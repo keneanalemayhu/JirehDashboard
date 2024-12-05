@@ -1,6 +1,6 @@
 "use client";
 import Link from "next/link";
-import { Sun, Moon, Languages } from "lucide-react";
+import { Sun, Moon, Languages, Eye, EyeOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -15,11 +15,13 @@ import { useTheme } from "next-themes";
 import { cn } from "@/lib/utils";
 import { useLanguage } from "@/components/context/LanguageContext";
 import { translations } from "@/translations";
+import { useState } from "react";
 
 export function LoginForm() {
   const { theme, setTheme } = useTheme();
   const { language, toggleLanguage } = useLanguage();
   const t = translations[language].login;
+  const [showPassword, setShowPassword] = useState(false);
 
   return (
     <main className="min-h-screen p-4 flex items-center justify-center bg-background dark:bg-black">
@@ -59,13 +61,27 @@ export function LoginForm() {
                 className="dark:bg-black dark:text-white dark:border-gray-800 focus:dark:border-gray-600"
               />
             </div>
-            <div className="grid gap-2">
+            <div className="grid gap-2 relative">
               <Label className="dark:text-white">{t.password}</Label>
-              <Input
-                type="password"
-                required
-                className="dark:bg-black dark:text-white dark:border-gray-800 focus:dark:border-gray-600"
-              />
+              <div className="relative">
+                <Input
+                  type={showPassword ? "text" : "password"}
+                  placeholder="*******"
+                  required
+                  className="dark:bg-black dark:text-white dark:border-gray-800 focus:dark:border-gray-600 pr-10"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute inset-y-0 right-2 flex items-center text-gray-500 dark:text-gray-400"
+                >
+                  {showPassword ? (
+                    <EyeOff className="w-5 h-5" />
+                  ) : (
+                    <Eye className="w-5 h-5" />
+                  )}
+                </button>
+              </div>
               <Link
                 href="#"
                 className="text-sm underline dark:text-gray-400 hover:dark:text-gray-300"
@@ -86,7 +102,7 @@ export function LoginForm() {
               href="/auth/register/"
               className="underline hover:dark:text-gray-300"
             >
-              {t.signUp}
+              {t.register}
             </Link>
           </div>
         </CardContent>

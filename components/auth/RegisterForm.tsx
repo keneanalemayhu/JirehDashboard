@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { Sun, Moon, Languages } from "lucide-react";
+import { Sun, Moon, Languages, Eye, EyeOff } from "lucide-react";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -28,6 +29,14 @@ export function RegisterForm() {
   const { theme, setTheme } = useTheme();
   const { language, toggleLanguage } = useLanguage();
   const t = translations[language].register;
+
+  // State to handle password visibility toggle
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+
+  const togglePasswordVisibility = () => setShowPassword(!showPassword);
+  const toggleConfirmPasswordVisibility = () =>
+    setShowConfirmPassword(!showConfirmPassword);
 
   return (
     <main className="min-h-screen p-4 flex items-center justify-center bg-background dark:bg-black">
@@ -94,21 +103,47 @@ export function RegisterForm() {
                   <Label className="dark:text-white">
                     {t.personalInfo.password}
                   </Label>
-                  <Input
-                    type="password"
-                    placeholder="********"
-                    className="dark:bg-black dark:text-white dark:border-gray-800 focus:dark:border-gray-600"
-                    required
-                  />
+                  <div className="relative">
+                    <Input
+                      type={showPassword ? "text" : "password"}
+                      placeholder="********"
+                      className="dark:bg-black dark:text-white dark:border-gray-800 focus:dark:border-gray-600"
+                      required
+                    />
+                    <button
+                      type="button"
+                      onClick={togglePasswordVisibility}
+                      className="absolute right-2 top-1/2 transform -translate-y-1/2"
+                    >
+                      {showPassword ? (
+                        <EyeOff className="w-5 h-5 text-gray-500" />
+                      ) : (
+                        <Eye className="w-5 h-5 text-gray-500" />
+                      )}
+                    </button>
+                  </div>
                   <Label className="dark:text-white">
                     {t.personalInfo.confirmPassword}
                   </Label>
-                  <Input
-                    type="password"
-                    placeholder="********"
-                    className="dark:bg-black dark:text-white dark:border-gray-800 focus:dark:border-gray-600"
-                    required
-                  />
+                  <div className="relative">
+                    <Input
+                      type={showConfirmPassword ? "text" : "password"}
+                      placeholder="********"
+                      className="dark:bg-black dark:text-white dark:border-gray-800 focus:dark:border-gray-600"
+                      required
+                    />
+                    <button
+                      type="button"
+                      onClick={toggleConfirmPasswordVisibility}
+                      className="absolute right-2 top-1/2 transform -translate-y-1/2"
+                    >
+                      {showConfirmPassword ? (
+                        <EyeOff className="w-5 h-5 text-gray-500" />
+                      ) : (
+                        <Eye className="w-5 h-5 text-gray-500" />
+                      )}
+                    </button>
+                  </div>
                 </div>
               </div>
             </CardContent>
