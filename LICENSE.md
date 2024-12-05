@@ -32,7 +32,5 @@ This agreement is governed by the laws of Ethiopia.
 
 For licensing inquiries:
 Contact: Kenean Alemayhu Tilahun
-
 Email: keneanalemayhu@jirehgroup.tech
-
 Phone: +251-93-560-9339
