@@ -1,36 +1,69 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Business Management System
+
+A comprehensive retail management solution built with Next.js 14, TailwindCSS, and shadcn/ui for the frontend, integrated with Django and MySQL backend.
+
+## Overview
+
+This system provides a complete solution for retail businesses to manage their operations across multiple locations. It features role-based access control, inventory management, sales tracking, and warehouse operations.
+
+## Key Features
+
+- **Role-Based Access Control**
+  - Admin: Store management, user control, and analytics
+  - Sales: POS system and order management
+  - Warehouse: Inventory and order fulfillment
+  - Superadmin: System-wide management and store oversight
+
+- **Store Management**
+  - Multi-location support
+  - Category and item management
+  - Employee management
+  - User access control
+
+- **Sales Operations**
+  - Point of Sale (POS)
+  - Order tracking
+  - Sales monitoring
+  - Transaction management
+
+- **Warehouse Operations**
+  - Inventory tracking
+  - Stock management
+  - Order fulfillment
+  - Stock level monitoring
+
+## Tech Stack
+
+- **Frontend**
+  - Next.js 14
+  - TailwindCSS
+  - shadcn/ui components
+  - TypeScript
+
+- **Backend**
+  - Django
+  - MySQL
+  - Python
+
+## Installation
+
+[Installation steps to be added]
 
 ## Getting Started
 
-First, run the development server:
+[Setup instructions to be added]
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+## Contributing
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+[Contribution guidelines to be added]
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## License
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+[License information to be added]
 
-## Learn More
+## Acknowledgments
 
-To learn more about Next.js, take a look at the following resources:
+Built with shadcn/ui components and inspired by modern retail management needs.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+---
+Would you like me to add or modify any section?
