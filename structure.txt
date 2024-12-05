@@ -1,0 +1,118 @@
+retail-bms/
+├── .env
+├── .env.example
+├── .gitignore
+├── package.json
+├── tailwind.config.js
+├── tsconfig.json
+├── middleware.ts
+├── public/
+│   ├── images/
+│   └── fonts/
+└── src/
+    ├── app/
+    │   ├── layout.tsx
+    │   ├── page.tsx
+    │   ├── error.tsx
+    │   ├── loading.tsx
+    │   ├── not-found.tsx
+    │   ├── favicon.ico
+    │   ├── globals.css
+    │   ├── auth/
+    │   │   ├── login/
+    │   │   │   └── page.tsx
+    │   │   └── register/
+    │   │       └── page.tsx
+    │   ├── dashboard/
+    │   │   ├── layout.tsx
+    │   │   ├── page.tsx
+    │   │   ├── admin/
+    │   │   │   ├── page.tsx
+    │   │   │   ├── locations/
+    │   │   │   │   └── page.tsx
+    │   │   │   ├── categories/
+    │   │   │   │   └── page.tsx
+    │   │   │   ├── items/
+    │   │   │   │   └── page.tsx
+    │   │   │   ├── employees/
+    │   │   │   │   └── page.tsx
+    │   │   │   └── users/
+    │   │   │       └── page.tsx
+    │   │   ├── sales/
+    │   │   │   ├── page.tsx
+    │   │   │   ├── ordering/
+    │   │   │   │   └── page.tsx
+    │   │   │   └── orders/
+    │   │   │       └── page.tsx
+    │   │   └── warehouse/
+    │   │       ├── page.tsx
+    │   │       ├── items/
+    │   │       │   └── page.tsx
+    │   │       └── orders/
+    │   │           └── page.tsx
+    │   └── superadmin/
+    │       ├── layout.tsx
+    │       ├── page.tsx
+    │       └── stores/
+    │           └── page.tsx
+    ├── components/
+    │   ├── ui/
+    │   ├── auth/
+    │   │   ├── login-form.tsx
+    │   │   └── register-form.tsx
+    │   ├── common/
+    │   │   ├── header.tsx
+    │   │   └── loading.tsx
+    │   ├── admin/
+    │   │   ├── sidebar.tsx
+    │   │   ├── dashboard/
+    │   │   │   ├── stats-card.tsx
+    │   │   │   └── charts/
+    │   │   ├── locations/
+    │   │   │   ├── location-form.tsx
+    │   │   │   └── location-table.tsx
+    │   │   ├── categories/
+    │   │   │   ├── category-form.tsx
+    │   │   │   └── category-table.tsx
+    │   │   ├── items/
+    │   │   │   ├── item-form.tsx
+    │   │   │   └── item-table.tsx
+    │   │   ├── employees/
+    │   │   │   ├── employee-form.tsx
+    │   │   │   └── employee-table.tsx
+    │   │   └── users/
+    │   │       ├── user-form.tsx
+    │   │       └── user-table.tsx
+    │   ├── sales/
+    │   │   ├── sidebar.tsx
+    │   │   ├── dashboard/
+    │   │   │   └── stats-card.tsx
+    │   │   └── orders/
+    │   │       ├── order-form.tsx
+    │   │       └── order-table.tsx
+    │   ├── warehouse/
+    │   │   ├── sidebar.tsx
+    │   │   ├── dashboard/
+    │   │   │   └── stats-card.tsx
+    │   │   ├── items/
+    │   │   │   └── inventory-table.tsx
+    │   │   └── orders/
+    │   │       └── order-table.tsx
+    │   └── superadmin/
+    │       ├── sidebar.tsx
+    │       ├── store-table.tsx
+    │       └── subscription-table.tsx
+    ├── hooks/
+    │   ├── use-auth.ts
+    │   ├── use-store.ts
+    │   └── use-toast.ts
+    ├── lib/
+    │   ├── utils.ts
+    │   └── api.ts
+    ├── providers/
+    │   ├── auth-provider.tsx
+    │   └── store-provider.tsx
+    └── types/
+        ├── auth.ts
+        ├── store.ts
+        └── index.ts

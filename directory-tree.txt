@@ -1,0 +1,35 @@
+Jireh-dashboard/
+├── .next/
+├── app/
+│   └── auth/
+│       ├── login/
+│       │   └── page.tsx
+│       └── register/
+│           └── page.tsx
+│   └── fonts/
+│   └── globals.css
+│   └── layout.tsx
+│   └── page.tsx
+├── components/
+│   ├── context/
+│   │   ├── LanguageContext.tsx
+│   │   └── ThemeContext.tsx
+│   ├── ui/
+│   ├── LoginForm.tsx
+│   └── RegisterForm.tsx
+├── lib/
+│   ├── utils.ts
+├── node_modules/
+├── translations/
+├── └── index.ts
+├── .eslintrc.json
+├── .gitignore
+├── components.json
+├── next-env.d.ts
+├── next.config.mjs
+├── package-lock.json
+├── package.json
+├── postcss.config.js
+├── README.md
+├── tailwind.config.js
+└── tsconfig.json
