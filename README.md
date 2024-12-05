@@ -45,18 +45,6 @@ This system provides a complete solution for retail businesses to manage their o
   - MySQL
   - Python
 
-## Installation
-
-[Installation steps to be added]
-
-## Getting Started
-
-[Setup instructions to be added]
-
-## Contributing
-
-[Contribution guidelines to be added]
-
 ## License
 
 [License information to be added]
