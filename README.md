@@ -1,13 +1,11 @@
 # Business Management System
 
-A comprehensive retail management solution built with Next.js 14, TailwindCSS, and shadcn/ui for the frontend, integrated with Django and MySQL backend.
+A comprehensive business management solution with role-based access for admins, sales, and warehouse staff, built with Next.js 14, TailwindCSS, and shadcn/ui, enabling efficient store operations including inventory management, POS, and order fulfillment.
 
 ## Overview
-
-This system provides a complete solution for retail businesses to manage their operations across multiple locations. It features role-based access control, inventory management, sales tracking, and warehouse operations.
+This system provides a complete solution for business businesses to manage their operations across multiple locations. It features role-based access control, inventory management, sales tracking, and warehouse operations.
 
 ## Key Features
-
 - **Role-Based Access Control**
   - Admin: Store management, user control, and analytics
   - Sales: POS system and order management
@@ -33,25 +31,24 @@ This system provides a complete solution for retail businesses to manage their o
   - Stock level monitoring
 
 ## Tech Stack
+### Frontend
+- Next.js 14
+- TailwindCSS
+- shadcn/ui components
+- TypeScript
 
-- **Frontend**
-  - Next.js 14
-  - TailwindCSS
-  - shadcn/ui components
-  - TypeScript
-
-- **Backend**
-  - Django
-  - MySQL
-  - Python
+### Backend
+- Django
+- MySQL
+- Python
 
 ## License
+This project is proprietary software owned by Jireh-Group. See [LICENSE.md](LICENSE.md) for details.
 
-[License information to be added]
+## Developer
+Kenean Alemayhu Tilahun  
+Email: keneanalemayhu@jireh-group.tech  
+Jireh-Group, Ethiopia
 
 ## Acknowledgments
-
-Built with shadcn/ui components and inspired by modern retail management needs.
-
----
-Would you like me to add or modify any section?
+Built with [shadcn/ui](https://ui.shadcn.com/) components
