@@ -1,9 +1,8 @@
 # Business Management System
-
-A comprehensive business management solution with role-based access for admins, sales, and warehouse staff, built with Next.js 14, TailwindCSS, and shadcn/ui, enabling efficient store operations including inventory management, POS, and order fulfillment.
+A comprehensive business solution with role-based access for admins, sales, and warehouse staff, built with Next.js 14, TailwindCSS, and shadcn/ui, enabling efficient operations including inventory management, POS, and order fulfillment.
 
 ## Overview
-This system provides a complete solution for business businesses to manage their operations across multiple locations. It features role-based access control, inventory management, sales tracking, and warehouse operations.
+This system provides a complete solution for businesses to manage their operations across multiple locations. It features role-based access control, inventory management, sales tracking, and warehouse operations.
 
 ## Key Features
 - **Role-Based Access Control**
