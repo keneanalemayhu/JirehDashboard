@@ -1,58 +1,110 @@
 Jireh-dashboard/
 ├── .next/
-├── app/
-│   └── auth/
-│   │   ├── login/
-│   │   │   └── page.tsx
-│   │   └── register/
-│   │       └── page.tsx
-│   └── dashboard/
-│   │   ├── admin/
-│   │   │   ├── categories/
-│   │   │   │   └── page.tsx
-│   │   │   ├── employees/
-│   │   │   │   └── page.tsx
-│   │   │   ├── items/
-│   │   │   │   └── page.tsx
-│   │   │   ├── locations/
-│   │   │   │   └── page.tsx
-│   │   │   ├── orders/
-│   │   │   │   └── page.tsx
-│   │   │   ├── users/
-│   │   │   │   └── page.tsx
-│   │   │   └── page.tsx
-│   │   ├── sales/
-│   │   │   ├── ordering/
-│   │   │   │   └── page.tsx
-│   │   │   ├── orders/
-│   │   │   │   └── page.tsx
-│   │   │   └── page.tsx
-│   │   ├── warehouse/
-│   │   │   ├── items/
-│   │   │   │   └── page.tsx
-│   │   │   ├── orders/
-│   │   │   │   └── page.tsx
-│   │   │   ├── page.tsx
-│   │   └── page.tsx
-│   └── fonts/
-│   └── globals.css
-│   └── layout.tsx
-│   └── page.tsx
-├── components/
-│   ├── context/
-│   │   ├── LanguageContext.tsx
-│   │   └── ThemeContext.tsx
-│   ├── auth/
-│   │   ├── LoginForm.tsx
-│   │   └── RegisterForm.tsx
-│   ├── ui/
-│   ├── LoginForm.tsx
-│   └── RegisterForm.tsx
-├── lib/
-│   ├── utils.ts
 ├── node_modules/
-├── translations/
-├── └── index.ts
+├── public/
+├── src/
+│   ├── app/
+│   │   └── auth/
+│   │   │   ├── login/
+│   │   │   │   └── page.tsx
+│   │   │   └── register/
+│   │   │       └── page.tsx
+│   │   └── dashboard/
+│   │   │   ├── admin/
+│   │   │   │   ├── categories/
+│   │   │   │   │   └── page.tsx
+│   │   │   │   ├── employees/
+│   │   │   │   │   └── page.tsx
+│   │   │   │   ├── items/
+│   │   │   │   │   └── page.tsx
+│   │   │   │   ├── locations/
+│   │   │   │   │   └── page.tsx
+│   │   │   │   ├── orders/
+│   │   │   │   │   └── page.tsx
+│   │   │   │   ├── users/
+│   │   │   │   │   └── page.tsx
+│   │   │   │   └── page.tsx
+│   │   │   ├── sales/
+│   │   │   │   ├── ordering/
+│   │   │   │   │   └── page.tsx
+│   │   │   │   ├── orders/
+│   │   │   │   │   └── page.tsx
+│   │   │   │   └── page.tsx
+│   │   │   ├── warehouse/
+│   │   │   │   ├── items/
+│   │   │   │   │   └── page.tsx
+│   │   │   │   ├── orders/
+│   │   │   │   │   └── page.tsx
+│   │   │   │   └── page.tsx
+│   │   │   └── page.tsx
+│   │   ├── fonts/
+│   │   ├── globals.css
+│   │   ├── layout.tsx
+│   │   ├── page.tsx
+│   │   └── provider.tsx
+│   ├── components/
+│   │   ├── auth/
+│   │   │   ├── ForgetPasswordForm.tsx
+│   │   │   ├── LoginForm.tsx
+│   │   │   ├── RegisterForm.tsx
+│   │   │   └── ResetPasswordForm.tsx
+│   │   ├── common/
+│   │   │   ├── Header.tsx
+│   │   │   └── Loading.tsx
+│   │   ├── context/
+│   │   │   ├── LanguageContext.tsx
+│   │   │   └── ThemeContext.tsx
+│   │   ├── dashboard/
+│   │   │   ├── Admin/
+│   │   │   │   ├── categories/
+    │   │   │   │   ├── CategoryForm.tsx
+    │   │   │   │   ├── CategoryTable.tsx
+│   │   │   │   ├── employees/
+│   │   │   │   ├── items/
+│   │   │   │   ├── locations/
+│   │   │   │   ├── orders/
+│   │   │   │   ├── users/
+│   │   │   │   └── page.tsx
+│   │   │   ├── Sales/
+│   │   │   │   ├── dashboard
+│   │   │   │   ├── orders/
+│   │   │   │   │   ├── OrderForm.tsx
+│   │   │   │   │   └── orderTable.tsx
+│   │   │   │   └── Sidebar.tsx
+│   │   │   ├── superadmin/
+│   │   │   │   ├── Sidebar.tsx
+│   │   │   │   ├── StoreTable.tsx
+│   │   │   │   └── SubscriptionTable.tsx
+│   │   │   ├── Warehouse/
+│   │   │   │   ├── dashboard/
+│   │   │   │   ├── items/
+│   │   │   │   │   └── ItemsTable.tsx
+│   │   │   │   ├── orders/
+│   │   │   │   │   └── OrderTable.tsx
+│   │   │   │   └── Sidebar.tsx
+│   │   ├── legal/
+│   │   │   ├── PrivacyContent.tsx
+│   │   │   ├── PrivacyModal.tsx
+│   │   │   ├── TermsContent.tsx
+│   │   │   └── ThemeModal.tsx
+│   │   ├── ui/
+│   ├── hooks/
+│   │   ├── use-auth.ts
+│   │   ├── use-store.ts
+│   │   └── use-toast.ts
+│   ├── lib/
+│   │   ├── api.ts
+│   │   └── utils.ts
+│   ├── providers/
+│   │   ├── auth-provider.tsx
+│   │   └── store-provider.tsx
+│   ├── translations/
+│   │   └── index.ts
+│   └── types/
+│       ├── auth.ts
+│       ├── index.ts
+│       └── store.ts
+├── .env
 ├── .eslintrc.json
 ├── .gitignore
 ├── components.json
