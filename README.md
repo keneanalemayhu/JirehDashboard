@@ -1,53 +1,36 @@
-# Business Management System
-A comprehensive business solution with role-based access for admins, sales, and warehouse staff, built with Next.js 14, TailwindCSS, and shadcn/ui, enabling efficient operations including inventory management, POS, and order fulfillment.
+This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
-## Overview
-This system provides a complete solution for businesses to manage their operations across multiple locations. It features role-based access control, inventory management, sales tracking, and warehouse operations.
+## Getting Started
 
-## Key Features
-- **Role-Based Access Control**
-  - Admin: Store management, user control, and analytics
-  - Sales: POS system and order management
-  - Warehouse: Inventory and order fulfillment
-  - Superadmin: System-wide management and store oversight
+First, run the development server:
 
-- **Store Management**
-  - Multi-location support
-  - Category and item management
-  - Employee management
-  - User access control
+```bash
+npm run dev
+# or
+yarn dev
+# or
+pnpm dev
+# or
+bun dev
+```
 
-- **Sales Operations**
-  - Point of Sale (POS)
-  - Order tracking
-  - Sales monitoring
-  - Transaction management
+Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
-- **Warehouse Operations**
-  - Inventory tracking
-  - Stock management
-  - Order fulfillment
-  - Stock level monitoring
+You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
 
-## Tech Stack
-### Frontend
-- Next.js 14
-- TailwindCSS
-- shadcn/ui components
-- TypeScript
+This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
 
-### Backend
-- Django
-- MySQL
-- Python
+## Learn More
 
-## License
-This project is proprietary software owned by Jireh-Group. See [LICENSE.md](LICENSE.md) for details.
+To learn more about Next.js, take a look at the following resources:
 
-## Developer
-Kenean Alemayhu Tilahun  
-Email: keneanalemayhu@jireh-group.tech  
-Jireh-Group, Ethiopia
+- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
+- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
 
-## Acknowledgments
-Built with [shadcn/ui](https://ui.shadcn.com/) components
+You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+
+## Deploy on Vercel
+
+The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+
+Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
