@@ -13,11 +13,15 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useTheme } from "next-themes";
 import { cn } from "@/lib/utils";
-import { useLanguage } from "@/components/context/LanguageContext";
+import {
+  useLanguage,
+  LanguageProvider,
+} from "@/components/context/LanguageContext";
 import { translations } from "@/translations";
 import { useState } from "react";
 
-export function LoginForm() {
+// Create a separate component for the form content
+function LoginFormContent() {
   const { theme, setTheme } = useTheme();
   const { language, toggleLanguage } = useLanguage();
   const t = translations[language].login;
@@ -83,7 +87,7 @@ export function LoginForm() {
                 </button>
               </div>
               <Link
-                href="#"
+                href="/auth/forgot-password/"
                 className="text-sm underline dark:text-gray-400 hover:dark:text-gray-300"
               >
                 {t.forgotPassword}
@@ -108,5 +112,14 @@ export function LoginForm() {
         </CardContent>
       </Card>
     </main>
+  );
+}
+
+// Wrap the form content with LanguageProvider
+export function LoginForm() {
+  return (
+    <LanguageProvider>
+      <LoginFormContent />
+    </LanguageProvider>
   );
 }

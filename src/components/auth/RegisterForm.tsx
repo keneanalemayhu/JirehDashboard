@@ -22,7 +22,7 @@ import {
 } from "@/components/ui/select";
 import { useTheme } from "next-themes";
 import { cn } from "@/lib/utils";
-import { useLanguage } from "@/components/context/LanguageContext";
+import { useLanguage } from "@/components/context/LanguageContext"; // Changed this line
 import { translations } from "@/translations";
 
 export function RegisterForm() {
@@ -30,7 +30,6 @@ export function RegisterForm() {
   const { language, toggleLanguage } = useLanguage();
   const t = translations[language].register;
 
-  // State to handle password visibility toggle
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
@@ -203,11 +202,19 @@ export function RegisterForm() {
           </Button>
           <CardDescription className="dark:text-gray-400">
             {t.terms}{" "}
-            <Link href="#" className="underline hover:dark:text-gray-300">
+            <Link
+              href="/app/legal/privacy"
+              target="_blank"
+              className="underline hover:dark:text-gray-300"
+            >
               {t.termsLink}
             </Link>{" "}
             {t.and}{" "}
-            <Link href="#" className="underline hover:dark:text-gray-300">
+            <Link
+              href="/app/legal/privacy"
+              target="_blank"
+              className="underline hover:dark:text-gray-300"
+            >
               {t.privacyLink}
             </Link>
             .
