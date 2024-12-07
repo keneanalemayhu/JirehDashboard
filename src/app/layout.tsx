@@ -1,10 +1,12 @@
-// app/layout.tsx
 import type { Metadata } from "next";
 import { Providers } from "./providers";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "JirehDashboard",
+  title: {
+    template: "%s | JirehDashboard",
+    default: "JirehDashboard",
+  },
   description: "Simplify Management, Empower Businesses, Scale with Confidence",
 };
 
@@ -15,6 +17,10 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" suppressHydrationWarning>
+      <head>
+        <meta charSet="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+      </head>
       <body suppressHydrationWarning>
         <Providers>{children}</Providers>
       </body>

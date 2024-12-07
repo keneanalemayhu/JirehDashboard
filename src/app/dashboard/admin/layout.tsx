@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Authentication", // This will be inserted into the template
+  title: "Admin | Dashboard", // This will be inserted into the template
 };
 
 export default function AuthLayout({

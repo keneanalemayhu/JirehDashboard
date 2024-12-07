@@ -7,8 +7,9 @@ Jireh-dashboard/
 │   │   └── auth/
 │   │   │   ├── login/
 │   │   │   │   └── page.tsx
-│   │   │   └── register/
-│   │   │       └── page.tsx
+│   │   │   ├── register/
+│   │   │   │   └── page.tsx
+│   │   │   └── layout.tsx
 │   │   └── dashboard/
 │   │   │   ├── admin/
 │   │   │   │   ├── categories/
@@ -57,13 +58,21 @@ Jireh-dashboard/
 │   │   ├── dashboard/
 │   │   │   ├── Admin/
 │   │   │   │   ├── categories/
-    │   │   │   │   ├── CategoryForm.tsx
-    │   │   │   │   ├── CategoryTable.tsx
+│   │   │   │   │   ├── CategoryForm.tsx
+│   │   │   │   │   ├── CategoriesTable.tsx
 │   │   │   │   ├── employees/
+│   │   │   │   │   ├── EmployeeForm.tsx
+│   │   │   │   │   └── EmployeesTable.tsx
 │   │   │   │   ├── items/
+│   │   │   │   │   ├── ItemForm.tsx
+│   │   │   │   │   └── ItemsTable.tsx
 │   │   │   │   ├── locations/
+│   │   │   │   │   ├── LocationForm.tsx
+│   │   │   │   │   └── LocationsTable.tsx
 │   │   │   │   ├── orders/
+│   │   │   │   │   └── OrderTable.tsx
 │   │   │   │   ├── users/
+│   │   │   │   │   └── UserTable.tsx
 │   │   │   │   └── page.tsx
 │   │   │   ├── Sales/
 │   │   │   │   ├── dashboard
@@ -73,14 +82,15 @@ Jireh-dashboard/
 │   │   │   │   └── Sidebar.tsx
 │   │   │   ├── superadmin/
 │   │   │   │   ├── Sidebar.tsx
-│   │   │   │   ├── StoreTable.tsx
-│   │   │   │   └── SubscriptionTable.tsx
+│   │   │   │   ├── StoresTable.tsx
+│   │   │   │   └── SubscriptionsTable.tsx
 │   │   │   ├── Warehouse/
 │   │   │   │   ├── dashboard/
 │   │   │   │   ├── items/
+│   │   │   │   │   ├── ItemForm.tsx
 │   │   │   │   │   └── ItemsTable.tsx
 │   │   │   │   ├── orders/
-│   │   │   │   │   └── OrderTable.tsx
+│   │   │   │   │   └── OrdersTable.tsx
 │   │   │   │   └── Sidebar.tsx
 │   │   ├── legal/
 │   │   │   ├── PrivacyContent.tsx
@@ -108,8 +118,9 @@ Jireh-dashboard/
 ├── .eslintrc.json
 ├── .gitignore
 ├── components.json
+├── LICENSE.md
 ├── next-env.d.ts
-├── next.config.mjs
+├── next.config.ts
 ├── package-lock.json
 ├── package.json
 ├── postcss.config.js

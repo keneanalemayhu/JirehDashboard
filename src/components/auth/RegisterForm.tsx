@@ -20,6 +20,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  HoverCard,
+  HoverCardContent,
+  HoverCardTrigger,
+} from "@/components/ui/hover-card";
 import { useTheme } from "next-themes";
 import { cn } from "@/lib/utils";
 import { useLanguage } from "@/components/context/LanguageContext"; // Changed this line
@@ -202,21 +207,49 @@ export function RegisterForm() {
           </Button>
           <CardDescription className="dark:text-gray-400">
             {t.terms}{" "}
-            <Link
-              href="/app/legal/privacy"
-              target="_blank"
-              className="underline hover:dark:text-gray-300"
-            >
-              {t.termsLink}
-            </Link>{" "}
+            <HoverCard>
+              <HoverCardTrigger>
+                <Link
+                  href="/app/legal/terms"
+                  target="_blank"
+                  className="underline hover:dark:text-gray-300"
+                >
+                  {t.termsLink}
+                </Link>
+              </HoverCardTrigger>
+              <HoverCardContent>
+                <p>{t.termsofservice}</p>
+                <Link
+                  href="/app/legal/terms"
+                  target="_blank"
+                  className="text-blue-500 underline hover:text-blue-700 dark:hover:text-blue-400"
+                >
+                  {t.learnmore}
+                </Link>
+              </HoverCardContent>
+            </HoverCard>{" "}
             {t.and}{" "}
-            <Link
-              href="/app/legal/privacy"
-              target="_blank"
-              className="underline hover:dark:text-gray-300"
-            >
-              {t.privacyLink}
-            </Link>
+            <HoverCard>
+              <HoverCardTrigger>
+                <Link
+                  href="/app/legal/privacy"
+                  target="_blank"
+                  className="underline hover:dark:text-gray-300"
+                >
+                  {t.privacyLink}
+                </Link>
+              </HoverCardTrigger>
+              <HoverCardContent>
+                <p>{t.privacypolicy}</p>
+                <Link
+                  href="/app/legal/privacy"
+                  target="_blank"
+                  className="text-blue-500 underline hover:text-blue-700 dark:hover:text-blue-400"
+                >
+                  {t.learnmore}
+                </Link>
+              </HoverCardContent>
+            </HoverCard>
             .
           </CardDescription>
           <div className="mt-4 text-sm dark:text-gray-400">

@@ -37,6 +37,11 @@ export const translations = {
       privacyLink: "Privacy Policy",
       haveAccount: "Already have an account?",
       login: "Login here",
+      termsofservice:
+        "Terms of Service Use requires a valid subscription. Unauthorized access, copying, or modification is prohibited. Data is secured, but the software is provided &quot;as is.&quot; Learn more",
+      privacypolicy:
+        "Privacy Policy We respect your data. Business data remains yours; system data belongs to us. We use anonymous data for improvements. Industry-standard security measures are in place. Learn more",
+      learnmore: "Learn more",
     },
     forgotPassword: {
       title: "Forgot Password",
@@ -92,6 +97,11 @@ export const translations = {
       privacyLink: "የግላዊነት ፖሊሲ ነው",
       haveAccount: "አካውንት አለዎት?",
       login: "ይግቡ",
+      termsofservice:
+        "አገልግሎቱን ለመጠቀም የተረጋገጠ የደንበኝነት ምዝገባ ያስፈልጋል። ያልተፈቀደ መዳረሻ፣ ቅጂ ማንሳት ወይም ማሻሻል የተከለከለ ነው። ውሂቡ ደህንነቱ የተጠበቀ ነው፣ ነገር ግን ሶፍትዌሩ 'እንደነበረው' ይቀርባል።",
+      privacypolicy:
+        "የግላዊነት መመሪያ የእርስዎን ውሂብ እናከብራለን። የንግድ ውሂብዎ የእርስዎ ነው፤ የስርዓቱ ውሂብ የኛ ነው። ማሻሻያዎችን ለማድረግ ስም-አልባ ውሂብን እንጠቀማለን። የኢንዱስትሪ ደረጃ የደህንነት እርምጃዎች ተተግብረዋል።",
+      learnmore: "ተጨማሪ ይወቁ",
     },
     forgotPassword: {
       title: "የይለፍ ቃል ረሳሁ",
