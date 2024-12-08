@@ -115,6 +115,18 @@ Jireh-dashboard/
 │   │   │   │   └── AdminTeamSwitcher.tsx
 │   │   │   ├── sadmin/
 │   │   │   │   ├── Stores/
+│   │   │   │   │   ├── categories/
+│   │   │   │   │   │   ├── CategoriesTable.tsx
+│   │   │   │   │   ├── employees/
+│   │   │   │   │   │   └── EmployeesTable.tsx
+│   │   │   │   │   ├── items/
+│   │   │   │   │   │   └── ItemsTable.tsx
+│   │   │   │   │   ├── locations/
+│   │   │   │   │   │   └── LocationsTable.tsx
+│   │   │   │   │   ├── orders/
+│   │   │   │   │   │   └── OrderTable.tsx
+│   │   │   │   │   ├── users/
+│   │   │   │   │   │   └── UserTable.tsx
 │   │   │   │   │   └── StoresTable.tsx
 │   │   │   │   ├── Subscriptions/
 │   │   │   │   │   └── SubscriptionsTable.tsx
@@ -126,8 +138,8 @@ Jireh-dashboard/
 │   │   │   │   └── SadminTeamSwitcher.tsx
 │   │   │   ├── Sales/
 │   │   │   │   ├── order/
+│   │   │   │   │   └── OrderForm.tsx
 │   │   │   │   ├── orders/
-│   │   │   │   │   ├── OrderForm.tsx
 │   │   │   │   │   └── orderTable.tsx
 │   │   │   │   ├── SalesNavAction.tsx
 │   │   │   │   ├── SalesNavMain.tsx
