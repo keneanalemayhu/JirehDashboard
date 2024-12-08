@@ -129,7 +129,12 @@ Jireh-dashboard/
 │   │   │   │   ├── orders/
 │   │   │   │   │   ├── OrderForm.tsx
 │   │   │   │   │   └── orderTable.tsx
-│   │   │   │   └── Sidebar.tsx
+│   │   │   │   ├── SalesNavAction.tsx
+│   │   │   │   ├── SalesNavMain.tsx
+│   │   │   │   ├── SalesNavProjects.tsx
+│   │   │   │   ├── SalesNavUser.tsx
+│   │   │   │   ├── SalesSidebar.tsx
+│   │   │   │   └── SalesTeamSwitcher.tsx
 │   │   │   ├── Warehouse/
 │   │   │   │   ├── dashboard/
 │   │   │   │   ├── items/
