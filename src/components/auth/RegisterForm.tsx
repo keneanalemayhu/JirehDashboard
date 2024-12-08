@@ -4,13 +4,6 @@ import Link from "next/link";
 import { Sun, Moon, Languages, Eye, EyeOff } from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -26,243 +19,284 @@ import {
   HoverCardTrigger,
 } from "@/components/ui/hover-card";
 import { useTheme } from "next-themes";
-import { cn } from "@/lib/utils";
-import { useLanguage } from "@/components/context/LanguageContext"; // Changed this line
+import { useLanguage } from "@/components/context/LanguageContext";
 import { translations } from "@/translations";
+import { Icons } from "@/components/Icons";
 
 export function RegisterForm() {
   const { theme, setTheme } = useTheme();
   const { language, toggleLanguage } = useLanguage();
   const t = translations[language].register;
-
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
-  const togglePasswordVisibility = () => setShowPassword(!showPassword);
-  const toggleConfirmPasswordVisibility = () =>
-    setShowConfirmPassword(!showConfirmPassword);
+  async function onSubmit(event: React.SyntheticEvent) {
+    event.preventDefault();
+    setIsLoading(true);
+    setTimeout(() => {
+      setIsLoading(false);
+    }, 3000);
+  }
 
   return (
-    <main className="min-h-screen p-4 flex items-center justify-center bg-background dark:bg-black">
-      <div className="fixed top-4 right-4 flex space-x-4">
-        <button onClick={() => setTheme(theme === "dark" ? "light" : "dark")}>
+    <div className="h-screen w-screen flex flex-col lg:flex-row">
+      {/* Theme and Language Toggles - Fixed position */}
+      <div className="fixed top-4 right-4 flex items-center space-x-2 z-50">
+        <button
+          onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+          className="rounded-md p-2 hover:bg-accent"
+        >
           {theme === "dark" ? (
-            <Sun className="w-6 h-6 text-white" />
+            <Sun className="w-5 h-5" />
           ) : (
-            <Moon className="w-6 h-6" />
+            <Moon className="w-5 h-5" />
           )}
         </button>
-        <button onClick={toggleLanguage}>
-          <Languages
-            className={cn("w-6 h-6", theme === "dark" && "text-white")}
-          />
+        <button
+          onClick={toggleLanguage}
+          className="rounded-md p-2 hover:bg-accent"
+        >
+          <Languages className="w-5 h-5" />
         </button>
       </div>
 
-      <Card className="w-full max-w-4xl p-6 dark:bg-black dark:text-white dark:border dark:border-gray-800">
-        <CardHeader className="text-center">
-          <CardTitle className="text-2xl">{t.title}</CardTitle>
-          <CardDescription className="dark:text-gray-400">
-            {t.description}
-          </CardDescription>
-        </CardHeader>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
-          <div>
-            <CardHeader className="text-center">
-              <CardTitle className="text-2xl">{t.personalInfo.title}</CardTitle>
-              <CardDescription className="dark:text-gray-400">
-                {t.personalInfo.description}
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="grid gap-4">
-                <div className="grid gap-2">
-                  <Label className="dark:text-white">
-                    {t.personalInfo.name}
-                  </Label>
-                  <Input
-                    type="text"
-                    placeholder="John Doe"
-                    className="dark:bg-black dark:text-white dark:border-gray-800 focus:dark:border-gray-600"
-                    required
-                  />
-                  <Label className="dark:text-white">
-                    {t.personalInfo.phone}
-                  </Label>
-                  <Input
-                    type="number"
-                    placeholder="+251-91-234-5678"
-                    className="dark:bg-black dark:text-white dark:border-gray-800 focus:dark:border-gray-600"
-                    required
-                  />
-                  <Label className="dark:text-white">
-                    {t.personalInfo.email}
-                  </Label>
-                  <Input
-                    type="email"
-                    placeholder="m@example.com"
-                    className="dark:bg-black dark:text-white dark:border-gray-800 focus:dark:border-gray-600"
-                    required
-                  />
-                  <Label className="dark:text-white">
-                    {t.personalInfo.password}
-                  </Label>
-                  <div className="relative">
-                    <Input
-                      type={showPassword ? "text" : "password"}
-                      placeholder="********"
-                      className="dark:bg-black dark:text-white dark:border-gray-800 focus:dark:border-gray-600"
-                      required
-                    />
-                    <button
-                      type="button"
-                      onClick={togglePasswordVisibility}
-                      className="absolute right-2 top-1/2 transform -translate-y-1/2"
-                    >
-                      {showPassword ? (
-                        <EyeOff className="w-5 h-5 text-gray-500" />
-                      ) : (
-                        <Eye className="w-5 h-5 text-gray-500" />
-                      )}
-                    </button>
-                  </div>
-                  <Label className="dark:text-white">
-                    {t.personalInfo.confirmPassword}
-                  </Label>
-                  <div className="relative">
-                    <Input
-                      type={showConfirmPassword ? "text" : "password"}
-                      placeholder="********"
-                      className="dark:bg-black dark:text-white dark:border-gray-800 focus:dark:border-gray-600"
-                      required
-                    />
-                    <button
-                      type="button"
-                      onClick={toggleConfirmPasswordVisibility}
-                      className="absolute right-2 top-1/2 transform -translate-y-1/2"
-                    >
-                      {showConfirmPassword ? (
-                        <EyeOff className="w-5 h-5 text-gray-500" />
-                      ) : (
-                        <Eye className="w-5 h-5 text-gray-500" />
-                      )}
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-          </div>
+      {/* Left side - Personal Information */}
+      <div className="lg:hidden w-full px-4 pt-6 pb-8">
+        <div className="relative z-20 flex items-center text-lg font-medium">
+          <Icons.logo className="mr-2 h-6 w-6" /> Jireh-Group
+        </div>
+      </div>
 
-          <div>
-            <CardHeader className="text-center">
-              <CardTitle className="text-2xl">{t.businessInfo.title}</CardTitle>
-              <CardDescription className="dark:text-gray-400">
-                {t.businessInfo.description}
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="grid gap-4">
-                <div className="grid gap-2">
-                  <Label className="dark:text-white">
-                    {t.businessInfo.businessName}
-                  </Label>
-                  <Input
-                    type="text"
-                    placeholder="My Business"
-                    className="dark:bg-black dark:text-white dark:border-gray-800 focus:dark:border-gray-600"
-                    required
-                  />
-                  <Label className="dark:text-white">
-                    {t.businessInfo.businessPhone}
-                  </Label>
-                  <Input
-                    type="tel"
-                    placeholder="+251-91-234-5678"
-                    className="dark:bg-black dark:text-white dark:border-gray-800 focus:dark:border-gray-600"
-                    required
-                  />
-                  <Label className="dark:text-white">
-                    {t.businessInfo.businessType}
-                  </Label>
-                  <Select>
-                    <SelectTrigger className="w-full dark:bg-black dark:text-white dark:border-gray-800">
-                      <SelectValue placeholder="Select a business type" />
-                    </SelectTrigger>
-                    <SelectContent className="dark:bg-black dark:border-gray-800">
-                      <SelectItem value="retail">Retail</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-            </CardContent>
+      <div className="w-full lg:w-1/2 lg:h-full bg-zinc-900 text-white p-8 lg:p-10">
+        <div className="hidden lg:block lg:fixed lg:top-10 lg:left-10">
+          <div className="relative z-20 flex items-center text-lg font-medium">
+            <Icons.logo className="mr-2 h-6 w-6" /> Jireh-Group
           </div>
         </div>
 
-        <div className="mt-6 text-center">
-          <Button
-            type="submit"
-            className="w-1/3 dark:bg-white dark:text-black dark:border dark:border-gray-800 dark:hover:bg-gray-900"
-          >
-            {t.registerButton}
-          </Button>
-          <CardDescription className="dark:text-gray-400">
-            {t.terms}{" "}
-            <HoverCard>
-              <HoverCardTrigger>
-                <Link
-                  href="/app/legal/terms"
-                  target="_blank"
-                  className="underline hover:dark:text-gray-300"
-                >
-                  {t.termsLink}
-                </Link>
-              </HoverCardTrigger>
-              <HoverCardContent>
-                <p>{t.termsofservice}</p>
-                <Link
-                  href="/app/legal/terms"
-                  target="_blank"
-                  className="text-blue-500 underline hover:text-blue-700 dark:hover:text-blue-400"
-                >
-                  {t.learnmore}
-                </Link>
-              </HoverCardContent>
-            </HoverCard>{" "}
-            {t.and}{" "}
-            <HoverCard>
-              <HoverCardTrigger>
-                <Link
-                  href="/app/legal/privacy"
-                  target="_blank"
-                  className="underline hover:dark:text-gray-300"
-                >
-                  {t.privacyLink}
-                </Link>
-              </HoverCardTrigger>
-              <HoverCardContent>
-                <p>{t.privacypolicy}</p>
-                <Link
-                  href="/app/legal/privacy"
-                  target="_blank"
-                  className="text-blue-500 underline hover:text-blue-700 dark:hover:text-blue-400"
-                >
-                  {t.learnmore}
-                </Link>
-              </HoverCardContent>
-            </HoverCard>
-            .
-          </CardDescription>
-          <div className="mt-4 text-sm dark:text-gray-400">
-            {t.haveAccount}{" "}
-            <Link
-              href="/auth/login"
-              className="underline hover:dark:text-gray-300"
-            >
-              {t.login}
-            </Link>
+        <div className="h-full flex flex-col justify-center">
+          <div className="w-full max-w-[350px] mx-auto space-y-6 lg:-mt-10">
+            <div className="flex flex-col space-y-2">
+              <h1 className="text-2xl font-semibold tracking-tight">
+                {t.personalInfo.title}
+              </h1>
+              <p className="text-sm text-white">{t.personalInfo.description}</p>
+            </div>
+
+            <div className="grid gap-4">
+              <div className="grid gap-2">
+                <Label htmlFor="name" className="text-white">
+                  {t.personalInfo.name}
+                </Label>
+                <Input
+                  id="name"
+                  type="text"
+                  placeholder="John Doe"
+                  disabled={isLoading}
+                  className="bg-zinc-800 border-zinc-700"
+                />
+              </div>
+
+              <div className="grid gap-2">
+                <Label htmlFor="phone" className="text-white">
+                  {t.personalInfo.phone}
+                </Label>
+                <Input
+                  id="phone"
+                  type="tel"
+                  placeholder="+251-91-234-5678"
+                  disabled={isLoading}
+                  className="bg-zinc-800 border-zinc-700"
+                />
+              </div>
+
+              <div className="grid gap-2">
+                <Label htmlFor="email" className="text-white">
+                  {t.personalInfo.email}
+                </Label>
+                <Input
+                  id="email"
+                  type="email"
+                  placeholder="m@example.com"
+                  disabled={isLoading}
+                  className="bg-zinc-800 border-zinc-700"
+                />
+              </div>
+
+              <div className="grid gap-2">
+                <Label htmlFor="password" className="text-white">
+                  {t.personalInfo.password}
+                </Label>
+                <div className="relative">
+                  <Input
+                    id="password"
+                    type={showPassword ? "text" : "password"}
+                    placeholder="********"
+                    disabled={isLoading}
+                    className="pr-10 bg-zinc-800 border-zinc-700"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute inset-y-0 right-2 flex items-center text-gray-400"
+                  >
+                    {showPassword ? (
+                      <EyeOff className="w-5 h-5" />
+                    ) : (
+                      <Eye className="w-5 h-5" />
+                    )}
+                  </button>
+                </div>
+              </div>
+
+              <div className="grid gap-2">
+                <Label htmlFor="confirmPassword" className="text-white">
+                  {t.personalInfo.confirmPassword}
+                </Label>
+                <div className="relative">
+                  <Input
+                    id="confirmPassword"
+                    type={showConfirmPassword ? "text" : "password"}
+                    placeholder="********"
+                    disabled={isLoading}
+                    className="pr-10 bg-zinc-800 border-zinc-700"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                    className="absolute inset-y-0 right-2 flex items-center text-gray-400"
+                  >
+                    {showConfirmPassword ? (
+                      <EyeOff className="w-5 h-5" />
+                    ) : (
+                      <Eye className="w-5 h-5" />
+                    )}
+                  </button>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
-      </Card>
-    </main>
+      </div>
+
+      {/* Right side - Business Information */}
+      <div className="w-full lg:w-1/2 flex items-center justify-center p-8">
+        <div className="w-full max-w-[350px] space-y-6 lg:-mt-10">
+          <div className="flex flex-col space-y-2 text-center">
+            <h1 className="text-2xl font-semibold tracking-tight">
+              {t.businessInfo.title}
+            </h1>
+            <p className="text-sm text-muted-foreground">
+              {t.businessInfo.description}
+            </p>
+          </div>
+
+          <form onSubmit={onSubmit}>
+            <div className="grid gap-4">
+              <div className="grid gap-2">
+                <Label htmlFor="businessName">
+                  {t.businessInfo.businessName}
+                </Label>
+                <Input
+                  id="businessName"
+                  type="text"
+                  placeholder="My Business"
+                  disabled={isLoading}
+                />
+              </div>
+
+              <div className="grid gap-2">
+                <Label htmlFor="businessPhone">
+                  {t.businessInfo.businessPhone}
+                </Label>
+                <Input
+                  id="businessPhone"
+                  type="tel"
+                  placeholder="+251-91-234-5678"
+                  disabled={isLoading}
+                />
+              </div>
+
+              <div className="grid gap-2">
+                <Label htmlFor="businessType">
+                  {t.businessInfo.businessType}
+                </Label>
+                <Select>
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Select a business type" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="retail">Retail</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <Button className="mt-4" disabled={isLoading}>
+                {t.registerButton}
+              </Button>
+            </div>
+          </form>
+
+          <div className="text-center text-sm text-muted-foreground space-y-2">
+            <div>
+              {t.terms}{" "}
+              <HoverCard>
+                <HoverCardTrigger asChild>
+                  <Link
+                    href="/app/legal/terms"
+                    target="_blank"
+                    className="underline underline-offset-4 hover:text-primary"
+                  >
+                    {t.termsLink}
+                  </Link>
+                </HoverCardTrigger>
+                <HoverCardContent>
+                  <p>{t.termsofservice}</p>
+                  <Link
+                    href="/app/legal/terms"
+                    target="_blank"
+                    className="text-blue-500 underline hover:text-blue-700 dark:hover:text-blue-400"
+                  >
+                    {t.learnmore}
+                  </Link>
+                </HoverCardContent>
+              </HoverCard>{" "}
+              {t.and}{" "}
+              <HoverCard>
+                <HoverCardTrigger asChild>
+                  <Link
+                    href="/app/legal/privacy"
+                    target="_blank"
+                    className="underline underline-offset-4 hover:text-primary"
+                  >
+                    {t.privacyLink}
+                  </Link>
+                </HoverCardTrigger>
+                <HoverCardContent>
+                  <p>{t.privacypolicy}</p>
+                  <Link
+                    href="/app/legal/privacy"
+                    target="_blank"
+                    className="text-blue-500 underline hover:text-blue-700 dark:hover:text-blue-400"
+                  >
+                    {t.learnmore}
+                  </Link>
+                </HoverCardContent>
+              </HoverCard>
+            </div>
+            <div>
+              {t.haveAccount}{" "}
+              <Link
+                href="/auth/login"
+                className="underline underline-offset-4 hover:text-primary"
+              >
+                {t.login}
+              </Link>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
   );
 }

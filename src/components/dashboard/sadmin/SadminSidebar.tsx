@@ -43,7 +43,7 @@ const data = {
       icon: Gauge,
     },
     {
-      name: "Subscriptions",
+      name: "Subscribed users",
       url: "/dashboard/sadmin/subscriptions",
       icon: CreditCard,
     },

@@ -10,10 +10,11 @@ export const translations = {
       loginButton: "Login",
       noAccount: "Don't have an account?",
       register: "Register here",
+      quote:
+        "It provides a streamlined Business Management System that cuts out paperwork and makes handling complex calculations much simpler.",
+      quotee: "Kenean Alemayhu",
     },
     register: {
-      title: "Register",
-      description: "Enter your information below to register",
       personalInfo: {
         title: "Personal Information",
         description: "Enter your personal information to register",
@@ -38,7 +39,7 @@ export const translations = {
       haveAccount: "Already have an account?",
       login: "Login here",
       termsofservice:
-        "Terms of Service Use requires a valid subscription. Unauthorized access, copying, or modification is prohibited. Data is secured, but the software is provided &quot;as is.&quot; Learn more",
+        "Terms of Service Use requires a valid subscription. Unauthorized access, copying, or modification is prohibited. Data is secured, but the software is provided as is. Learn more",
       privacypolicy:
         "Privacy Policy We respect your data. Business data remains yours; system data belongs to us. We use anonymous data for improvements. Industry-standard security measures are in place. Learn more",
       learnmore: "Learn more",
@@ -70,6 +71,9 @@ export const translations = {
       loginButton: "ይግቡ",
       noAccount: "አካውንት የለዎትም?",
       register: "ይመዝገቡ",
+      quote:
+        "የተቀናጀ የንግድ ሥርዓት በማቅረብ የወረቀት ሥራን ይቀንሳል እና ውስብስብ ስሌቶችን በቀላሉ እንድንይዝ ያደርገናል።",
+      quotee: "ከነአን አለማየሁ"
     },
     register: {
       title: "ይመዝገቡ",
