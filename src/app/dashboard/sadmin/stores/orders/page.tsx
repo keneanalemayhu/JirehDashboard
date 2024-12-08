@@ -1,5 +1,5 @@
-import { AppSidebar } from "@/components/dashboard/sales/SalesSidebar";
-import { NavActions } from "@/components/dashboard/sales/SalesNavAction";
+import { AppSidebar } from "@/components/dashboard/admin/AdminSidebar";
+import { NavActions } from "@/components/dashboard/admin/AdminNavAction";
 import { Separator } from "@/components/ui/separator";
 import {
   SidebarInset,
@@ -16,7 +16,7 @@ export default function Home() {
           <div className="flex items-center gap-2 px-4">
             <SidebarTrigger className="-ml-1" />
             <Separator orientation="vertical" className="mr-2 h-4" />
-            <p>Sales Dashboard</p>
+            <p>JirehDashboard</p>
           </div>
           <div className="ml-auto px-3">
             <NavActions />

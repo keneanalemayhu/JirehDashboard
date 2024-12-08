@@ -5,9 +5,15 @@ Jireh-dashboard/
 ├── src/
 │   ├── app/
 │   │   └── auth/
+│   │   │   ├── forgot-password/
+│   │   │   │   └── page.tsx
 │   │   │   ├── login/
 │   │   │   │   └── page.tsx
 │   │   │   ├── register/
+│   │   │   │   └── page.tsx
+│   │   │   ├── reset-password/
+│   │   │   │   └── page.tsx
+│   │   │   ├── subscription/
 │   │   │   │   └── page.tsx
 │   │   │   └── layout.tsx
 │   │   └── dashboard/
@@ -22,23 +28,51 @@ Jireh-dashboard/
 │   │   │   │   │   └── page.tsx
 │   │   │   │   ├── orders/
 │   │   │   │   │   └── page.tsx
+│   │   │   │   ├── profile/
+│   │   │   │   │   └── page.tsx
 │   │   │   │   ├── users/
+│   │   │   │   │   └── page.tsx
+│   │   │   │   └── layout.tsx
+│   │   │   │   └── page.tsx
+│   │   │   ├── sadmin/
+│   │   │   │   ├── stores/
+│   │   │   │   │   ├── categories/
+│   │   │   │   │   │   └── page.tsx
+│   │   │   │   │   ├── employees/
+│   │   │   │   │   │   └── page.tsx
+│   │   │   │   │   ├── items/
+│   │   │   │   │   │   └── page.tsx
+│   │   │   │   │   ├── locations/
+│   │   │   │   │   │   └── page.tsx
+│   │   │   │   │   ├── orders/
+│   │   │   │   │   │   └── page.tsx
+│   │   │   │   │   ├── users/
+│   │   │   │   │   │   └── page.tsx
+│   │   │   │   │   └── page.tsx
+│   │   │   │   ├── subscriptions/
 │   │   │   │   │   └── page.tsx
 │   │   │   │   └── page.tsx
 │   │   │   ├── sales/
-│   │   │   │   ├── ordering/
+│   │   │   │   ├── order/
 │   │   │   │   │   └── page.tsx
 │   │   │   │   ├── orders/
 │   │   │   │   │   └── page.tsx
+│   │   │   │   ├── profile/
+│   │   │   │   │   └── page.tsx
+│   │   │   │   └── layout.tsx
 │   │   │   │   └── page.tsx
 │   │   │   ├── warehouse/
 │   │   │   │   ├── items/
 │   │   │   │   │   └── page.tsx
 │   │   │   │   ├── orders/
 │   │   │   │   │   └── page.tsx
+│   │   │   │   ├── profile/
+│   │   │   │   │   └── page.tsx
+│   │   │   │   └── layout.tsx
 │   │   │   │   └── page.tsx
 │   │   │   └── page.tsx
 │   │   ├── fonts/
+│   │   ├── legal/
 │   │   ├── globals.css
 │   │   ├── layout.tsx
 │   │   ├── page.tsx
@@ -73,17 +107,29 @@ Jireh-dashboard/
 │   │   │   │   │   └── OrderTable.tsx
 │   │   │   │   ├── users/
 │   │   │   │   │   └── UserTable.tsx
-│   │   │   │   └── page.tsx
+│   │   │   │   ├── AdminNavAction.tsx
+│   │   │   │   ├── AdminNavMain.tsx
+│   │   │   │   ├── AdminNavProjects.tsx
+│   │   │   │   ├── AdminNavUser.tsx
+│   │   │   │   ├── AdminSidebar.tsx
+│   │   │   │   └── AdminTeamSwitcher.tsx
+│   │   │   ├── sadmin/
+│   │   │   │   ├── Stores/
+│   │   │   │   │   └── StoresTable.tsx
+│   │   │   │   ├── Subscriptions/
+│   │   │   │   │   └── SubscriptionsTable.tsx
+│   │   │   │   ├── SadminNavAction.tsx
+│   │   │   │   ├── SadminNavMain.tsx
+│   │   │   │   ├── SadminNavProjects.tsx
+│   │   │   │   ├── SadminNavUser.tsx
+│   │   │   │   ├── SadminSidebar.tsx
+│   │   │   │   └── SadminTeamSwitcher.tsx
 │   │   │   ├── Sales/
-│   │   │   │   ├── dashboard
+│   │   │   │   ├── order/
 │   │   │   │   ├── orders/
 │   │   │   │   │   ├── OrderForm.tsx
 │   │   │   │   │   └── orderTable.tsx
 │   │   │   │   └── Sidebar.tsx
-│   │   │   ├── superadmin/
-│   │   │   │   ├── Sidebar.tsx
-│   │   │   │   ├── StoresTable.tsx
-│   │   │   │   └── SubscriptionsTable.tsx
 │   │   │   ├── Warehouse/
 │   │   │   │   ├── dashboard/
 │   │   │   │   ├── items/
@@ -91,7 +137,12 @@ Jireh-dashboard/
 │   │   │   │   │   └── ItemsTable.tsx
 │   │   │   │   ├── orders/
 │   │   │   │   │   └── OrdersTable.tsx
-│   │   │   │   └── Sidebar.tsx
+│   │   │   │   ├── warehouseNavAction.tsx
+│   │   │   │   ├── warehouseNavMain.tsx
+│   │   │   │   ├── warehouseNavProjects.tsx
+│   │   │   │   ├── warehouseNavUser.tsx
+│   │   │   │   ├── warehouseSidebar.tsx
+│   │   │   │   └── warehouseTeamSwitcher.tsx
 │   │   ├── legal/
 │   │   │   ├── PrivacyContent.tsx
 │   │   │   ├── PrivacyModal.tsx
