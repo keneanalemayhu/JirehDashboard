@@ -2,10 +2,8 @@
 
 import * as React from "react"
 import {
-  AudioWaveform,
   Command,
   Gauge,
-  GalleryVerticalEnd,
   ArrowUpDown,
   CirclePlus,
 } from "lucide-react";
@@ -32,19 +30,7 @@ const data = {
     {
       name: "Warehouse",
       logo: Command,
-      plan: "Free",
-      url: "/dashboard/warehouse",
-    },
-    {
-      name: "Admin",
-      logo: GalleryVerticalEnd,
-      plan: "shadcn",
-      url: "/dashboard/admin",
-    },
-    {
-      name: "Sales",
-      logo: AudioWaveform,
-      plan: "Startup",
+      plan: "Inventory Management",
       url: "/dashboard/warehouse",
     },
   ],

@@ -33,19 +33,19 @@ const data = {
     {
       name: "Admin",
       logo: GalleryVerticalEnd,
-      plan: "shadcn",
+      plan: "Management",
       url: "/dashboard/admin",
     },
     {
       name: "Sales",
       logo: AudioWaveform,
-      plan: "Startup",
+      plan: "Revenue Operations",
       url: "/dashboard/sales",
     },
     {
       name: "Warehouse",
       logo: Command,
-      plan: "Free",
+      plan: "Inventory Management",
       url: "/dashboard/warehouse",
     },
   ],
