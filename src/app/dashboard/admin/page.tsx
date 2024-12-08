@@ -2,7 +2,7 @@
 import React from "react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
-import { Download } from "lucide-react";
+
 import {
   Card,
   CardContent,
@@ -25,7 +25,6 @@ import {
 
 export default function DashboardPage() {
   const [value, setValue] = React.useState("overview");
-
   return (
     <div className="min-h-screen flex flex-col">
       <SidebarProvider>
@@ -50,6 +49,11 @@ export default function DashboardPage() {
                 <h2 className="text-2xl font-bold tracking-tight">
                   {value.charAt(0).toUpperCase() + value.slice(1)}
                 </h2>
+                
+                <div className="flex fit-col gap-3">
+                  <CalendarDateRangePicker />
+                  <Button className="w-fit">Download</Button>
+                </div>
               </div>
 
               <Tabs
@@ -57,8 +61,8 @@ export default function DashboardPage() {
                 className="space-y-4"
                 onValueChange={(value) => setValue(value)}
               >
-                <div className="flex justify-between items-center border-b">
-                  <ScrollArea className="w-[60%]">
+                <div className="border-b">
+                  <ScrollArea className="w-fit whitespace-nowrap">
                     <TabsList className="w-fit justify-start">
                       <TabsTrigger value="overview">Overview</TabsTrigger>
                       <TabsTrigger value="analytics">Analytics</TabsTrigger>
@@ -68,18 +72,7 @@ export default function DashboardPage() {
                       </TabsTrigger>
                     </TabsList>
                   </ScrollArea>
-
-                  <div className="flex items-center gap-2">
-                    <CalendarDateRangePicker />
-                    <Button size="icon" className="hidden sm:flex">
-                      Download
-                    </Button>
-                    <Button size="icon" className="sm:hidden w-10 h-10">
-                      <Download className="h-4 w-4" />
-                    </Button>
-                  </div>
                 </div>
-
                 <TabsContent value="overview" className="space-y-4">
                   <div className="grid gap-4">
                     <Card>

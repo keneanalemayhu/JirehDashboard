@@ -1,30 +1,53 @@
-import { AppSidebar } from "@/components/dashboard/admin/AdminSidebar";
-import { NavActions } from "@/components/dashboard/admin/AdminNavAction";
+"use client";
+
+import * as React from "react";
+import { AppSidebar } from "@/components/dashboard/Admin/AdminSidebar";
+import { NavActions } from "@/components/dashboard/Admin/AdminNavAction";
+import { CategoryTable } from "@/components/dashboard/Admin/categories/CategoryTable";
+import { CategoryTableSettings } from "@/components/dashboard/Admin/categories/CategoryTableSettings";
+import { CategoryTablePagination } from "@/components/dashboard/Admin/categories/CategoryTablePagination";
+import { useCategories } from "@/hooks/dashboard/admin/category";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
+import { CirclePlus } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import {
   SidebarInset,
   SidebarProvider,
   SidebarTrigger,
 } from "@/components/ui/sidebar";
+import { CategoryForm } from "@/components/dashboard/Admin/categories/CategoryForm";
 
-import { columns } from "@/components/columns";
-import { DataTable } from "@/components/data-table";
-import { UserNav } from "@/components/user-nav";
-import { taskSchema } from "@/data/schema";
+export default function CategoriesPage() {
+  const {
+    categories,
+    filterValue,
+    setFilterValue,
+    handleAddCategory,
+    handleEditCategory,
+    handleDeleteCategory,
+    isAddDialogOpen,
+    setIsAddDialogOpen,
+    isEditDialogOpen,
+    setIsEditDialogOpen,
+    isDeleteDialogOpen,
+    setIsDeleteDialogOpen,
+    editingCategory,
+    setEditingCategory,
+    columnsVisible,
+    setColumnsVisible,
+    handleSort,
+    filteredCategories,
+  } = useCategories();
 
-// Simulate a database read for tasks.
-async function getTasks() {
-  const data = await fs.readFile(
-    path.join(process.cwd(), "app/(app)/examples/tasks/data/tasks.json")
-  )
-
-  const tasks = JSON.parse(data.toString())
-
-  return z.array(taskSchema).parse(tasks)
-}
-
-
-export default function Home() {
   return (
     <SidebarProvider>
       <AppSidebar />
@@ -39,37 +62,78 @@ export default function Home() {
             <NavActions />
           </div>
         </header>
-        <div className="md:hidden">
-          <Image
-            src="/examples/tasks-light.png"
-            width={1280}
-            height={998}
-            alt="Playground"
-            className="block dark:hidden"
-          />
-          <Image
-            src="/examples/tasks-dark.png"
-            width={1280}
-            height={998}
-            alt="Playground"
-            className="hidden dark:block"
-          />
-        </div>
-        <div className="hidden h-full flex-1 flex-col space-y-8 p-8 md:flex">
-          <div className="flex items-center justify-between space-y-2">
-            <div>
-              <h2 className="text-2xl font-bold tracking-tight">
-                Welcome back!
-              </h2>
-              <p className="text-muted-foreground">
-                Here&apos;s a list of your tasks for this month!
-              </p>
+
+        <div className="flex-1 p-6">
+          <div className="flex flex-col gap-6">
+            {/* Header with Add Button */}
+            <div className="flex items-center justify-between">
+              <h1 className="text-2xl font-bold">Categories</h1>
+              <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
+                <DialogTrigger asChild>
+                  <Button>
+                    <CirclePlus className="w-4 h-4 mr-2" />
+                    Add Category
+                  </Button>
+                </DialogTrigger>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>Add New Category</DialogTitle>
+                    <DialogDescription>
+                      Enter the details for the new category.
+                    </DialogDescription>
+                  </DialogHeader>
+                  <CategoryForm onSubmit={handleAddCategory} />
+                </DialogContent>
+              </Dialog>
             </div>
-            <div className="flex items-center space-x-2">
-              <UserNav />
+
+            {/* Filter and Settings */}
+            <div className="flex items-center gap-2">
+              <Input
+                placeholder="Filter categories..."
+                className="max-w-sm"
+                value={filterValue}
+                onChange={(e) => setFilterValue(e.target.value)}
+              />
+              <CategoryTableSettings
+                columnsVisible={columnsVisible}
+                onColumnVisibilityChange={(column, visible) =>
+                  setColumnsVisible((prev) => ({ ...prev, [column]: visible }))
+                }
+              />
             </div>
+
+            {/* Table */}
+            <CategoryTable
+              categories={filteredCategories}
+              columnsVisible={columnsVisible}
+              onSort={handleSort}
+              onEdit={(category) => {
+                setEditingCategory(category);
+                setIsEditDialogOpen(true);
+              }}
+              onDelete={(category) => {
+                setEditingCategory(category);
+                setIsDeleteDialogOpen(true);
+              }}
+              isEditDialogOpen={isEditDialogOpen}
+              setIsEditDialogOpen={setIsEditDialogOpen}
+              isDeleteDialogOpen={isDeleteDialogOpen}
+              setIsDeleteDialogOpen={setIsDeleteDialogOpen}
+              editingCategory={editingCategory}
+              onEditSubmit={handleEditCategory}
+              onDeleteConfirm={handleDeleteCategory}
+            />
+
+            {/* Pagination */}
+            <CategoryTablePagination
+              totalItems={filteredCategories.length}
+              pageSize={10}
+              currentPage={1}
+              onPageChange={() => {}}
+              onPageSizeChange={() => {}}
+            />
           </div>
-          <DataTable data={tasks} columns={columns} />
         </div>
       </SidebarInset>
     </SidebarProvider>
