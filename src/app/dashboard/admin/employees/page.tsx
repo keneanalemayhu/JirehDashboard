@@ -1,13 +1,13 @@
 "use client";
 
 import * as React from "react";
-import { AppSidebar } from "@/components/dashboard/admin/AdminSidebar";
 import { Header } from "@/components/common/dashboard/admin/Header";
 import { SidebarLayout } from "@/components/common/dashboard/admin/Sidebar";
-import { LocationTable } from "@/components/dashboard/admin/locations/LocationTable";
-import { LocationTableSettings } from "@/components/dashboard/admin/locations/LocationTableSettings";
-import { LocationTablePagination } from "@/components/dashboard/admin/locations/LocationTablePagination";
-import { useLocations } from "@/hooks/dashboard/admin/location";
+import { EmployeeTable } from "@/components/dashboard/admin/employees/EmployeeTable";
+import { EmployeeTableSettings } from "@/components/dashboard/admin/employees/EmployeeTableSettings";
+import { EmployeeTablePagination } from "@/components/dashboard/admin/employees/EmployeeTablePagination";
+import { EmployeeForm } from "@/components/dashboard/admin/employees/EmployeeForm";
+import { useEmployees } from "@/hooks/dashboard/admin/employee";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { CirclePlus } from "lucide-react";
@@ -19,148 +19,135 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
-import { LocationForm } from "@/components/dashboard/admin/locations/LocationForm";
+import {
+  Employee,
+  EmployeeFormData,
+  ColumnVisibility,
+} from "@/types/dashboard/admin/employee";
 
-// Define interfaces for our component
-interface Location {
-  id: string;
-  name: string;
-  address: string;
-  phoneNumber: string;
-}
-
-interface LocationFormData {
-  name: string;
-  address: string;
-  phoneNumber: string;
-}
-
-interface ColumnsVisibility {
-  id: boolean;
-  name: boolean;
-  address: boolean;
-  phoneNumber: boolean;
-}
-
-export default function LocationsPage() {
+export default function EmployeesPage() {
   const {
-    locations,
+    employees,
     filterValue,
     setFilterValue,
-    handleAddLocation,
-    handleEditLocation,
-    handleDeleteLocation,
+    handleAddEmployee,
+    handleEditEmployee,
+    handleDeleteEmployee,
     isAddDialogOpen,
     setIsAddDialogOpen,
     isEditDialogOpen,
     setIsEditDialogOpen,
     isDeleteDialogOpen,
     setIsDeleteDialogOpen,
-    editingLocation,
-    setEditingLocation,
+    editingEmployee,
+    setEditingEmployee,
     columnsVisible,
     setColumnsVisible,
     handleSort,
-    filteredLocations,
-  } = useLocations();
+    filteredEmployees,
+  } = useEmployees();
 
-  // Use the locations array to display total count
-  const totalLocations = locations?.length || 0;
+  // Calculate total employees
+  const totalEmployees = employees?.length || 0;
 
-  const handleEditSubmit = (data: LocationFormData) => {
-    if (editingLocation) {
-      handleEditLocation({ ...data, id: editingLocation.id });
+  const handleEditSubmit = (data: EmployeeFormData) => {
+    if (editingEmployee) {
+      handleEditEmployee({
+        ...data,
+        id: editingEmployee.id,
+      });
     }
   };
 
   return (
-    <SidebarProvider>
-      <AppSidebar />
-      <SidebarInset>
-        <Header />
-
-        <div className="flex-1 p-6">
-          <div className="flex flex-col gap-6">
-            {/* Header with Add Button */}
-            <div className="flex items-center justify-between">
-              <div>
-                <h1 className="text-2xl font-bold">Locations</h1>
-                <p className="text-sm text-gray-500">
-                  Total locations: {totalLocations}
-                </p>
-              </div>
-              <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
-                <DialogTrigger asChild>
-                  <Button>
-                    <CirclePlus className="w-4 h-4 mr-2" />
-                    Add Location
-                  </Button>
-                </DialogTrigger>
-                <DialogContent>
-                  <DialogHeader>
-                    <DialogTitle>Add New Location</DialogTitle>
-                    <DialogDescription>
-                      Enter the details for the new location.
-                    </DialogDescription>
-                  </DialogHeader>
-                  <LocationForm onSubmit={handleAddLocation} />
-                </DialogContent>
-              </Dialog>
+    <SidebarLayout>
+      <Header />
+      <div className="flex-1 p-6">
+        <div className="flex flex-col gap-6">
+          {/* Header with Add Button */}
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-2xl font-bold">Employees</h1>
+              <p className="text-sm text-gray-500">
+                Total employees: {totalEmployees}
+              </p>
             </div>
+            <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
+              <DialogTrigger asChild>
+                <Button>
+                  <CirclePlus className="w-4 h-4 mr-2" />
+                  Add Employee
+                </Button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Add New Employee</DialogTitle>
+                  <DialogDescription>
+                    Enter the details for the new employee.
+                  </DialogDescription>
+                </DialogHeader>
+                <EmployeeForm onSubmit={handleAddEmployee} />
+              </DialogContent>
+            </Dialog>
+          </div>
 
-            {/* Filter and Settings */}
-            <div className="flex items-center gap-2">
-              <Input
-                placeholder="Filter locations..."
-                className="max-w-sm"
-                value={filterValue}
-                onChange={(e) => setFilterValue(e.target.value)}
-              />
-              <LocationTableSettings
-                columnsVisible={columnsVisible as ColumnsVisibility}
-                onColumnVisibilityChange={(
-                  column: keyof ColumnsVisibility,
-                  visible: boolean
-                ) =>
-                  setColumnsVisible((prev) => ({ ...prev, [column]: visible }))
-                }
-              />
-            </div>
-
-            {/* Table */}
-            <LocationTable
-              locations={filteredLocations}
-              columnsVisible={columnsVisible}
-              onSort={handleSort}
-              onEdit={(location: Location) => {
-                setEditingLocation(location);
-                setIsEditDialogOpen(true);
-              }}
-              onDelete={(location: Location) => {
-                setEditingLocation(location);
-                setIsDeleteDialogOpen(true);
-              }}
-              isEditDialogOpen={isEditDialogOpen}
-              setIsEditDialogOpen={setIsEditDialogOpen}
-              isDeleteDialogOpen={isDeleteDialogOpen}
-              setIsDeleteDialogOpen={setIsDeleteDialogOpen}
-              editingLocation={editingLocation}
-              onEditSubmit={handleEditSubmit}
-              onDeleteConfirm={handleDeleteLocation}
+          {/* Filter and Settings */}
+          <div className="flex items-center gap-2">
+            <Input
+              placeholder="Filter employees..."
+              className="max-w-sm"
+              value={filterValue}
+              onChange={(e) => setFilterValue(e.target.value)}
             />
-
-            {/* Pagination */}
-            <LocationTablePagination
-              totalItems={filteredLocations.length}
-              pageSize={10}
-              currentPage={1}
-              onPageChange={() => {}}
-              onPageSizeChange={() => {}}
+            <EmployeeTableSettings
+              columnsVisible={columnsVisible as ColumnVisibility}
+              onColumnVisibilityChange={(
+                column: keyof ColumnVisibility,
+                visible: boolean
+              ) =>
+                setColumnsVisible((prev) => ({ ...prev, [column]: visible }))
+              }
             />
           </div>
+
+          {/* Table */}
+          <EmployeeTable
+            employees={filteredEmployees ?? []}
+            columnsVisible={columnsVisible}
+            onSort={handleSort}
+            onEdit={(employee: Employee) => {
+              setEditingEmployee({
+                ...employee,
+                isActive: employee.isActive ?? true,
+              });
+              setIsEditDialogOpen(true);
+            }}
+            onDelete={(employee: Employee) => {
+              setEditingEmployee({
+                ...employee,
+                isActive: employee.isActive ?? true,
+              });
+              setIsDeleteDialogOpen(true);
+            }}
+            isEditDialogOpen={isEditDialogOpen}
+            setIsEditDialogOpen={setIsEditDialogOpen}
+            isDeleteDialogOpen={isDeleteDialogOpen}
+            setIsDeleteDialogOpen={setIsDeleteDialogOpen}
+            editingEmployee={editingEmployee}
+            onEditSubmit={handleEditSubmit}
+            onDeleteConfirm={handleDeleteEmployee}
+          />
+
+          {/* Pagination */}
+          <EmployeeTablePagination
+            totalItems={filteredEmployees?.length ?? 0}
+            pageSize={10}
+            currentPage={1}
+            onPageChange={() => {}}
+            onPageSizeChange={() => {}}
+          />
         </div>
-      </SidebarInset>
-    </SidebarProvider>
+      </div>
+    </SidebarLayout>
   );
 }
