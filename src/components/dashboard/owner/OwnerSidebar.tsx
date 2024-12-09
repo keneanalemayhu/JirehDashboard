@@ -1,6 +1,6 @@
-"use client"
+"use client";
 
-import * as React from "react"
+import * as React from "react";
 import {
   AudioWaveform,
   Command,
@@ -11,7 +11,6 @@ import {
   ListOrdered,
   BookUser,
 } from "lucide-react";
-
 import { NavMain } from "@/components/dashboard/owner/OwnerNavMain";
 import { NavUser } from "@/components/dashboard/owner/OwnerNavUser";
 import { NavProjects } from "@/components/dashboard/owner/OwnerNavProjects";
@@ -22,98 +21,103 @@ import {
   SidebarFooter,
   SidebarHeader,
   SidebarRail,
-} from "@/components/ui/sidebar"
-
-// This is sample data.
-const data = {
-  user: {
-    name: "shadcn",
-    email: "m@example.com",
-    avatar: "/avatars/shadcn.jpg",
-  },
-  teams: [
-    {
-      name: "Owner",
-      logo: BookUser,
-      plan: "Management",
-      url: "/dashboard/owner",
-    },
-    {
-      name: "Admin",
-      logo: GalleryVerticalEnd,
-      plan: "Management",
-      url: "/dashboard/admin",
-    },
-    {
-      name: "Sales",
-      logo: AudioWaveform,
-      plan: "Revenue Operations",
-      url: "/dashboard/sales",
-    },
-    {
-      name: "Warehouse",
-      logo: Command,
-      plan: "Inventory Management",
-      url: "/dashboard/warehouse",
-    },
-  ],
-  projects: [
-    {
-      name: "Overview",
-      url: "/dashboard/owner/",
-      icon: Gauge,
-    },
-    {
-      name: "Orders",
-      url: "/dashboard/owner/orders",
-      icon: ListOrdered,
-    },
-  ],
-  navMain: [
-    {
-      title: "Manage",
-      url: "#",
-      icon: Wrench,
-      isActive: true,
-      items: [
-        {
-          title: "Locations",
-          url: "/dashboard/owner/locations",
-        },
-        {
-          title: "Categories",
-          url: "/dashboard/owner/categories",
-        },
-        {
-          title: "Items",
-          url: "/dashboard/owner/items",
-        },
-        {
-          title: "Employees",
-          url: "/dashboard/owner/employees",
-        },
-        {
-          title: "Users",
-          url: "/dashboard/owner/users",
-        },
-      ],
-    },
-    {
-      title: "Settings",
-      url: "#",
-      icon: Settings2,
-      isactive: true,
-      items: [
-        {
-          title: "Profile",
-          url: "/dashboard/owner/profile",
-        },
-      ],
-    },
-  ],
-};
+} from "@/components/ui/sidebar";
+import { useLanguage } from "@/components/context/LanguageContext";
+import { translations } from "@/translations/dashboard/owner";
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
+  const { language } = useLanguage();
+  const t = translations[language].dashboard.owner.sidebar;
+
+  // This is sample data with translations
+  const data = {
+    user: {
+      name: "shadcn",
+      email: "m@example.com",
+      avatar: "/avatars/shadcn.jpg",
+    },
+    teams: [
+      {
+        name: t.teams.owner,
+        logo: BookUser,
+        plan: t.teams.ownerPlan,
+        url: "/dashboard/owner",
+      },
+      {
+        name: t.teams.admin,
+        logo: GalleryVerticalEnd,
+        plan: t.teams.adminPlan,
+        url: "/dashboard/admin",
+      },
+      {
+        name: t.teams.sales,
+        logo: AudioWaveform,
+        plan: t.teams.salesPlan,
+        url: "/dashboard/sales",
+      },
+      {
+        name: t.teams.warehouse,
+        logo: Command,
+        plan: t.teams.warehousePlan,
+        url: "/dashboard/warehouse",
+      },
+    ],
+    projects: [
+      {
+        name: t.projects.overview,
+        url: "/dashboard/owner/",
+        icon: Gauge,
+      },
+      {
+        name: t.projects.orders,
+        url: "/dashboard/owner/orders",
+        icon: ListOrdered,
+      },
+    ],
+    navMain: [
+      {
+        title: t.manage.title,
+        url: "#",
+        icon: Wrench,
+        isActive: true,
+        items: [
+          {
+            title: t.manage.locations,
+            url: "/dashboard/owner/locations",
+          },
+          {
+            title: t.manage.categories,
+            url: "/dashboard/owner/categories",
+          },
+          {
+            title: t.manage.items,
+            url: "/dashboard/owner/items",
+          },
+          {
+            title: t.manage.employees,
+            url: "/dashboard/owner/employees",
+          },
+          {
+            title: t.manage.users,
+            url: "/dashboard/owner/users",
+          },
+        ],
+      },
+      {
+        title: t.settingsSection.title,
+        url: "#",
+        icon: Settings2,
+        isactive: true,
+        items: [
+          {
+            title: t.settingsSection.profile,
+            url: "/dashboard/owner/profile",
+          },
+        ],
+      },
+    ],
+  };
+
   return (
     <Sidebar collapsible="icon" {...props}>
       <SidebarHeader>

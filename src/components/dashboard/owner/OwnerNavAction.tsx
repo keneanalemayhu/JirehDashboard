@@ -2,10 +2,13 @@
 import React, { useState, useEffect } from "react";
 import { Sun, Moon, Languages } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useLanguage } from "@/components/context/LanguageContext";
+import { translations } from "@/translations/dashboard/owner/index";
 
 export function NavActions() {
   const [isDarkTheme, setIsDarkTheme] = useState(false);
-  const [language, setLanguage] = useState("en");
+  const { language, toggleLanguage } = useLanguage();
+  const t = translations[language].dashboard?.owner?.nav || {};
 
   // Initialize theme from localStorage on component mount
   useEffect(() => {
@@ -37,12 +40,6 @@ export function NavActions() {
     }
   };
 
-  const toggleLanguage = () => {
-    setLanguage(language === "en" ? "am" : "en");
-    // You might want to persist language preference similarly:
-    // localStorage.setItem("language", language === "en" ? "am" : "en");
-  };
-
   return (
     <div className="flex items-center gap-2 text-sm">
       <Button
@@ -50,6 +47,7 @@ export function NavActions() {
         size="icon"
         className="h-7 w-7"
         onClick={toggleTheme}
+        aria-label={t.toggleTheme || "Toggle theme"}
       >
         {isDarkTheme ? (
           <Sun className="h-4 w-4" />
@@ -62,6 +60,7 @@ export function NavActions() {
         size="icon"
         className="h-7 w-7"
         onClick={toggleLanguage}
+        aria-label={t.toggleLanguage || "Toggle language"}
       >
         <Languages className="h-4 w-4" />
       </Button>

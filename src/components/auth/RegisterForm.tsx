@@ -20,7 +20,7 @@ import {
 } from "@/components/ui/hover-card";
 import { useTheme } from "next-themes";
 import { useLanguage } from "@/components/context/LanguageContext";
-import { translations } from "@/translations";
+import { translations } from "@/translations/auth";
 import { Icons } from "@/components/common/Icons";
 
 export function RegisterForm() {
@@ -251,7 +251,9 @@ export function RegisterForm() {
                 </Label>
                 <Select>
                   <SelectTrigger className="w-full">
-                    <SelectValue placeholder={t.businessInfo.businessTypePlaceholder} />
+                    <SelectValue
+                      placeholder={t.businessInfo.businessTypePlaceholder}
+                    />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="retail">Retail</SelectItem>
@@ -267,8 +269,7 @@ export function RegisterForm() {
 
           <div className="text-center text-sm text-muted-foreground space-y-2">
             <div>
-              {t.terms}{" "}
-              <br />
+              {t.terms} <br />
               <HoverCard>
                 <HoverCardTrigger asChild>
                   <Link

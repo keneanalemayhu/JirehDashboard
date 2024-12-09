@@ -10,7 +10,7 @@ import {
   useLanguage,
   LanguageProvider,
 } from "@/components/context/LanguageContext";
-import { translations } from "@/translations";
+import { translations } from "@/translations/auth";
 import { useState } from "react";
 import { Icons } from "@/components/common/Icons";
 

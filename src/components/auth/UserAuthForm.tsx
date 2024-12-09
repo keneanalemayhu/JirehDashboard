@@ -20,7 +20,7 @@ import {
   useLanguage,
   LanguageProvider,
 } from "@/components/context/LanguageContext";
-import { translations } from "@/translations";
+import { translations } from "@/translations/auth";
 
 interface UserAuthFormProps extends React.HTMLAttributes<HTMLDivElement> {}
 

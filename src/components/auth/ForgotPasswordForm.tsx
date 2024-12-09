@@ -18,7 +18,7 @@ import {
   useLanguage,
   LanguageProvider,
 } from "@/components/context/LanguageContext";
-import { translations } from "@/translations";
+import { translations } from "@/translations/auth";
 import { useState } from "react";
 
 function ForgotPasswordFormContent() {

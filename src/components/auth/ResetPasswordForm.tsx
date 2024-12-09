@@ -15,8 +15,11 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useTheme } from "next-themes";
 import { cn } from "@/lib/utils";
-import { useLanguage, LanguageProvider } from "@/components/context/LanguageContext";
-import { translations } from "@/translations";
+import {
+  useLanguage,
+  LanguageProvider,
+} from "@/components/context/LanguageContext";
+import { translations } from "@/translations/auth";
 import { useState } from "react";
 
 function ResetPasswordFormContent() {

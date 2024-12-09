@@ -5,7 +5,6 @@ import {
   User,
   LogOut,
 } from "lucide-react"
-
 import {
   Avatar,
   AvatarFallback,
@@ -26,6 +25,8 @@ import {
   SidebarMenuItem,
   useSidebar,
 } from "@/components/ui/sidebar"
+import { useLanguage } from "@/components/context/LanguageContext"
+import { translations } from "@/translations/dashboard/owner"
 
 export function NavUser({
   user,
@@ -37,6 +38,8 @@ export function NavUser({
   }
 }) {
   const { isMobile } = useSidebar()
+  const { language } = useLanguage()
+  const t = translations[language].dashboard.owner.sidebar.userMenu
 
   return (
     <SidebarMenu>
@@ -80,14 +83,14 @@ export function NavUser({
             <DropdownMenuSeparator />
             <DropdownMenuGroup>
               <DropdownMenuItem>
-                <User />
-                Account
+                <User className="mr-2 h-4 w-4" />
+                {t.account}
               </DropdownMenuItem>
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
             <DropdownMenuItem>
-              <LogOut />
-              Log out
+              <LogOut className="mr-2 h-4 w-4" />
+              {t.logout}
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
