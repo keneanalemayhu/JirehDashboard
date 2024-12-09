@@ -1,9 +1,10 @@
-import { RegisterForm } from "@/components/auth/RegisterForm";
+import SubscriptionForm from "@/components/auth/SubscriptionForm";
 
-export default function Page() {
+export default function SubscriptionPage() {
   return (
-    <div className="flex h-screen w-full items-center justify-center px-4">
-      <RegisterForm />
+    <div className="container mx-auto py-10">
+      <h1 className="text-3xl font-bold text-center mb-10">Choose Your Plan</h1>
+      <SubscriptionForm />
     </div>
-  )
+  );
 }

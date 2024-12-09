@@ -8,33 +8,39 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { ChevronsUpDownIcon } from "lucide-react";
-import { Item } from "@/types/dashboard/owner/item";
+import { User } from "@/types/dashboard/owner/user";
 
-interface ItemTableHeaderProps {
+interface UserTableHeaderProps {
   columnsVisible: {
     id: boolean;
+    username: boolean;
     name: boolean;
-    price: boolean;
-    category: boolean;
+    email: boolean;
+    phone: boolean;
+    location: boolean;
+    role: boolean;
   };
-  onSort: (column: keyof Item) => void;
+  onSort: (column: keyof User) => void;
 }
 
 type ColumnConfig = {
-  key: keyof Omit<Item, "isHidden">;
+  key: keyof Omit<User, "password">;
   label: string;
   width?: string;
 };
 
-export function ItemTableHeader({
+export function UserTableHeader({
   columnsVisible,
   onSort,
-}: ItemTableHeaderProps) {
+}: UserTableHeaderProps) {
   const columns: ColumnConfig[] = [
     { key: "id", label: "ID", width: "w-[100px]" },
+    { key: "username", label: "Username" },
     { key: "name", label: "Name" },
-    { key: "price", label: "Price" },
-    { key: "category", label: "Category" },
+    { key: "email", label: "Email" },
+    { key: "phone", label: "Phone" },
+    { key: "location", label: "Location" },
+    { key: "role", label: "Role", width: "w-[120px]" },
   ];
 
   const renderSortableHeader = (column: ColumnConfig) => (

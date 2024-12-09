@@ -6,14 +6,11 @@
 export interface Item {
   id: string;
   name: string;
-  description: string;
-  location: string;
+  price: string;
+  category: string;
   isHidden: boolean;
 }
 
-/**
- * Form-related types
- */
 export type ItemFormData = Omit<Item, "id">;
 
 export interface ItemFormProps {
@@ -29,8 +26,8 @@ export type SortDirection = "asc" | "desc" | null;
 export interface ColumnVisibility {
   id: boolean;
   name: boolean;
-  description: boolean;
-  location: boolean;
+  price: boolean;
+  category: boolean;
 }
 
 export interface ItemTableProps {
@@ -76,9 +73,6 @@ export interface ItemTableSettingsProps {
   ) => void;
 }
 
-/**
- * Configuration and constants
- */
 export type ColumnKey = keyof Omit<Item, "isHidden">;
 
 export interface ColumnConfig {
@@ -90,68 +84,56 @@ export interface ColumnConfig {
 export const COLUMNS: ColumnConfig[] = [
   { key: "id", label: "ID", width: "w-[100px]" },
   { key: "name", label: "Name" },
-  { key: "description", label: "Description" },
-  { key: "location", label: "Location" },
+  { key: "price", label: "Price" },
+  { key: "category", label: "Category" },
 ];
 
 export const PAGE_SIZE_OPTIONS = [10, 20, 30, 40, 50] as const;
 
-export const locations = ["Location 1", "Location 2", "Location 3"] as const;
+export const categories = ["Category 1", "Category 2", "Category 3"] as const;
 
-export type LocationType = (typeof locations)[number];
+export type CategoryType = (typeof categories)[number];
 
-/**
- * Initial/Default Values
- */
 export const DEFAULT_PAGE_SIZE = 10;
 
 export const DEFAULT_COLUMN_VISIBILITY: ColumnVisibility = {
   id: true,
   name: true,
-  description: true,
-  location: true,
+  price: true,
+  category: true,
 };
 
 export const INITIAL_FORM_DATA: ItemFormData = {
   name: "",
-  description: "",
-  location: "",
+  price: "",
+  category: "",
   isHidden: false,
 };
 
 export const initialItems: Item[] = [
   {
-    id: "CAT-001",
+    id: "ITEM-001",
     name: "Item 1",
-    description: "Description for item 1",
-    location: "Location 1",
+    price: "9.99",
+    category: "Category 1",
     isHidden: false,
   },
   {
-    id: "CAT-002",
+    id: "ITEM-002",
     name: "Item 2",
-    description: "Description for item 2",
-    location: "Location 2",
+    price: "19.99",
+    category: "Category 2",
     isHidden: false,
   },
-  // Add more initial Items as needed
 ];
 
-/**
- * Hook return type
- */
 export interface UseItemsReturn {
-  // Data
   items: Item[];
   paginatedItems: Item[];
   filteredItems: Item[];
   editingItem: Item | null;
-
-  // State setters
   setItems: (items: Item[]) => void;
   setEditingItem: (item: Item | null) => void;
-
-  // UI state
   filterValue: string;
   setFilterValue: (value: string) => void;
   isAddDialogOpen: boolean;
@@ -160,14 +142,10 @@ export interface UseItemsReturn {
   setIsEditDialogOpen: (open: boolean) => void;
   isDeleteDialogOpen: boolean;
   setIsDeleteDialogOpen: (open: boolean) => void;
-
-  // Table state
   columnsVisible: ColumnVisibility;
   setColumnsVisible: (visibility: ColumnVisibility) => void;
   pageSize: number;
   currentPage: number;
-
-  // Handlers
   handleSort: (column: keyof Item) => void;
   handleAddItem: (data: ItemFormData) => void;
   handleEditItem: (data: ItemFormData) => void;

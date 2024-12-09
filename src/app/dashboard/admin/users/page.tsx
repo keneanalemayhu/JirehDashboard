@@ -1,12 +1,13 @@
 "use client";
 
 import * as React from "react";
-import { AppSidebar } from "@/components/dashboard/admin/AdminSidebar";
 import { Header } from "@/components/common/dashboard/admin/Header";
-import { LocationTable } from "@/components/dashboard/admin/locations/LocationTable";
-import { LocationTableSettings } from "@/components/dashboard/admin/locations/LocationTableSettings";
-import { LocationTablePagination } from "@/components/dashboard/admin/locations/LocationTablePagination";
-import { useLocations } from "@/hooks/dashboard/admin/location";
+import { SidebarLayout } from "@/components/common/dashboard/admin/Sidebar";
+import { UserTable } from "@/components/dashboard/admin/users/UserTable";
+import { UserTableSettings } from "@/components/dashboard/admin/users/UserTableSettings";
+import { UserTablePagination } from "@/components/dashboard/admin/users/UserTablePagination";
+import { UserForm } from "@/components/dashboard/admin/users/UserForm";
+import { useUsers } from "@/hooks/dashboard/admin/user";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { CirclePlus } from "lucide-react";
@@ -18,148 +19,121 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
-import { LocationForm } from "@/components/dashboard/admin/locations/LocationForm";
+import {
+  User,
+  UserFormData,
+  ColumnVisibility,
+} from "@/types/dashboard/owner/user";
 
-// Define interfaces for our component
-interface Location {
-  id: string;
-  name: string;
-  address: string;
-  phoneNumber: string;
-}
-
-interface LocationFormData {
-  name: string;
-  address: string;
-  phoneNumber: string;
-}
-
-interface ColumnsVisibility {
-  id: boolean;
-  name: boolean;
-  address: boolean;
-  phoneNumber: boolean;
-}
-
-export default function LocationsPage() {
+export default function UsersPage() {
   const {
-    locations,
+    users,
     filterValue,
     setFilterValue,
-    handleAddLocation,
-    handleEditLocation,
-    handleDeleteLocation,
+    handleAddUser,
+    handleEditUser,
+    handleDeleteUser,
     isAddDialogOpen,
     setIsAddDialogOpen,
     isEditDialogOpen,
     setIsEditDialogOpen,
     isDeleteDialogOpen,
     setIsDeleteDialogOpen,
-    editingLocation,
-    setEditingLocation,
+    editingUser,
+    setEditingUser,
     columnsVisible,
     setColumnsVisible,
     handleSort,
-    filteredLocations,
-  } = useLocations();
+    filteredUsers,
+  } = useUsers();
 
-  // Use the locations array to display total count
-  const totalLocations = locations?.length || 0;
+  const totalUsers = users?.length || 0;
 
-  const handleEditSubmit = (data: LocationFormData) => {
-    if (editingLocation) {
-      handleEditLocation({ ...data, id: editingLocation.id });
+  const handleEditSubmit = (data: UserFormData) => {
+    if (editingUser) {
+      handleEditUser({
+        ...data,
+      });
     }
   };
 
   return (
-    <SidebarProvider>
-      <AppSidebar />
-      <SidebarInset>
-        <Header />
-
-        <div className="flex-1 p-6">
-          <div className="flex flex-col gap-6">
-            {/* Header with Add Button */}
-            <div className="flex items-center justify-between">
-              <div>
-                <h1 className="text-2xl font-bold">Locations</h1>
-                <p className="text-sm text-gray-500">
-                  Total locations: {totalLocations}
-                </p>
-              </div>
-              <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
-                <DialogTrigger asChild>
-                  <Button>
-                    <CirclePlus className="w-4 h-4 mr-2" />
-                    Add Location
-                  </Button>
-                </DialogTrigger>
-                <DialogContent>
-                  <DialogHeader>
-                    <DialogTitle>Add New Location</DialogTitle>
-                    <DialogDescription>
-                      Enter the details for the new location.
-                    </DialogDescription>
-                  </DialogHeader>
-                  <LocationForm onSubmit={handleAddLocation} />
-                </DialogContent>
-              </Dialog>
+    <SidebarLayout>
+      <Header />
+      <div className="flex-1 p-6">
+        <div className="flex flex-col gap-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-2xl font-bold">Users</h1>
+              <p className="text-sm text-gray-500">Total users: {totalUsers}</p>
             </div>
+            <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
+              <DialogTrigger asChild>
+                <Button>
+                  <CirclePlus className="w-4 h-4 mr-2" />
+                  Add User
+                </Button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Add New User</DialogTitle>
+                  <DialogDescription>
+                    Enter the details for the new user.
+                  </DialogDescription>
+                </DialogHeader>
+                <UserForm onSubmit={handleAddUser} />
+              </DialogContent>
+            </Dialog>
+          </div>
 
-            {/* Filter and Settings */}
-            <div className="flex items-center gap-2">
-              <Input
-                placeholder="Filter locations..."
-                className="max-w-sm"
-                value={filterValue}
-                onChange={(e) => setFilterValue(e.target.value)}
-              />
-              <LocationTableSettings
-                columnsVisible={columnsVisible as ColumnsVisibility}
-                onColumnVisibilityChange={(
-                  column: keyof ColumnsVisibility,
-                  visible: boolean
-                ) =>
-                  setColumnsVisible((prev) => ({ ...prev, [column]: visible }))
-                }
-              />
-            </div>
-
-            {/* Table */}
-            <LocationTable
-              locations={filteredLocations}
-              columnsVisible={columnsVisible}
-              onSort={handleSort}
-              onEdit={(location: Location) => {
-                setEditingLocation(location);
-                setIsEditDialogOpen(true);
-              }}
-              onDelete={(location: Location) => {
-                setEditingLocation(location);
-                setIsDeleteDialogOpen(true);
-              }}
-              isEditDialogOpen={isEditDialogOpen}
-              setIsEditDialogOpen={setIsEditDialogOpen}
-              isDeleteDialogOpen={isDeleteDialogOpen}
-              setIsDeleteDialogOpen={setIsDeleteDialogOpen}
-              editingLocation={editingLocation}
-              onEditSubmit={handleEditSubmit}
-              onDeleteConfirm={handleDeleteLocation}
+          <div className="flex items-center gap-2">
+            <Input
+              placeholder="Filter users..."
+              className="max-w-sm"
+              value={filterValue}
+              onChange={(e) => setFilterValue(e.target.value)}
             />
-
-            {/* Pagination */}
-            <LocationTablePagination
-              totalItems={filteredLocations.length}
-              pageSize={10}
-              currentPage={1}
-              onPageChange={() => {}}
-              onPageSizeChange={() => {}}
+            <UserTableSettings
+              columnsVisible={columnsVisible as ColumnVisibility}
+              onColumnVisibilityChange={(
+                column: keyof ColumnVisibility,
+                visible: boolean
+              ) =>
+                setColumnsVisible((prev) => ({ ...prev, [column]: visible }))
+              }
             />
           </div>
+
+          <UserTable
+            users={filteredUsers ?? []}
+            columnsVisible={columnsVisible}
+            onSort={handleSort}
+            onEdit={(user: User) => {
+              setEditingUser(user);
+              setIsEditDialogOpen(true);
+            }}
+            onDelete={(user: User) => {
+              setEditingUser(user);
+              setIsDeleteDialogOpen(true);
+            }}
+            isEditDialogOpen={isEditDialogOpen}
+            setIsEditDialogOpen={setIsEditDialogOpen}
+            isDeleteDialogOpen={isDeleteDialogOpen}
+            setIsDeleteDialogOpen={setIsDeleteDialogOpen}
+            editingUser={editingUser}
+            onEditSubmit={handleEditSubmit}
+            onDeleteConfirm={handleDeleteUser}
+          />
+
+          <UserTablePagination
+            totalItems={filteredUsers?.length ?? 0}
+            pageSize={10}
+            currentPage={1}
+            onPageChange={() => {}}
+            onPageSizeChange={() => {}}
+          />
         </div>
-      </SidebarInset>
-    </SidebarProvider>
+      </div>
+    </SidebarLayout>
   );
 }

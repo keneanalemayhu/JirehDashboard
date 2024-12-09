@@ -1,4 +1,3 @@
-// src/hooks/dashboard/admin/item.ts
 "use client";
 
 import { useState, useMemo } from "react";
@@ -12,8 +11,8 @@ const initialItems: Item[] = [
   {
     id: "ITM-001",
     name: "Item 1",
-    description: "Description for item 1",
-    location: "Location 1",
+    price: "9.99",
+    category: "Category 1",
     isHidden: false,
   },
 ];
@@ -28,29 +27,34 @@ export function useItems(defaultItems: Item[] = initialItems) {
   const [columnsVisible, setColumnsVisible] = useState({
     id: true,
     name: true,
-    description: true,
-    location: true,
+    price: true,
+    category: true,
   });
   const [sortColumn, setSortColumn] = useState<keyof Item | null>(null);
   const [sortDirection, setSortDirection] = useState<SortDirection>(null);
   const [pageSize, setPageSize] = useState(10);
   const [currentPage, setCurrentPage] = useState(1);
 
-  // Filtering and sorting
   const filteredItems = useMemo(() => {
     const itemsToFilter = items || [];
 
-    const result = itemsToFilter.filter(
-      (item) =>
-        item.name.toLowerCase().includes(filterValue.toLowerCase()) ||
-        item.description.toLowerCase().includes(filterValue.toLowerCase()) ||
-        item.location.toLowerCase().includes(filterValue.toLowerCase())
+    const result = itemsToFilter.filter((item) =>
+      [item.name, item.price, item.category]
+        .join(" ")
+        .toLowerCase()
+        .includes(filterValue.toLowerCase())
     );
 
     if (sortColumn) {
       result.sort((a, b) => {
         const aValue = a[sortColumn];
         const bValue = b[sortColumn];
+
+        if (sortColumn === "price") {
+          return sortDirection === "asc"
+            ? parseFloat(aValue as string) - parseFloat(bValue as string)
+            : parseFloat(bValue as string) - parseFloat(aValue as string);
+        }
 
         if (sortDirection === "asc") {
           return aValue < bValue ? -1 : aValue > bValue ? 1 : 0;
@@ -64,16 +68,13 @@ export function useItems(defaultItems: Item[] = initialItems) {
     return result;
   }, [items, filterValue, sortColumn, sortDirection]);
 
-  // Pagination
   const paginatedItems = useMemo(() => {
     const startIndex = (currentPage - 1) * pageSize;
     return filteredItems.slice(startIndex, startIndex + pageSize);
   }, [filteredItems, currentPage, pageSize]);
 
-  // Fixed handlers
   const handleSort = (column: keyof Item) => {
     if (sortColumn === column) {
-      // Cycle through: asc -> desc -> null
       setSortDirection((prev) => {
         if (prev === "asc") return "desc";
         if (prev === "desc") return null;
@@ -89,14 +90,13 @@ export function useItems(defaultItems: Item[] = initialItems) {
   };
 
   const handleAddItem = (data: ItemFormData) => {
-    // Generate new ID with ITM prefix instead of CAT
     const newId = `ITM-${String(items.length + 1).padStart(3, "0")}`;
 
     const newItem: Item = {
       id: newId,
       name: data.name,
-      description: data.description,
-      location: data.location,
+      price: data.price,
+      category: data.category,
       isHidden: data.isHidden,
     };
 
@@ -107,7 +107,6 @@ export function useItems(defaultItems: Item[] = initialItems) {
   const handleEditItem = (data: ItemFormData) => {
     if (!editingItem) return;
 
-    // Update items with edited data
     setItems((prev) =>
       prev.map((item) =>
         item.id === editingItem.id
@@ -119,7 +118,6 @@ export function useItems(defaultItems: Item[] = initialItems) {
       )
     );
 
-    // Reset states
     setIsEditDialogOpen(false);
     setEditingItem(null);
   };
@@ -127,10 +125,7 @@ export function useItems(defaultItems: Item[] = initialItems) {
   const handleDeleteItem = () => {
     if (!editingItem) return;
 
-    // Remove the item
     setItems((prev) => prev.filter((item) => item.id !== editingItem.id));
-
-    // Reset states
     setIsDeleteDialogOpen(false);
     setEditingItem(null);
   };
@@ -141,7 +136,7 @@ export function useItems(defaultItems: Item[] = initialItems) {
 
   const handlePageSizeChange = (size: number) => {
     setPageSize(size);
-    setCurrentPage(1); // Reset to first page
+    setCurrentPage(1);
   };
 
   return {
@@ -163,5 +158,10 @@ export function useItems(defaultItems: Item[] = initialItems) {
     setColumnsVisible,
     handleSort,
     filteredItems,
+    paginatedItems,
+    pageSize,
+    currentPage,
+    handlePageChange,
+    handlePageSizeChange,
   };
 }

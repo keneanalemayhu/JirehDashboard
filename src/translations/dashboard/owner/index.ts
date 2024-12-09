@@ -118,7 +118,7 @@ export const translations = {
             users: "ተጠቃሚዎች",
           },
           userMenu: {
-            account: "መለያ",
+            account: "አካውንት",
             logout: "ውጣ",
           },
           settingsSection: {

@@ -1,9 +1,9 @@
 "use client";
 
 import { Table, TableBody } from "@/components/ui/table";
-import { Item } from "@/types/dashboard/owner/item";
-import { ItemTableHeader } from "./ItemTableHeader";
-import { ItemTableRow } from "./ItemTableRow";
+import { User } from "@/types/dashboard/owner/user";
+import { UserTableHeader } from "./UserTableHeader";
+import { UserTableRow } from "./UserTableRow";
 import {
   Dialog,
   DialogContent,
@@ -13,30 +13,33 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { ItemForm } from "./ItemForm";
+import { UserForm } from "./UserForm";
 
-interface ItemTableProps {
-  items: Item[];
+interface UserTableProps {
+  users: User[];
   columnsVisible: {
     id: boolean;
+    username: boolean;
     name: boolean;
-    price: boolean;
-    category: boolean;
+    email: boolean;
+    phone: boolean;
+    location: boolean;
+    role: boolean;
   };
-  onSort: (column: keyof Item) => void;
-  onEdit: (item: Item) => void;
-  onDelete: (item: Item) => void;
+  onSort: (column: keyof User) => void;
+  onEdit: (user: User) => void;
+  onDelete: (user: User) => void;
   isEditDialogOpen: boolean;
   setIsEditDialogOpen: (open: boolean) => void;
   isDeleteDialogOpen: boolean;
   setIsDeleteDialogOpen: (open: boolean) => void;
-  editingItem: Item | null;
+  editingUser: User | null;
   onEditSubmit: () => void;
   onDeleteConfirm: () => void;
 }
 
-export function ItemTable({
-  items,
+export function UserTable({
+  users,
   columnsVisible,
   onSort,
   onEdit,
@@ -45,36 +48,20 @@ export function ItemTable({
   setIsEditDialogOpen,
   isDeleteDialogOpen,
   setIsDeleteDialogOpen,
-  editingItem,
+  editingUser,
   onEditSubmit,
   onDeleteConfirm,
-}: ItemTableProps) {
-  if (!items) {
-    return (
-      <div className="border rounded-lg p-4 text-center text-gray-500">
-        Loading items...
-      </div>
-    );
-  }
-
-  if (items.length === 0) {
-    return (
-      <div className="border rounded-lg p-4 text-center text-gray-500">
-        No items found.
-      </div>
-    );
-  }
-
+}: UserTableProps) {
   return (
     <div className="border rounded-lg overflow-hidden">
       <div className="overflow-x-auto">
         <Table>
-          <ItemTableHeader columnsVisible={columnsVisible} onSort={onSort} />
+          <UserTableHeader columnsVisible={columnsVisible} onSort={onSort} />
           <TableBody>
-            {items.map((item) => (
-              <ItemTableRow
-                key={item.id}
-                item={item}
+            {users.map((user) => (
+              <UserTableRow
+                key={user.id}
+                user={user}
                 columnsVisible={columnsVisible}
                 onEdit={onEdit}
                 onDelete={onDelete}
@@ -87,13 +74,13 @@ export function ItemTable({
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Edit Item</DialogTitle>
+            <DialogTitle>Edit User</DialogTitle>
             <DialogDescription>
-              Make changes to the item details.
+              Make changes to the user details.
             </DialogDescription>
           </DialogHeader>
-          {editingItem && (
-            <ItemForm initialData={editingItem} onSubmit={onEditSubmit} />
+          {editingUser && (
+            <UserForm initialData={editingUser} onSubmit={onEditSubmit} />
           )}
         </DialogContent>
       </Dialog>
@@ -101,9 +88,9 @@ export function ItemTable({
       <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Delete Item</DialogTitle>
+            <DialogTitle>Delete User</DialogTitle>
             <DialogDescription>
-              Are you sure you want to delete this item? This action cannot be
+              Are you sure you want to delete this user? This action cannot be
               undone.
             </DialogDescription>
           </DialogHeader>
