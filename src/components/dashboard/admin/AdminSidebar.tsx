@@ -8,6 +8,7 @@ import {
   GalleryVerticalEnd,
   Settings2,
   Wrench,
+  ListOrdered,
 } from "lucide-react";
 
 import { NavMain } from "@/components/dashboard/admin/AdminNavMain";
@@ -54,6 +55,11 @@ const data = {
       name: "Overview",
       url: "/dashboard/admin/",
       icon: Gauge,
+    },
+    {
+      name: "Orders",
+      url: "/dashboard/admin/orders",
+      icon: ListOrdered,
     },
   ],
   navMain: [

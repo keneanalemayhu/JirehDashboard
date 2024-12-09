@@ -1,9 +1,9 @@
-// src/types/dashboard/admin/category.ts
+// src/types/dashboard/admin/item.ts
 
 /**
  * Core entity interfaces
  */
-export interface Category {
+export interface Item {
   id: string;
   name: string;
   description: string;
@@ -14,11 +14,11 @@ export interface Category {
 /**
  * Form-related types
  */
-export type CategoryFormData = Omit<Category, "id">;
+export type ItemFormData = Omit<Item, "id">;
 
-export interface CategoryFormProps {
-  initialData?: Partial<Category>;
-  onSubmit: (data: CategoryFormData) => void;
+export interface ItemFormProps {
+  initialData?: Partial<Item>;
+  onSubmit: (data: ItemFormData) => void;
 }
 
 /**
@@ -33,34 +33,34 @@ export interface ColumnVisibility {
   location: boolean;
 }
 
-export interface CategoryTableProps {
-  categories: Category[];
+export interface ItemTableProps {
+  items: Item[];
   columnsVisible: ColumnVisibility;
-  onSort: (column: keyof Category) => void;
-  onEdit: (category: Category) => void;
-  onDelete: (category: Category) => void;
+  onSort: (column: keyof Item) => void;
+  onEdit: (item: Item) => void;
+  onDelete: (item: Item) => void;
   isEditDialogOpen: boolean;
   setIsEditDialogOpen: (open: boolean) => void;
   isDeleteDialogOpen: boolean;
   setIsDeleteDialogOpen: (open: boolean) => void;
-  editingCategory: Category | null;
+  editingItem: Item | null;
   onEditSubmit: () => void;
   onDeleteConfirm: () => void;
 }
 
-export interface CategoryTableHeaderProps {
+export interface ItemTableHeaderProps {
   columnsVisible: ColumnVisibility;
-  onSort: (column: keyof Category) => void;
+  onSort: (column: keyof Item) => void;
 }
 
-export interface CategoryTableRowProps {
-  category: Category;
+export interface ItemTableRowProps {
+  item: Item;
   columnsVisible: ColumnVisibility;
-  onEdit: (category: Category) => void;
-  onDelete: (category: Category) => void;
+  onEdit: (item: Item) => void;
+  onDelete: (item: Item) => void;
 }
 
-export interface CategoryTablePaginationProps {
+export interface ItemTablePaginationProps {
   totalItems: number;
   pageSize: number;
   currentPage: number;
@@ -68,10 +68,10 @@ export interface CategoryTablePaginationProps {
   onPageSizeChange: (pageSize: number) => void;
 }
 
-export interface CategoryTableSettingsProps {
+export interface ItemTableSettingsProps {
   columnsVisible: ColumnVisibility;
   onColumnVisibilityChange: (
-    column: keyof Omit<Category, "isHidden">,
+    column: keyof Omit<Item, "isHidden">,
     visible: boolean
   ) => void;
 }
@@ -79,7 +79,7 @@ export interface CategoryTableSettingsProps {
 /**
  * Configuration and constants
  */
-export type ColumnKey = keyof Omit<Category, "isHidden">;
+export type ColumnKey = keyof Omit<Item, "isHidden">;
 
 export interface ColumnConfig {
   key: ColumnKey;
@@ -112,44 +112,44 @@ export const DEFAULT_COLUMN_VISIBILITY: ColumnVisibility = {
   location: true,
 };
 
-export const INITIAL_FORM_DATA: CategoryFormData = {
+export const INITIAL_FORM_DATA: ItemFormData = {
   name: "",
   description: "",
   location: "",
   isHidden: false,
 };
 
-export const initialCategories: Category[] = [
+export const initialItems: Item[] = [
   {
     id: "CAT-001",
-    name: "Category 1",
-    description: "Description for category 1",
+    name: "Item 1",
+    description: "Description for item 1",
     location: "Location 1",
     isHidden: false,
   },
   {
     id: "CAT-002",
-    name: "Category 2",
-    description: "Description for category 2",
+    name: "Item 2",
+    description: "Description for item 2",
     location: "Location 2",
     isHidden: false,
   },
-  // Add more initial categories as needed
+  // Add more initial Items as needed
 ];
 
 /**
  * Hook return type
  */
-export interface UseCategoriesReturn {
+export interface UseItemsReturn {
   // Data
-  categories: Category[];
-  paginatedCategories: Category[];
-  filteredCategories: Category[];
-  editingCategory: Category | null;
+  items: Item[];
+  paginatedItems: Item[];
+  filteredItems: Item[];
+  editingItem: Item | null;
 
   // State setters
-  setCategories: (categories: Category[]) => void;
-  setEditingCategory: (category: Category | null) => void;
+  setItems: (items: Item[]) => void;
+  setEditingItem: (item: Item | null) => void;
 
   // UI state
   filterValue: string;
@@ -168,10 +168,10 @@ export interface UseCategoriesReturn {
   currentPage: number;
 
   // Handlers
-  handleSort: (column: keyof Category) => void;
-  handleAddCategory: (data: CategoryFormData) => void;
-  handleEditCategory: (data: CategoryFormData) => void;
-  handleDeleteCategory: () => void;
+  handleSort: (column: keyof Item) => void;
+  handleAddItem: (data: ItemFormData) => void;
+  handleEditItem: (data: ItemFormData) => void;
+  handleDeleteItem: () => void;
   handlePageChange: (page: number) => void;
   handlePageSizeChange: (size: number) => void;
 }

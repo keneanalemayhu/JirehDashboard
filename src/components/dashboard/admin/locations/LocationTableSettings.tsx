@@ -8,15 +8,32 @@ import {
   DropdownMenuContent,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import {
-  CategoryTableSettingsProps,
-  COLUMNS,
-} from "@/types/dashboard/admin/category";
+import { Location, ColumnVisibility } from "@/types/dashboard/admin/location";
 
-export function CategoryTableSettings({
+interface LocationTableSettingsProps {
+  columnsVisible: ColumnVisibility;
+  onColumnVisibilityChange: (
+    column: keyof ColumnVisibility,
+    visible: boolean
+  ) => void;
+}
+
+type ColumnConfig = {
+  key: keyof ColumnVisibility;
+  label: string;
+};
+
+export function LocationTableSettings({
   columnsVisible,
   onColumnVisibilityChange,
-}: CategoryTableSettingsProps) {
+}: LocationTableSettingsProps) {
+  const columns: ColumnConfig[] = [
+    { key: "id", label: "ID" },
+    { key: "name", label: "Name" },
+    { key: "address", label: "Address" },
+    { key: "phoneNumber", label: "Phone Number" },
+  ];
+
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -26,7 +43,7 @@ export function CategoryTableSettings({
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
-        {COLUMNS.map((column) => (
+        {columns.map((column) => (
           <DropdownMenuCheckboxItem
             key={column.key}
             checked={columnsVisible[column.key]}

@@ -5,7 +5,7 @@ import Link from "next/link";
 import { Sun, Moon, Languages, Eye, EyeOff } from "lucide-react";
 import { useTheme } from "next-themes";
 import { cn } from "@/lib/utils";
-import { Icons } from "@/components/Icons";
+import { Icons } from "@/components/common/Icons";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";

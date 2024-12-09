@@ -1,25 +1,32 @@
-// src/hooks/dashboard/admin/category.ts
+"use client";
 
 import { useState, useMemo } from "react";
 import {
   Category,
   CategoryFormData,
   SortDirection,
-  initialCategories,
 } from "@/types/dashboard/admin/category";
 
-export function useCategories() {
-  // Data state
-  const [categories, setCategories] = useState<Category[]>(initialCategories);
+const initialCategories: Category[] = [
+  {
+    id: "CAT-001",
+    name: "Category 1",
+    description: "Description for category 1",
+    location: "Location 1",
+    isHidden: false,
+  },
+];
+
+export function useCategories(
+  defaultCategories: Category[] = initialCategories
+) {
+  // States
+  const [categories, setCategories] = useState<Category[]>(defaultCategories);
   const [filterValue, setFilterValue] = useState("");
   const [editingCategory, setEditingCategory] = useState<Category | null>(null);
-
-  // UI state
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-
-  // Table state
   const [columnsVisible, setColumnsVisible] = useState({
     id: true,
     name: true,
@@ -33,20 +40,27 @@ export function useCategories() {
 
   // Filtering and sorting
   const filteredCategories = useMemo(() => {
-    let result = categories.filter((category) =>
-      Object.values(category)
-        .filter((value): value is string => typeof value === "string")
-        .some((value) =>
-          value.toLowerCase().includes(filterValue.toLowerCase())
-        )
+    const categoriesToFilter = categories || [];
+
+    const result = categoriesToFilter.filter(
+      (category) =>
+        category.name.toLowerCase().includes(filterValue.toLowerCase()) ||
+        category.description
+          .toLowerCase()
+          .includes(filterValue.toLowerCase()) ||
+        category.location.toLowerCase().includes(filterValue.toLowerCase())
     );
 
     if (sortColumn) {
       result.sort((a, b) => {
-        if (a[sortColumn] < b[sortColumn])
-          return sortDirection === "asc" ? -1 : 1;
-        if (a[sortColumn] > b[sortColumn])
-          return sortDirection === "asc" ? 1 : -1;
+        const aValue = a[sortColumn];
+        const bValue = b[sortColumn];
+
+        if (sortDirection === "asc") {
+          return aValue < bValue ? -1 : aValue > bValue ? 1 : 0;
+        } else if (sortDirection === "desc") {
+          return aValue > bValue ? -1 : aValue < bValue ? 1 : 0;
+        }
         return 0;
       });
     }
@@ -60,14 +74,18 @@ export function useCategories() {
     return filteredCategories.slice(startIndex, startIndex + pageSize);
   }, [filteredCategories, currentPage, pageSize]);
 
-  // Handlers
+  // Fixed handlers
   const handleSort = (column: keyof Category) => {
     if (sortColumn === column) {
+      // Cycle through: asc -> desc -> null
       setSortDirection((prev) => {
         if (prev === "asc") return "desc";
         if (prev === "desc") return null;
         return "asc";
       });
+      if (sortDirection === null) {
+        setSortColumn(null);
+      }
     } else {
       setSortColumn(column);
       setSortDirection("asc");
@@ -75,32 +93,54 @@ export function useCategories() {
   };
 
   const handleAddCategory = (data: CategoryFormData) => {
+    // Generate new ID
+    const newId = `CAT-${String(categories.length + 1).padStart(3, "0")}`;
+
+    // Create new category with all fields
     const newCategory: Category = {
-      id: `CAT-${String(categories.length + 1).padStart(3, "0")}`,
-      ...data,
+      id: newId,
+      name: data.name,
+      description: data.description,
+      location: data.location,
+      isHidden: data.isHidden,
     };
-    setCategories([...categories, newCategory]);
+
+    // Update categories
+    setCategories((prev) => [...prev, newCategory]);
     setIsAddDialogOpen(false);
   };
 
   const handleEditCategory = (data: CategoryFormData) => {
-    if (editingCategory) {
-      setCategories(
-        categories.map((cat) =>
-          cat.id === editingCategory.id ? { ...editingCategory, ...data } : cat
-        )
-      );
-      setIsEditDialogOpen(false);
-      setEditingCategory(null);
-    }
+    if (!editingCategory) return;
+
+    // Update categories with edited data
+    setCategories((prev) =>
+      prev.map((category) =>
+        category.id === editingCategory.id
+          ? {
+              ...category,
+              ...data,
+            }
+          : category
+      )
+    );
+
+    // Reset states
+    setIsEditDialogOpen(false);
+    setEditingCategory(null);
   };
 
   const handleDeleteCategory = () => {
-    if (editingCategory) {
-      setCategories(categories.filter((cat) => cat.id !== editingCategory.id));
-      setIsDeleteDialogOpen(false);
-      setEditingCategory(null);
-    }
+    if (!editingCategory) return;
+
+    // Remove the category
+    setCategories((prev) =>
+      prev.filter((category) => category.id !== editingCategory.id)
+    );
+
+    // Reset states
+    setIsDeleteDialogOpen(false);
+    setEditingCategory(null);
   };
 
   const handlePageChange = (page: number) => {
@@ -109,7 +149,7 @@ export function useCategories() {
 
   const handlePageSizeChange = (size: number) => {
     setPageSize(size);
-    setCurrentPage(1); // Reset to first page when changing page size
+    setCurrentPage(1); // Reset to first page
   };
 
   return {
@@ -138,6 +178,8 @@ export function useCategories() {
     setColumnsVisible,
     pageSize,
     currentPage,
+    sortColumn,
+    sortDirection,
 
     // Handlers
     handleSort,

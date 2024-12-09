@@ -21,7 +21,7 @@ import {
 import { useTheme } from "next-themes";
 import { useLanguage } from "@/components/context/LanguageContext";
 import { translations } from "@/translations";
-import { Icons } from "@/components/Icons";
+import { Icons } from "@/components/common/Icons";
 
 export function RegisterForm() {
   const { theme, setTheme } = useTheme();

@@ -12,7 +12,7 @@ import {
 } from "@/components/context/LanguageContext";
 import { translations } from "@/translations";
 import { useState } from "react";
-import { Icons } from "@/components/Icons";
+import { Icons } from "@/components/common/Icons";
 
 function LoginFormContent() {
   const { theme, setTheme } = useTheme();
@@ -58,9 +58,7 @@ function LoginFormContent() {
         </div>
         <div className="relative z-20">
           <blockquote className="space-y-2">
-            <p className="text-lg">
-              {t.quote}
-            </p>
+            <p className="text-lg">{t.quote}</p>
             <footer className="text-sm">{t.quotee}</footer>
           </blockquote>
         </div>

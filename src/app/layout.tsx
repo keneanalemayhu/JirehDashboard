@@ -4,7 +4,7 @@ import "./globals.css";
 
 export const metadata: Metadata = {
   title: {
-    template: "%s | JirehDashboard",
+    template: "%s | Jireh-Dashboard",
     default: "JirehDashboard",
   },
   description: "Simplify Management, Empower Businesses, Scale with Confidence",

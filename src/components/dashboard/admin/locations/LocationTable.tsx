@@ -1,9 +1,13 @@
 "use client";
 
 import { Table, TableBody } from "@/components/ui/table";
-import { Category } from "@/types/dashboard/admin/category";
-import { CategoryTableHeader } from "./CategoryTableHeader";
-import { CategoryTableRow } from "./CategoryTableRow";
+import {
+  Location,
+  ColumnVisibility,
+  LocationFormData,
+} from "@/types/dashboard/admin/location";
+import { LocationTableHeader } from "./LocationTableHeader";
+import { LocationTableRow } from "./LocationTableRow";
 import {
   Dialog,
   DialogContent,
@@ -13,30 +17,25 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { CategoryForm } from "./CategoryForm";
+import { LocationForm } from "./LocationForm";
 
-interface CategoryTableProps {
-  categories: Category[];
-  columnsVisible: {
-    id: boolean;
-    name: boolean;
-    description: boolean;
-    location: boolean;
-  };
-  onSort: (column: keyof Category) => void;
-  onEdit: (category: Category) => void;
-  onDelete: (category: Category) => void;
+interface LocationTableProps {
+  locations: Location[];
+  columnsVisible: ColumnVisibility;
+  onSort: (column: keyof Location) => void;
+  onEdit: (location: Location) => void;
+  onDelete: (location: Location) => void;
   isEditDialogOpen: boolean;
   setIsEditDialogOpen: (open: boolean) => void;
   isDeleteDialogOpen: boolean;
   setIsDeleteDialogOpen: (open: boolean) => void;
-  editingCategory: Category | null;
-  onEditSubmit: () => void;
-  onDeleteConfirm: () => void;
+  editingLocation: Location | null;
+  onEditSubmit: (data: LocationFormData) => void;
+  onDeleteConfirm: (location: Location) => void;
 }
 
-export function CategoryTable({
-  categories,
+export function LocationTable({
+  locations,
   columnsVisible,
   onSort,
   onEdit,
@@ -45,23 +44,23 @@ export function CategoryTable({
   setIsEditDialogOpen,
   isDeleteDialogOpen,
   setIsDeleteDialogOpen,
-  editingCategory,
+  editingLocation,
   onEditSubmit,
   onDeleteConfirm,
-}: CategoryTableProps) {
+}: LocationTableProps) {
   return (
     <div className="border rounded-lg overflow-hidden">
       <div className="overflow-x-auto">
         <Table>
-          <CategoryTableHeader
+          <LocationTableHeader
             columnsVisible={columnsVisible}
             onSort={onSort}
           />
           <TableBody>
-            {categories.map((category) => (
-              <CategoryTableRow
-                key={category.id}
-                category={category}
+            {locations.map((location) => (
+              <LocationTableRow
+                key={location.id}
+                location={location}
                 columnsVisible={columnsVisible}
                 onEdit={onEdit}
                 onDelete={onDelete}
@@ -75,14 +74,14 @@ export function CategoryTable({
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Edit Category</DialogTitle>
+            <DialogTitle>Edit Location</DialogTitle>
             <DialogDescription>
-              Make changes to the category details.
+              Make changes to the location details.
             </DialogDescription>
           </DialogHeader>
-          {editingCategory && (
-            <CategoryForm
-              initialData={editingCategory}
+          {editingLocation && (
+            <LocationForm
+              initialData={editingLocation}
               onSubmit={onEditSubmit}
             />
           )}
@@ -93,9 +92,9 @@ export function CategoryTable({
       <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Delete Category</DialogTitle>
+            <DialogTitle>Delete Location</DialogTitle>
             <DialogDescription>
-              Are you sure you want to delete this category? This action cannot
+              Are you sure you want to delete this location? This action cannot
               be undone.
             </DialogDescription>
           </DialogHeader>
@@ -106,7 +105,12 @@ export function CategoryTable({
             >
               Cancel
             </Button>
-            <Button variant="destructive" onClick={onDeleteConfirm}>
+            <Button
+              variant="destructive"
+              onClick={() =>
+                editingLocation && onDeleteConfirm(editingLocation)
+              }
+            >
               Delete
             </Button>
           </DialogFooter>

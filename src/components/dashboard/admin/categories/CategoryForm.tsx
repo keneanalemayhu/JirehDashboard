@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -13,53 +13,81 @@ import {
 } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { DialogFooter } from "@/components/ui/dialog";
-import { Category } from "@/types/dashboard/admin/category";
+import { Category, locations } from "@/types/dashboard/admin/category";
 
 interface CategoryFormProps {
-  initialData?: Partial<Category>;
+  initialData?: Category;
   onSubmit: (data: Omit<Category, "id">) => void;
 }
 
 export function CategoryForm({ initialData, onSubmit }: CategoryFormProps) {
   const [formData, setFormData] = useState<Omit<Category, "id">>({
-    name: "",
-    description: "",
-    location: "",
-    isHidden: false,
+    name: initialData?.name || "",
+    description: initialData?.description || "",
+    location: initialData?.location || "",
+    isHidden: initialData?.isHidden || false,
   });
 
-  // Update form data when initialData changes
+  // Add error states
+  const [errors, setErrors] = useState({
+    name: false,
+    location: false,
+  });
+
   useEffect(() => {
     if (initialData) {
       setFormData({
-        name: initialData.name || "",
-        description: initialData.description || "",
-        location: initialData.location || "",
-        isHidden: initialData.isHidden || false,
+        name: initialData.name,
+        description: initialData.description,
+        location: initialData.location,
+        isHidden: initialData.isHidden,
       });
+      // Clear errors when initialData changes
+      setErrors({ name: false, location: false });
     }
   }, [initialData]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+
+    // Validate required fields
+    const newErrors = {
+      name: !formData.name.trim(),
+      location: !formData.location,
+    };
+
+    setErrors(newErrors);
+
+    // If there are any errors, don't submit
+    if (Object.values(newErrors).some(Boolean)) {
+      return;
+    }
+
     onSubmit(formData);
   };
-
-  const locations = ["Location 1", "Location 2", "Location 3"]; // Should come from your constants or API
 
   return (
     <form onSubmit={handleSubmit}>
       <div className="grid gap-4 py-4">
         <div className="grid grid-cols-4 items-center gap-4">
           <Label htmlFor="name" className="text-right">
-            Name
+            Name <span className="text-red-500">*</span>
           </Label>
-          <Input
-            id="name"
-            value={formData.name}
-            onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-            className="col-span-3"
-          />
+          <div className="col-span-3">
+            <Input
+              id="name"
+              value={formData.name}
+              onChange={(e) => {
+                setFormData({ ...formData, name: e.target.value });
+                setErrors({ ...errors, name: false });
+              }}
+              className={errors.name ? "border-red-500" : ""}
+              required
+            />
+            {errors.name && (
+              <p className="text-sm text-red-500 mt-1">Name is required</p>
+            )}
+          </div>
         </div>
 
         <div className="grid grid-cols-4 items-center gap-4">
@@ -78,25 +106,34 @@ export function CategoryForm({ initialData, onSubmit }: CategoryFormProps) {
 
         <div className="grid grid-cols-4 items-center gap-4">
           <Label htmlFor="location" className="text-right">
-            Location
+            Location <span className="text-red-500">*</span>
           </Label>
-          <Select
-            value={formData.location}
-            onValueChange={(value) =>
-              setFormData({ ...formData, location: value })
-            }
-          >
-            <SelectTrigger className="col-span-3">
-              <SelectValue placeholder="Select a location" />
-            </SelectTrigger>
-            <SelectContent>
-              {locations.map((location) => (
-                <SelectItem key={location} value={location}>
-                  {location}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <div className="col-span-3">
+            <Select
+              value={formData.location}
+              onValueChange={(value) => {
+                setFormData({ ...formData, location: value });
+                setErrors({ ...errors, location: false });
+              }}
+              required
+            >
+              <SelectTrigger
+                className={errors.location ? "border-red-500" : ""}
+              >
+                <SelectValue placeholder="Select a location" />
+              </SelectTrigger>
+              <SelectContent>
+                {locations.map((location) => (
+                  <SelectItem key={location} value={location}>
+                    {location}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            {errors.location && (
+              <p className="text-sm text-red-500 mt-1">Location is required</p>
+            )}
+          </div>
         </div>
 
         <div className="grid grid-cols-4 items-center gap-4">

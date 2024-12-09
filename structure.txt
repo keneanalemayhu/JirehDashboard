@@ -68,11 +68,15 @@ Jireh-dashboard/
 │   │   │   │   │   └── page.tsx
 │   │   │   │   ├── profile/
 │   │   │   │   │   └── page.tsx
-│   │   │   │   └── layout.tsx
+│   │   │   │   ├── layout.tsx
 │   │   │   │   └── page.tsx
 │   │   │   └── page.tsx
 │   │   ├── fonts/
 │   │   ├── legal/
+│   │   │   ├── privacy/
+│   │   │   │   └── page.tsx
+│   │   │   └── terms/
+│   │   │       └── page.tsx
 │   │   ├── globals.css
 │   │   ├── layout.tsx
 │   │   ├── page.tsx
@@ -106,7 +110,11 @@ Jireh-dashboard/
 │   │   │   │   │   └── ItemTable.tsx
 │   │   │   │   ├── locations/
 │   │   │   │   │   ├── LocationForm.tsx
-│   │   │   │   │   └── LocationTable.tsx
+│   │   │   │   │   ├── LocationTable.tsx
+│   │   │   │   │   ├── LocationTableHeader.tsx
+│   │   │   │   │   ├── LocationTablePagination.tsx
+│   │   │   │   │   ├── LocationTableRow.tsx
+│   │   │   │   │   ├── LocationTableSettings.tsx
 │   │   │   │   ├── orders/
 │   │   │   │   │   └── OrderTable.tsx
 │   │   │   │   ├── users/
@@ -169,7 +177,7 @@ Jireh-dashboard/
 │   │   │   ├── PrivacyModal.tsx
 │   │   │   ├── TermsContent.tsx
 │   │   │   └── ThemeModal.tsx
-│   │   ├── ui/
+│   │   └── ui/
 │   ├── hooks/
 │   │   ├── dashboard/
 │   │   │   ├── admin/
@@ -178,6 +186,7 @@ Jireh-dashboard/
 │   │   │   ├── sales/
 │   │   │   └── warehouse/
 │   │   ├── use-auth.ts
+│   │   ├── use-mobile.tsx
 │   │   ├── use-store.ts
 │   │   └── use-toast.ts
 │   ├── lib/
@@ -209,5 +218,7 @@ Jireh-dashboard/
 ├── package.json
 ├── postcss.config.js
 ├── README.md
+├── structure.mermaid
+├── structure.txt
 ├── tailwind.config.js
 └── tsconfig.json
