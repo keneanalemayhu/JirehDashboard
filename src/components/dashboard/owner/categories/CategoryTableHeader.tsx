@@ -8,36 +8,32 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { ChevronsUpDownIcon } from "lucide-react";
-import { Employee } from "@/types/dashboard/admin/employee";
+import { Category } from "@/types/dashboard/owner/category";
 
-interface EmployeeTableHeaderProps {
+interface CategoryTableHeaderProps {
   columnsVisible: {
     id: boolean;
     name: boolean;
-    phone: boolean;
-    salary: boolean;
-    status: boolean;
+    description: boolean;
     location: boolean;
   };
-  onSort: (column: keyof Employee) => void;
+  onSort: (column: keyof Category) => void;
 }
 
 type ColumnConfig = {
-  key: keyof Omit<Employee, "isActive">;
+  key: keyof Omit<Category, "isHidden">;
   label: string;
   width?: string;
 };
 
-export function EmployeeTableHeader({
+export function CategoryTableHeader({
   columnsVisible,
   onSort,
-}: EmployeeTableHeaderProps) {
+}: CategoryTableHeaderProps) {
   const columns: ColumnConfig[] = [
     { key: "id", label: "ID", width: "w-[100px]" },
     { key: "name", label: "Name" },
-    { key: "phone", label: "Phone" },
-    { key: "salary", label: "Salary", width: "w-[120px]" },
-    { key: "status", label: "Status", width: "w-[120px]" },
+    { key: "description", label: "Description" },
     { key: "location", label: "Location" },
   ];
 

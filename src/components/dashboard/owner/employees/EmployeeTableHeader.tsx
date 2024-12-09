@@ -8,7 +8,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { ChevronsUpDownIcon } from "lucide-react";
-import { Employee } from "@/types/dashboard/admin/employee";
+import { Employee } from "@/types/dashboard/owner/employee";
 
 interface EmployeeTableHeaderProps {
   columnsVisible: {

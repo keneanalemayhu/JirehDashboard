@@ -3,7 +3,7 @@
 import { TableCell, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Edit, Trash2 } from "lucide-react";
-import { Employee, EmployeeStatus } from "@/types/dashboard/admin/employee";
+import { Employee, EmployeeStatus } from "@/types/dashboard/owner/employee";
 import { cn } from "@/lib/utils";
 
 interface EmployeeTableRowProps {

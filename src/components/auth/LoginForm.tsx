@@ -81,7 +81,7 @@ function LoginFormContent() {
                   </Label>
                   <Input
                     id="email"
-                    placeholder="name@example.com"
+                    placeholder={t.loginPlaceholder}
                     type="email"
                     autoCapitalize="none"
                     autoComplete="email"

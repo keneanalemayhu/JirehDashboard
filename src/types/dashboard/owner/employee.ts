@@ -1,4 +1,4 @@
-// src/types/dashboard/admin/employee.ts
+// src/types/dashboard/owner/employee.ts
 
 /**
  * Core entity interfaces

@@ -8,37 +8,33 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { ChevronsUpDownIcon } from "lucide-react";
-import { Employee } from "@/types/dashboard/admin/employee";
+import { Location } from "@/types/dashboard/owner/location";
 
-interface EmployeeTableHeaderProps {
+interface LocationTableHeaderProps {
   columnsVisible: {
     id: boolean;
     name: boolean;
-    phone: boolean;
-    salary: boolean;
-    status: boolean;
-    location: boolean;
+    address: boolean;
+    phoneNumber: boolean;
   };
-  onSort: (column: keyof Employee) => void;
+  onSort: (column: keyof Location) => void;
 }
 
 type ColumnConfig = {
-  key: keyof Omit<Employee, "isActive">;
+  key: keyof Location;
   label: string;
   width?: string;
 };
 
-export function EmployeeTableHeader({
+export function LocationTableHeader({
   columnsVisible,
   onSort,
-}: EmployeeTableHeaderProps) {
+}: LocationTableHeaderProps) {
   const columns: ColumnConfig[] = [
     { key: "id", label: "ID", width: "w-[100px]" },
     { key: "name", label: "Name" },
-    { key: "phone", label: "Phone" },
-    { key: "salary", label: "Salary", width: "w-[120px]" },
-    { key: "status", label: "Status", width: "w-[120px]" },
-    { key: "location", label: "Location" },
+    { key: "address", label: "Address" },
+    { key: "phoneNumber", label: "Phone Number" },
   ];
 
   const renderSortableHeader = (column: ColumnConfig) => (
@@ -62,7 +58,7 @@ export function EmployeeTableHeader({
     <TableHeader>
       <TableRow>
         {columns.map((column) =>
-          columnsVisible[column.key] ? (
+          columnsVisible[column.key as keyof typeof columnsVisible] ? (
             <TableHead key={column.key} className={column.width}>
               {renderSortableHeader(column)}
             </TableHead>

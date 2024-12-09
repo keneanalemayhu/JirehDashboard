@@ -30,6 +30,18 @@ export function RegisterForm() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [name, setName] = useState("");
+  const [username, setUsername] = useState("");
+
+  const generateUsername = (fullName: string) => {
+    return fullName.toLowerCase().trim().split(/\s+/).join(".");
+  };
+
+  const handleNameChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const newName = event.target.value;
+    setName(newName);
+    setUsername(generateUsername(newName));
+  };
 
   async function onSubmit(event: React.SyntheticEvent) {
     event.preventDefault();
@@ -92,8 +104,23 @@ export function RegisterForm() {
                 <Input
                   id="name"
                   type="text"
-                  placeholder="John Doe"
+                  placeholder={t.personalInfo.namePlaceholder}
+                  value={name}
+                  onChange={handleNameChange}
                   disabled={isLoading}
+                  className="bg-zinc-800 border-zinc-700"
+                />
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="username" className="text-white">
+                  {t.personalInfo.username}
+                </Label>
+                <Input
+                  id="username"
+                  type="text"
+                  placeholder={t.personalInfo.usernamePlaceholder}
+                  value={username}
+                  disabled={true}
                   className="bg-zinc-800 border-zinc-700"
                 />
               </div>
@@ -105,7 +132,7 @@ export function RegisterForm() {
                 <Input
                   id="phone"
                   type="tel"
-                  placeholder="+251-91-234-5678"
+                  placeholder="0911121314"
                   disabled={isLoading}
                   className="bg-zinc-800 border-zinc-700"
                 />
@@ -201,7 +228,7 @@ export function RegisterForm() {
                 <Input
                   id="businessName"
                   type="text"
-                  placeholder="My Business"
+                  placeholder={t.businessInfo.businessNamePlaceholder}
                   disabled={isLoading}
                 />
               </div>
@@ -213,7 +240,7 @@ export function RegisterForm() {
                 <Input
                   id="businessPhone"
                   type="tel"
-                  placeholder="+251-91-234-5678"
+                  placeholder="0911121314"
                   disabled={isLoading}
                 />
               </div>
@@ -224,7 +251,7 @@ export function RegisterForm() {
                 </Label>
                 <Select>
                   <SelectTrigger className="w-full">
-                    <SelectValue placeholder="Select a business type" />
+                    <SelectValue placeholder={t.businessInfo.businessTypePlaceholder} />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="retail">Retail</SelectItem>
@@ -241,6 +268,7 @@ export function RegisterForm() {
           <div className="text-center text-sm text-muted-foreground space-y-2">
             <div>
               {t.terms}{" "}
+              <br />
               <HoverCard>
                 <HoverCardTrigger asChild>
                   <Link

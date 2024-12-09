@@ -1,4 +1,8 @@
 erDiagram
+    %% Owner Level
+    OWNER ||--o{ ADMIN : manages
+    OWNER ||--o{ STORE : oversees
+    
     %% Core Business Structure
     STORE ||--o{ LOCATION : has
     STORE ||--o{ USER : has
@@ -12,15 +16,24 @@ erDiagram
 
     %% Product Structure
     CATEGORY ||--o{ ITEM : contains
-    ITEM ||--o{ INVENTORY : has
     ITEM ||--o{ ORDER_ITEM : includes
     
     %% Order Structure
     ORDER ||--o{ ORDER_ITEM : contains
 
+    OWNER {
+        int id PK
+        string full_name
+        string email
+        string password_hash
+        datetime last_login
+        boolean is_active
+    }
+
     STORE {
         int id PK
         int admin_id FK
+        int owner_id FK
         string name
         string business_type
         string address
@@ -90,16 +103,10 @@ erDiagram
         string name
         string description
         decimal price
-        string sku
-        boolean is_active
-    }
-
-    INVENTORY {
-        int id PK
-        int item_id FK
-        int location_id FK
+        string barcode
         int quantity
-        datetime last_updated
+        datetime last_inventory_update
+        boolean is_active
     }
 
     ORDER {
@@ -125,6 +132,7 @@ erDiagram
 
     ADMIN {
         int id PK
+        int owner_id FK
         string full_name
         string email
         string password_hash
