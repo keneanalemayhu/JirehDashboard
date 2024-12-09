@@ -32,8 +32,25 @@ Jireh-dashboard/
 │   │   │   │   │   └── page.tsx
 │   │   │   │   ├── users/
 │   │   │   │   │   └── page.tsx
+│   │   │   │   ├── page.tsx
 │   │   │   │   └── layout.tsx
-│   │   │   │   └── page.tsx
+│   │   │   ├── owner/
+│   │   │   │   ├── categories/
+│   │   │   │   │   └── page.tsx
+│   │   │   │   ├── employees/
+│   │   │   │   │   └── page.tsx
+│   │   │   │   ├── items/
+│   │   │   │   │   └── page.tsx
+│   │   │   │   ├── locations/
+│   │   │   │   │   └── page.tsx
+│   │   │   │   ├── orders/
+│   │   │   │   │   └── page.tsx
+│   │   │   │   ├── profile/
+│   │   │   │   │   └── page.tsx
+│   │   │   │   ├── users/
+│   │   │   │   │   └── page.tsx
+│   │   │   │   ├── page.tsx
+│   │   │   │   └── layout.tsx
 │   │   │   ├── sadmin/
 │   │   │   │   ├── stores/
 │   │   │   │   │   ├── categories/
@@ -57,9 +74,7 @@ Jireh-dashboard/
 │   │   │   │   │   └── page.tsx
 │   │   │   │   ├── orders/
 │   │   │   │   │   └── page.tsx
-│   │   │   │   ├── profile/
-│   │   │   │   │   └── page.tsx
-│   │   │   │   └── layout.tsx
+│   │   │   │   ├── layout.tsx
 │   │   │   │   └── page.tsx
 │   │   │   ├── warehouse/
 │   │   │   │   ├── items/
@@ -85,10 +100,27 @@ Jireh-dashboard/
 │   │   ├── auth/
 │   │   │   ├── ForgetPasswordForm.tsx
 │   │   │   ├── LoginForm.tsx
+│   │   │   ├── ResetPasswordForm.tsx
 │   │   │   ├── RegisterForm.tsx
-│   │   │   └── ResetPasswordForm.tsx
+│   │   │   └── SubscriptionForm.tsx
 │   │   ├── common/
-│   │   │   ├── Header.tsx
+│   │   │   ├── dashboard/
+│   │   │   │   ├── admin/
+│   │   │   │   │   ├── Header.tsx
+│   │   │   │   │   └── Sidebar.tsx
+│   │   │   │   ├── owner/
+│   │   │   │   │   ├── Header.tsx
+│   │   │   │   │   └── Sidebar.tsx
+│   │   │   │   ├── sadmin/
+│   │   │   │   │   ├── Header.tsx
+│   │   │   │   │   └── Sidebar.tsx
+│   │   │   │   ├── sales/
+│   │   │   │   │   ├── Header.tsx
+│   │   │   │   │   └── Sidebar.tsx
+│   │   │   │   ├── warehouse/
+│   │   │   │   │   ├── Header.tsx
+│   │   │   │   └── └── Sidebar.tsx
+│   │   │   ├── Icons.tsx
 │   │   │   └── Loading.tsx
 │   │   ├── context/
 │   │   │   ├── LanguageContext.tsx
@@ -129,6 +161,10 @@ Jireh-dashboard/
 │   │   │   │   │   ├── DateRangePicker.tsx
 │   │   │   │   │   ├── Search.tsx
 │   │   │   │   │   └── UserNav.tsx
+│   │   │   │   ├── overview/
+│   │   │   │   │   ├── DateRangePicker.tsx
+│   │   │   │   │   ├── Search.tsx
+│   │   │   │   │   └── UserNav.tsx
 │   │   │   │   ├── users/
 │   │   │   │   │   ├── UsersForm.tsx
 │   │   │   │   │   ├── UsersTable.tsx
@@ -177,6 +213,10 @@ Jireh-dashboard/
 │   │   │   │   │   ├── DateRangePicker.tsx
 │   │   │   │   │   ├── Search.tsx
 │   │   │   │   │   └── UserNav.tsx
+│   │   │   │   ├── overview/
+│   │   │   │   │   ├── DateRangePicker.tsx
+│   │   │   │   │   ├── Search.tsx
+│   │   │   │   │   └── UserNav.tsx
 │   │   │   │   ├── users/
 │   │   │   │   │   ├── UsersForm.tsx
 │   │   │   │   │   ├── UsersTable.tsx
@@ -184,12 +224,12 @@ Jireh-dashboard/
 │   │   │   │   │   ├── UsersTablePagination.tsx
 │   │   │   │   │   ├── UsersTableRow.tsx
 │   │   │   │   │   └── UsersTableSettings.tsx
-│   │   │   │   ├── AdminNavAction.tsx
-│   │   │   │   ├── AdminNavMain.tsx
-│   │   │   │   ├── AdminNavProjects.tsx
-│   │   │   │   ├── AdminNavUser.tsx
-│   │   │   │   ├── AdminSidebar.tsx
-│   │   │   │   └── AdminTeamSwitcher.tsx
+│   │   │   │   ├── OwnerNavAction.tsx
+│   │   │   │   ├── OwnerNavMain.tsx
+│   │   │   │   ├── OwnerNavProjects.tsx
+│   │   │   │   ├── OwnerNavUser.tsx
+│   │   │   │   ├── OwnerSidebar.tsx
+│   │   │   │   └── OwnerTeamSwitcher.tsx
 │   │   │   ├── sadmin/
 │   │   │   │   ├── Stores/
 │   │   │   │   │   ├── categories/
@@ -205,6 +245,10 @@ Jireh-dashboard/
 │   │   │   │   │   ├── users/
 │   │   │   │   │   │   └── UserTable.tsx
 │   │   │   │   │   └── StoresTable.tsx
+│   │   │   │   ├── overview/
+│   │   │   │   │   ├── DateRangePicker.tsx
+│   │   │   │   │   ├── Search.tsx
+│   │   │   │   │   └── UserNav.tsx
 │   │   │   │   ├── Subscriptions/
 │   │   │   │   │   └── SubscriptionsTable.tsx
 │   │   │   │   ├── SadminNavAction.tsx
@@ -218,6 +262,10 @@ Jireh-dashboard/
 │   │   │   │   │   └── OrderForm.tsx
 │   │   │   │   ├── orders/
 │   │   │   │   │   └── orderTable.tsx
+│   │   │   │   ├── overview/
+│   │   │   │   │   ├── DateRangePicker.tsx
+│   │   │   │   │   ├── Search.tsx
+│   │   │   │   │   └── UserNav.tsx
 │   │   │   │   ├── SalesNavAction.tsx
 │   │   │   │   ├── SalesNavMain.tsx
 │   │   │   │   ├── SalesNavProjects.tsx
@@ -225,12 +273,19 @@ Jireh-dashboard/
 │   │   │   │   ├── SalesSidebar.tsx
 │   │   │   │   └── SalesTeamSwitcher.tsx
 │   │   │   ├── Warehouse/
-│   │   │   │   ├── dashboard/
 │   │   │   │   ├── items/
 │   │   │   │   │   ├── ItemForm.tsx
-│   │   │   │   │   └── ItemTable.tsx
+│   │   │   │   │   ├── ItemTable.tsx
+│   │   │   │   │   ├── ItemTableHeader.tsx
+│   │   │   │   │   ├── ItemTablePagination.tsx
+│   │   │   │   │   ├── ItemTableRow.tsx
+│   │   │   │   │   └── ItemTableSettings.tsx
 │   │   │   │   ├── orders/
 │   │   │   │   │   └── OrdersTable.tsx
+│   │   │   │   ├── overview/
+│   │   │   │   │   ├── DateRangePicker.tsx
+│   │   │   │   │   ├── Search.tsx
+│   │   │   │   │   └── UserNav.tsx
 │   │   │   │   ├── warehouseNavAction.tsx
 │   │   │   │   ├── warehouseNavMain.tsx
 │   │   │   │   ├── warehouseNavProjects.tsx
@@ -246,15 +301,17 @@ Jireh-dashboard/
 │   ├── hooks/
 │   │   ├── dashboard/
 │   │   │   ├── admin/
-│   │   │   │   └── category.ts
-│   │   │   │   └── employee.ts
-│   │   │   │   └── item.ts
-│   │   │   │   └── location.ts
+│   │   │   │   ├── category.ts
+│   │   │   │   ├── employee.ts
+│   │   │   │   ├── item.ts
+│   │   │   │   ├── location.ts
+│   │   │   │   └── users.ts
 │   │   │   ├── owner/
-│   │   │   │   └── category.ts
-│   │   │   │   └── employee.ts
-│   │   │   │   └── item.ts
-│   │   │   │   └── location.ts
+│   │   │   │   ├── category.ts
+│   │   │   │   ├── employee.ts
+│   │   │   │   ├── item.ts
+│   │   │   │   ├── location.ts
+│   │   │   │   └── users.ts
 │   │   │   ├── sadmin/
 │   │   │   ├── sales/
 │   │   │   └── warehouse/
@@ -270,7 +327,7 @@ Jireh-dashboard/
 │   │   └── store-provider.tsx
 │   ├── translations/
 │   │   └── auth/
-│   │   │   ├── index.ts
+│   │   │   └── index.ts
 │   │   └── dashboard/
 │   │   │   ├── admin/
 │   │   │   │   └── index.ts
@@ -288,12 +345,14 @@ Jireh-dashboard/
 │   │   │   │   ├── category.ts
 │   │   │   │   ├── employee.ts
 │   │   │   │   ├── item.ts
-│   │   │   │   └── location.ts
+│   │   │   │   ├── location.ts
+│   │   │   │   └── user.ts
 │   │   │   ├── owner/
 │   │   │   │   ├── category.ts
 │   │   │   │   ├── employee.ts
 │   │   │   │   ├── item.ts
-│   │   │   │   └── location.ts
+│   │   │   │   ├── location.ts
+│   │   │   │   └── user.ts
 │   │   │   ├── sadmin/
 │   │   │   ├── sales/
 │   │   │   └── warehouse/
