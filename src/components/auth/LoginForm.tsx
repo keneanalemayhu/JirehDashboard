@@ -114,6 +114,14 @@ function LoginFormContent() {
                     </button>
                   </div>
                 </div>
+                <Link
+                  href="/auth/forgot-password"
+                  className="underline underline-offset-4 hover:text-primary"
+                >
+                  <p className="px-8 text-center text-sm text-muted-foreground">
+                    {t.forgotPassword}{" "}
+                  </p>
+                </Link>
                 <Button disabled={isLoading}>
                   {isLoading && (
                     <Icons.spinner className="mr-2 h-4 w-4 animate-spin" />

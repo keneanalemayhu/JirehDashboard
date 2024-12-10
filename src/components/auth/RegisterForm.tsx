@@ -43,6 +43,14 @@ export function RegisterForm() {
     setUsername(generateUsername(newName));
   };
 
+  const handleUsernameChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    // Allow only letters, numbers, and dots
+    const newUsername = event.target.value
+      .toLowerCase()
+      .replace(/[^a-z0-9.]/g, "");
+    setUsername(newUsername);
+  };
+
   async function onSubmit(event: React.SyntheticEvent) {
     event.preventDefault();
     setIsLoading(true);
@@ -120,7 +128,8 @@ export function RegisterForm() {
                   type="text"
                   placeholder={t.personalInfo.usernamePlaceholder}
                   value={username}
-                  disabled={true}
+                  onChange={handleUsernameChange}
+                  disabled={false}
                   className="bg-zinc-800 border-zinc-700"
                 />
               </div>
