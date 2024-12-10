@@ -12,7 +12,7 @@ import {
 } from "@/components/context/LanguageContext";
 import { translations } from "@/translations/auth";
 import { useState } from "react";
-import { Icons } from "@/components/common/Icons";
+import { Icons } from "@/components/common/auth/Icons";
 
 function LoginFormContent() {
   const { theme, setTheme } = useTheme();
@@ -123,8 +123,7 @@ function LoginFormContent() {
                     <Link
                       href="/auth/forgot-password"
                       className="underline underline-offset-4 hover:text-primary"
-                    >
-                    </Link>
+                    ></Link>
                   </p>
                 </Link>
                 <Button disabled={isLoading}>
