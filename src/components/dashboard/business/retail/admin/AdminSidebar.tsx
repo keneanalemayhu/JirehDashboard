@@ -35,30 +35,30 @@ const data = {
       name: "Admin",
       logo: GalleryVerticalEnd,
       plan: "Management",
-      url: "/dashboard/admin",
+      url: "/dashboard/business/retail/admin",
     },
     {
       name: "Sales",
       logo: AudioWaveform,
       plan: "Revenue Operations",
-      url: "/dashboard/sales",
+      url: "/dashboard/business/retail/sales",
     },
     {
       name: "Warehouse",
       logo: Command,
       plan: "Inventory Management",
-      url: "/dashboard/warehouse",
+      url: "/dashboard/business/retail/warehouse",
     },
   ],
   projects: [
     {
       name: "Overview",
-      url: "/dashboard/admin/",
+      url: "/dashboard/business/retail/admin/",
       icon: Gauge,
     },
     {
       name: "Orders",
-      url: "/dashboard/admin/orders",
+      url: "/dashboard/business/retail/admin/orders",
       icon: ListOrdered,
     },
   ],
@@ -71,23 +71,23 @@ const data = {
       items: [
         {
           title: "Locations",
-          url: "/dashboard/admin/locations",
+          url: "/dashboard/business/retail/admin/locations",
         },
         {
           title: "Categories",
-          url: "/dashboard/admin/categories",
+          url: "/dashboard/business/retail/admin/categories",
         },
         {
           title: "Items",
-          url: "/dashboard/admin/items",
+          url: "/dashboard/business/retail/admin/items",
         },
         {
           title: "Employees",
-          url: "/dashboard/admin/employees",
+          url: "/dashboard/business/retail/admin/employees",
         },
         {
           title: "Users",
-          url: "/dashboard/admin/users",
+          url: "/dashboard/business/retail/admin/users",
         },
       ],
     },
@@ -99,7 +99,7 @@ const data = {
       items: [
         {
           title: "Profile",
-          url: "/dashboard/admin/profile",
+          url: "/dashboard/business/retail/admin/profile",
         },
       ],
     },

@@ -3,9 +3,9 @@
 import * as React from "react";
 import { Header } from "@/components/common/dashboard/business/retail/admin/Header";
 import { SidebarLayout } from "@/components/common/dashboard/business/retail/admin/Sidebar";
-import { UserTable } from "@/components/dashboard/admin/users/UserTable";
-import { UserTableSettings } from "@/components/dashboard/admin/users/UserTableSettings";
-import { UserTablePagination } from "@/components/dashboard/admin/users/UserTablePagination";
+import { UserTable } from "@/components/dashboard/business/retail/admin/users/UserTable";
+import { UserTableSettings } from "@/components/dashboard/business/retail/admin/users/UserTableSettings";
+import { UserTablePagination } from "@/components/dashboard/business/retail/admin/users/UserTablePagination";
 import { UserForm } from "@/components/dashboard/business/retail/admin/users/UserForm";
 import { useUsers } from "@/hooks/dashboard/business/retail/admin/user";
 import { Button } from "@/components/ui/button";
@@ -23,7 +23,7 @@ import {
   User,
   UserFormData,
   ColumnVisibility,
-} from "@/types/dashboard/business/retail/owner/user";
+} from "@/types/dashboard/business/retail/admin/user";
 
 export default function UsersPage() {
   const {

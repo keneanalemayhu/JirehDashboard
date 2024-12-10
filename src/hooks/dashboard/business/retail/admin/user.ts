@@ -6,7 +6,7 @@ import {
   UserFormData,
   SortDirection,
   Role,
-} from "@/types/dashboard/business/retail/owner/user";
+} from "@/types/dashboard/business/retail/admin/user";
 
 const initialUsers: User[] = [
   {

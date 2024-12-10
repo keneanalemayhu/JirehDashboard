@@ -41,36 +41,36 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         name: t.teams.owner,
         logo: BookUser,
         plan: t.teams.ownerPlan,
-        url: "/dashboard/owner",
+        url: "/dashboard/business/retail/owner",
       },
       {
         name: t.teams.admin,
         logo: GalleryVerticalEnd,
         plan: t.teams.adminPlan,
-        url: "/dashboard/admin",
+        url: "/dashboard/business/retail/admin",
       },
       {
         name: t.teams.sales,
         logo: AudioWaveform,
         plan: t.teams.salesPlan,
-        url: "/dashboard/sales",
+        url: "/dashboard/business/retail/sales",
       },
       {
         name: t.teams.warehouse,
         logo: Command,
         plan: t.teams.warehousePlan,
-        url: "/dashboard/warehouse",
+        url: "/dashboard/business/retail/warehouse",
       },
     ],
     projects: [
       {
         name: t.projects.overview,
-        url: "/dashboard/owner/",
+        url: "/dashboard/business/retail/owner/",
         icon: Gauge,
       },
       {
         name: t.projects.orders,
-        url: "/dashboard/owner/orders",
+        url: "/dashboard/business/retail/owner/orders",
         icon: ListOrdered,
       },
     ],
@@ -83,23 +83,23 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         items: [
           {
             title: t.manage.locations,
-            url: "/dashboard/owner/locations",
+            url: "/dashboard/business/retail/owner/locations",
           },
           {
             title: t.manage.categories,
-            url: "/dashboard/owner/categories",
+            url: "/dashboard/business/retail/owner/categories",
           },
           {
             title: t.manage.items,
-            url: "/dashboard/owner/items",
+            url: "/dashboard/business/retail/owner/items",
           },
           {
             title: t.manage.employees,
-            url: "/dashboard/owner/employees",
+            url: "/dashboard/business/retail/owner/employees",
           },
           {
             title: t.manage.users,
-            url: "/dashboard/owner/users",
+            url: "/dashboard/business/retail/owner/users",
           },
         ],
       },
@@ -111,7 +111,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         items: [
           {
             title: t.settingsSection.profile,
-            url: "/dashboard/owner/profile",
+            url: "/dashboard/business/retail/owner/profile",
           },
         ],
       },
