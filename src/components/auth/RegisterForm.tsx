@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { Sun, Moon, Languages, Eye, EyeOff } from "lucide-react";
+import { Sun, Moon, Eye, EyeOff } from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -22,10 +22,14 @@ import { useTheme } from "next-themes";
 import { useLanguage } from "@/components/context/LanguageContext";
 import { translations } from "@/translations/auth";
 import { Icons } from "@/components/common/auth/Icons";
+import { LanguageToggle } from "@/components/common/LanguageToggle";
+
+
+interface FormProps extends React.FormHTMLAttributes<HTMLFormElement> {}
 
 export function RegisterForm() {
   const { theme, setTheme } = useTheme();
-  const { language, toggleLanguage } = useLanguage();
+  const { language } = useLanguage(); // Updated to remove toggleLanguage
   const t = translations[language].register;
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -73,12 +77,8 @@ export function RegisterForm() {
             <Moon className="w-5 h-5" />
           )}
         </button>
-        <button
-          onClick={toggleLanguage}
-          className="rounded-md p-2 hover:bg-accent"
-        >
-          <Languages className="w-5 h-5" />
-        </button>
+        <LanguageToggle />{" "}
+        {/* Replace the old language toggle with the new component */}
       </div>
 
       {/* Left side - Personal Information */}

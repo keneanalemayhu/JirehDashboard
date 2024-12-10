@@ -1,22 +1,22 @@
 "use client";
 
 import Link from "next/link";
-import { Sun, Moon, Languages, Eye, EyeOff } from "lucide-react";
+import { Sun, Moon, Eye, EyeOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useTheme } from "next-themes";
-import {
-  useLanguage,
-  LanguageProvider,
-} from "@/components/context/LanguageContext";
+import { useLanguage } from "@/components/context/LanguageContext";
+import { LanguageToggle } from "@/components/common/LanguageToggle";
 import { translations } from "@/translations/auth";
 import { useState } from "react";
 import { Icons } from "@/components/common/auth/Icons";
 
+interface FormProps extends React.FormHTMLAttributes<HTMLFormElement> {}
+
 function LoginFormContent() {
   const { theme, setTheme } = useTheme();
-  const { language, toggleLanguage } = useLanguage();
+  const { language } = useLanguage();
   const t = translations[language].login;
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -43,12 +43,7 @@ function LoginFormContent() {
             <Moon className="w-5 h-5" />
           )}
         </button>
-        <button
-          onClick={toggleLanguage}
-          className="rounded-md p-2 hover:bg-accent"
-        >
-          <Languages className="w-5 h-5" />
-        </button>
+        <LanguageToggle />
       </div>
 
       {/* Left side - Dark section */}
@@ -114,18 +109,14 @@ function LoginFormContent() {
                     </button>
                   </div>
                 </div>
-                <Link
-                  href="/auth/forgot-password"
-                  className="underline underline-offset-4 hover:text-primary"
-                >
-                  <p className="px-8 text-center text-sm text-muted-foreground">
-                    {t.forgotPassword}{" "}
-                    <Link
-                      href="/auth/forgot-password"
-                      className="underline underline-offset-4 hover:text-primary"
-                    ></Link>
-                  </p>
-                </Link>
+                <p className="px-8 text-center text-sm text-muted-foreground">
+                  <Link
+                    href="/auth/forgot-password"
+                    className="underline underline-offset-4 hover:text-primary"
+                  >
+                    {t.forgotPassword}
+                  </Link>
+                </p>
                 <Button disabled={isLoading}>
                   {isLoading && (
                     <Icons.spinner className="mr-2 h-4 w-4 animate-spin" />
@@ -152,9 +143,5 @@ function LoginFormContent() {
 }
 
 export function LoginForm() {
-  return (
-    <LanguageProvider>
-      <LoginFormContent />
-    </LanguageProvider>
-  );
+  return <LoginFormContent />;
 }

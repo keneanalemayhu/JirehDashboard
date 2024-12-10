@@ -1,8 +1,7 @@
-// components/auth/ResetPasswordForm.tsx
 "use client";
 
 import Link from "next/link";
-import { Sun, Moon, Languages, Eye, EyeOff } from "lucide-react";
+import { Sun, Moon, Eye, EyeOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -15,38 +14,32 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useTheme } from "next-themes";
 import { cn } from "@/lib/utils";
-import {
-  useLanguage,
-  LanguageProvider,
-} from "@/components/context/LanguageContext";
+import { useLanguage } from "@/components/context/LanguageContext";
 import { translations } from "@/translations/auth";
 import { useState } from "react";
+import { LanguageToggle } from "@/components/common/LanguageToggle";
 
 function ResetPasswordFormContent() {
   const { theme, setTheme } = useTheme();
-  const { language, toggleLanguage } = useLanguage();
+  const { language } = useLanguage();
   const t = translations[language].resetPassword;
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   return (
     <main className="min-h-screen p-4 flex items-center justify-center bg-background dark:bg-black">
-      <div className="fixed top-4 right-4 flex space-x-4">
+      <div className="fixed top-4 right-4 flex items-center space-x-2">
         <button
           onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-          className="cursor-pointer"
+          className="rounded-md p-2 hover:bg-accent"
         >
           {theme === "dark" ? (
-            <Sun className="w-6 h-6 text-white" />
+            <Sun className="w-5 h-5" />
           ) : (
-            <Moon className="w-6 h-6" />
+            <Moon className="w-5 h-5" />
           )}
         </button>
-        <button onClick={toggleLanguage}>
-          <Languages
-            className={cn("w-6 h-6", theme === "dark" && "text-white")}
-          />
-        </button>
+        <LanguageToggle />
       </div>
 
       <Card className="w-full max-w-sm dark:bg-black dark:text-white dark:border dark:border-gray-800">
@@ -126,9 +119,5 @@ function ResetPasswordFormContent() {
 }
 
 export function ResetPasswordForm() {
-  return (
-    <LanguageProvider>
-      <ResetPasswordFormContent />
-    </LanguageProvider>
-  );
+  return <ResetPasswordFormContent />;
 }

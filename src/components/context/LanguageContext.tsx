@@ -1,33 +1,33 @@
-// app/context/LanguageContext.tsx
+// components/context/LanguageContext.tsx
 "use client";
 
 import { createContext, useContext, useState, useEffect } from "react";
 
+type Language = "en" | "am";
+
 type LanguageContextType = {
-  language: "en" | "am";
-  toggleLanguage: () => void;
+  language: Language;
+  setLanguage: (lang: Language) => void;
 };
 
-const LanguageContext = createContext<LanguageContextType | undefined>(undefined);
+const LanguageContext = createContext<LanguageContextType | undefined>(
+  undefined
+);
 
 export function LanguageProvider({ children }: { children: React.ReactNode }) {
-  // Initialize state with a function to check localStorage
-  const [language, setLanguage] = useState<"en" | "am">(() => {
-    // Only access localStorage during client-side execution
+  const [language, setLanguage] = useState<Language>(() => {
     if (typeof window !== "undefined") {
       const savedLanguage = localStorage.getItem("jireh-language");
-      return (savedLanguage === "en" || savedLanguage === "am") ? savedLanguage : "en";
+      return savedLanguage === "en" || savedLanguage === "am"
+        ? savedLanguage
+        : "en";
     }
     return "en";
   });
 
-  // Update localStorage whenever language changes
   useEffect(() => {
     localStorage.setItem("jireh-language", language);
   }, [language]);
-
-  const toggleLanguage = () =>
-    setLanguage((prev) => (prev === "en" ? "am" : "en"));
 
   // Handle hydration mismatch
   const [mounted, setMounted] = useState(false);
@@ -40,7 +40,7 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <LanguageContext.Provider value={{ language, toggleLanguage }}>
+    <LanguageContext.Provider value={{ language, setLanguage }}>
       {children}
     </LanguageContext.Provider>
   );

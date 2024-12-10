@@ -2,13 +2,14 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Check, Sun, Moon, Languages, MoveLeft } from "lucide-react";
+import { Check, Sun, Moon, MoveLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useTheme } from "next-themes";
 import {
   useLanguage,
   LanguageProvider,
 } from "@/components/context/LanguageContext";
+import { LanguageToggle } from "@/components/common/LanguageToggle";
 import { translations } from "@/translations/auth/index";
 import {
   Card,
@@ -24,7 +25,7 @@ import { Badge } from "@/components/ui/badge";
 function SubscriptionFormContent() {
   const [isYearly, setIsYearly] = useState(false);
   const { theme, setTheme } = useTheme();
-  const { language, toggleLanguage } = useLanguage();
+  const { language } = useLanguage();
   const t = translations[language].subscription;
 
   const getYearlyPrice = (monthlyPrice: number | null) => {
@@ -70,6 +71,7 @@ function SubscriptionFormContent() {
         </Link>
       </div>
 
+      {/* Theme and Language Toggles - Fixed position */}
       <div className="fixed top-4 right-4 flex items-center space-x-2 z-50">
         <button
           onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
@@ -81,12 +83,7 @@ function SubscriptionFormContent() {
             <Moon className="w-5 h-5" />
           )}
         </button>
-        <button
-          onClick={toggleLanguage}
-          className="rounded-md p-2 hover:bg-accent"
-        >
-          <Languages className="w-5 h-5" />
-        </button>
+        <LanguageToggle />
       </div>
 
       <div className="container mx-auto pt-20">
