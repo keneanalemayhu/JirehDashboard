@@ -1,5 +1,5 @@
-import { AppSidebar } from "@/components/dashboard/admin/AdminSidebar";
-import { NavActions } from "@/components/dashboard/admin/AdminNavAction";
+import { AppSidebar } from "@/components/dashboard/business/retail/admin/AdminSidebar";
+import { NavActions } from "@/components/dashboard/business/retail/admin/AdminNavAction";
 import { Separator } from "@/components/ui/separator";
 import {
   SidebarInset,

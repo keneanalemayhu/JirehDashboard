@@ -1,13 +1,7 @@
 "use client";
 
 import * as React from "react";
-import {
-  Gauge,
-  Crown,
-  CreditCard,
-  Store,
-  Settings2,
-} from "lucide-react";
+import { Gauge, Crown, CreditCard, Store, Settings2 } from "lucide-react";
 
 import { NavMain } from "@/components/dashboard/sadmin/SadminNavMain";
 import { NavUser } from "@/components/dashboard/sadmin/SadminNavUser";

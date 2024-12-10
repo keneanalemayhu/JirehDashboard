@@ -20,6 +20,11 @@ import {
 } from "@/components/context/LanguageContext";
 import { translations } from "@/translations/auth";
 import { useState } from "react";
+import { ButtonProps } from "@/components/ui/button";
+import { LabelProps } from "@/components/ui/label";
+import { InputProps } from "@/components/ui/input";
+
+interface FormProps extends React.FormHTMLAttributes<HTMLFormElement> {}
 
 function ForgotPasswordFormContent() {
   const { theme, setTheme } = useTheme();
@@ -28,7 +33,7 @@ function ForgotPasswordFormContent() {
   const [email, setEmail] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (!email) return;
 
@@ -67,8 +72,11 @@ function ForgotPasswordFormContent() {
         <CardContent>
           <form onSubmit={handleSubmit} className="grid gap-4">
             <div className="grid gap-2">
-              <Label className="dark:text-white">{t.email}</Label>
+              <Label htmlFor="email" className="dark:text-white">
+                {t.email}
+              </Label>
               <Input
+                id="email"
                 type="email"
                 placeholder="m@example.com"
                 required

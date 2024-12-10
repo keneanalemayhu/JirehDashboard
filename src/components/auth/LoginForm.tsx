@@ -120,6 +120,11 @@ function LoginFormContent() {
                 >
                   <p className="px-8 text-center text-sm text-muted-foreground">
                     {t.forgotPassword}{" "}
+                    <Link
+                      href="/auth/forgot-password"
+                      className="underline underline-offset-4 hover:text-primary"
+                    >
+                    </Link>
                   </p>
                 </Link>
                 <Button disabled={isLoading}>
