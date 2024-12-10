@@ -1,6 +1,4 @@
 Jireh-dashboard/
-├── .next/
-├── node_modules/
 ├── public/
 ├── src/
 │   ├── app/
@@ -69,7 +67,7 @@ Jireh-dashboard/
 │   │   │   │   │   │   ├── profile/
 │   │   │   │   │   │   │   └── page.tsx
 │   │   │   │   │   │   ├── layout.tsx
-│   │   │   │   │   │   └── page.tsx
+│   │   │   │   └── └── └── page.tsx
 │   │   │   ├── sadmin/
 │   │   │   │   ├── stores/
 │   │   │   │   │   ├── categories/
@@ -106,6 +104,8 @@ Jireh-dashboard/
 │   │   │   ├── RegisterForm.tsx
 │   │   │   └── SubscriptionForm.tsx
 │   │   ├── common/
+│   │   │   ├── auth/
+│   │   │   │   └── Icons.tsx
 │   │   │   ├── dashboard/
 │   │   │   │   ├── business/
 │   │   │   │   │   ├── admin/
@@ -122,7 +122,7 @@ Jireh-dashboard/
 │   │   │   │   │   └── └── Sidebar.tsx
 │   │   │   │   ├── sadmin/
 │   │   │   │   │   ├── Header.tsx
-│   │   │   │   │   └── Sidebar.tsx
+│   │   │   │   └── └── Sidebar.tsx
 │   │   ├── context/
 │   │   │   ├── LanguageContext.tsx
 │   │   │   └── ThemeContext.tsx
@@ -268,7 +268,7 @@ Jireh-dashboard/
 │   │   │   │   │   │   ├── warehouseNavProjects.tsx
 │   │   │   │   │   │   ├── warehouseNavUser.tsx
 │   │   │   │   │   │   ├── warehouseSidebar.tsx
-│   │   │   │   │   │   └── warehouseTeamSwitcher.tsx
+│   │   │   │   └── └── └── warehouseTeamSwitcher.tsx
 │   │   │   ├── sadmin/
 │   │   │   │   ├── Stores/
 │   │   │   │   │   ├── categories/
@@ -333,9 +333,9 @@ Jireh-dashboard/
 │   │   ├── auth-provider.tsx
 │   │   └── store-provider.tsx
 │   ├── translations/
-│   │   └── auth/
+│   │   ├── auth/
 │   │   │   └── index.ts
-│   │   └── dashboard/
+│   │   ├── dashboard/
 │   │   │   ├── business/
 │   │   │   │   ├── garage/
 │   │   │   │   ├── retail/
@@ -367,7 +367,7 @@ Jireh-dashboard/
 │   │   │   │   │   │   ├── location.ts
 │   │   │   │   │   │   └── user.ts
 │   │   │   │   │   ├── sales/
-│   │   │   │   │   └── warehouse/
+│   │   │   │   └── └── warehouse/
 │   │   │   └── sadmin/
 │   │   ├── auth.ts
 │   │   ├── index.ts
