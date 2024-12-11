@@ -4,31 +4,29 @@
  * Core entity interfaces
  */
 export interface Order {
-  id: string;
-  itemName: string;
+  order_id: string;
+  item_name: string;
   quantity: number;
-  unitPrice: number;
+  unit_price: number;
   subtotal: number;
-  employee: string;
-  userName: string;
-  totalAmount: number;
-  paymentStatus: PaymentStatus;
+  employee_name: string;
+  user_name: string;
+  total_amount: number;
+  payment_status: PaymentStatus;
 }
 
 export enum PaymentStatus {
-  PENDING = "Pending",
-  PAID = "Paid",
-  FAILED = "Failed",
+  PENDING = "PENDING",
+  PAID = "PAID",
+  CANCELLED = "CANCELLED",
 }
 
 /**
  * Form-related types
  */
-export type OrderFormData = Omit<Order, "id" | "subtotal" | "totalAmount">;
-
 export interface OrderFormProps {
-  initialData?: Partial<Order>;
-  onSubmit: (data: OrderFormData) => void;
+  initialData: Order;
+  onSubmit: (data: Order) => void;
 }
 
 /**
@@ -36,44 +34,23 @@ export interface OrderFormProps {
  */
 export type SortDirection = "asc" | "desc" | null;
 
-export interface ColumnVisibility {
-  orderId: boolean;
-  itemName: boolean;
-  quantity: boolean;
-  unitPrice: boolean;
-  subtotal: boolean;
-  employee: boolean;
-  userName: boolean;
-  totalAmount: boolean;
-  paymentStatus: boolean;
-}
-
 export interface ColumnConfig {
-  key: ColumnKey;
+  key: keyof Order;
   label: string;
   width?: string;
 }
 
-export type ColumnKey = keyof Omit<Order, "id" | "subtotal" | "totalAmount">;
-
 export interface OrderTableProps {
   orders: Order[];
-  columnsVisible: ColumnVisibility;
-  onEdit: (order: Order) => void;
-  isEditDialogOpen: boolean;
-  setIsEditDialogOpen: (open: boolean) => void;
-  editingOrder: Order | null;
-  onEditSubmit: () => void;
+  onSort: (column: keyof Order) => void;
+  onStatusUpdate: (order: Order) => void;
+  isDetailsDialogOpen: boolean;
+  setIsDetailsDialogOpen: (open: boolean) => void;
+  selectedOrder: Order | null;
 }
 
 export interface OrderTableHeaderProps {
-  columnsVisible: ColumnVisibility;
-}
-
-export interface OrderTableRowProps {
-  order: Order;
-  columnsVisible: ColumnVisibility;
-  onEdit: (order: Order) => void;
+  onSort: (column: keyof Order) => void;
 }
 
 export interface OrderTablePaginationProps {
@@ -85,11 +62,10 @@ export interface OrderTablePaginationProps {
 }
 
 export interface OrderTableSettingsProps {
-  columnsVisible: ColumnVisibility;
-  onColumnVisibilityChange: (
-    column: keyof ColumnVisibility,
-    visible: boolean
-  ) => void;
+  showCurrency: boolean;
+  onShowCurrencyChange: (show: boolean) => void;
+  statusFilter: string[];
+  onStatusFilterChange: (status: string) => void;
 }
 
 /**
@@ -100,23 +76,20 @@ export interface UseOrdersReturn {
   orders: Order[];
   paginatedOrders: Order[];
   filteredOrders: Order[];
-  editingOrder: Order | null;
+  selectedOrder: Order | null;
 
   // State setters
   setOrders: (orders: Order[]) => void;
-  setEditingOrder: (order: Order | null) => void;
+  setSelectedOrder: (order: Order | null) => void;
 
   // UI state
   filterValue: string;
   setFilterValue: (value: string) => void;
-  isAddDialogOpen: boolean;
-  setIsAddDialogOpen: (open: boolean) => void;
-  isEditDialogOpen: boolean;
-  setIsEditDialogOpen: (open: boolean) => void;
+  isDetailsDialogOpen: boolean;
+  setIsDetailsDialogOpen: (open: boolean) => void;
+  statusFilter: string[];
 
   // Table state
-  columnsVisible: ColumnVisibility;
-  setColumnsVisible: (visibility: ColumnVisibility) => void;
   pageSize: number;
   currentPage: number;
   sortColumn: keyof Order | null;
@@ -124,25 +97,25 @@ export interface UseOrdersReturn {
 
   // Handlers
   handleSort: (column: keyof Order) => void;
-  handleAddOrder: (data: OrderFormData) => void;
-  handleEditOrder: (data: OrderFormData) => void;
+  handleUpdatePaymentStatus: (order: Order) => void;
   handlePageChange: (page: number) => void;
   handlePageSizeChange: (size: number) => void;
+  handleStatusFilterChange: (status: string) => void;
 }
 
 /**
  * Configuration and constants
  */
 export const COLUMNS: ColumnConfig[] = [
-  { key: "orderId", label: "Order ID", width: "w-[100px]" },
-  { key: "itemName", label: "Item Name" },
-  { key: "quantity", label: "Quantity" },
-  { key: "unitPrice", label: "Unit Price" },
-  { key: "subtotal", label: "Subtotal" },
-  { key: "employee", label: "Employee" },
-  { key: "userName", label: "User Name" },
-  { key: "totalAmount", label: "Total Amount" },
-  { key: "paymentStatus", label: "Payment Status" },
+  { key: "order_id", label: "Order ID", width: "w-[120px]" },
+  { key: "item_name", label: "Item" },
+  { key: "quantity", label: "Quantity", width: "w-[100px]" },
+  { key: "unit_price", label: "Unit Price", width: "w-[120px]" },
+  { key: "subtotal", label: "Subtotal", width: "w-[120px]" },
+  { key: "employee_name", label: "Employee" },
+  { key: "user_name", label: "Seller" },
+  { key: "total_amount", label: "Total Amount", width: "w-[120px]" },
+  { key: "payment_status", label: "Payment Status", width: "w-[130px]" },
 ];
 
 export const PAGE_SIZE_OPTIONS = [10, 20, 30, 40, 50] as const;
@@ -150,48 +123,21 @@ export const PAGE_SIZE_OPTIONS = [10, 20, 30, 40, 50] as const;
 /**
  * Initial/Default Values
  */
-export const DEFAULT_COLUMN_VISIBILITY: ColumnVisibility = {
-  orderId: true,
-  itemName: true,
-  quantity: true,
-  unitPrice: true,
-  subtotal: true,
-  employee: true,
-  userName: true,
-  totalAmount: true,
-  paymentStatus: true,
-};
-
-export const INITIAL_FORM_DATA: OrderFormData = {
-  itemName: "",
-  quantity: 1,
-  unitPrice: 0,
-  employee: "",
-  userName: "",
-  paymentStatus: PaymentStatus.PENDING,
-};
-
 export const initialOrders: Order[] = [
   {
-    id: "ORD-001",
-    itemName: "Product A",
+    order_id: "ORD-001",
+    item_name: "Sample Product",
     quantity: 2,
-    unitPrice: 100.0,
-    subtotal: 200.0,
-    employee: "John Doe",
-    userName: "Jane Smith",
-    totalAmount: 200.0,
-    paymentStatus: PaymentStatus.PENDING,
-  },
-  {
-    id: "ORD-002",
-    itemName: "Product B",
-    quantity: 1,
-    unitPrice: 150.0,
-    subtotal: 150.0,
-    employee: "Jane Smith",
-    userName: "John Doe",
-    totalAmount: 150.0,
-    paymentStatus: PaymentStatus.PAID,
+    unit_price: 1000,
+    subtotal: 2000,
+    employee_name: "John Doe",
+    user_name: "Jane Smith",
+    total_amount: 2000,
+    payment_status: PaymentStatus.PENDING,
   },
 ];
+
+export const DEFAULT_SETTINGS = {
+  showCurrency: true,
+  statusFilter: [],
+};

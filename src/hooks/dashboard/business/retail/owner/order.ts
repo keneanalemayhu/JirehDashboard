@@ -1,22 +1,32 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import {
-  Order,
-  OrderFormData,
-  PaymentStatus,
-  SortDirection,
-} from "@/types/dashboard/business/retail/owner/order";
+
+interface Order {
+  order_id: string;
+  item_name: string;
+  quantity: number;
+  unit_price: number;
+  subtotal: number;
+  employee_name: string;
+  user_name: string;
+  total_amount: number;
+  payment_status: "PENDING" | "PAID" | "CANCELLED";
+}
+
+type SortDirection = "asc" | "desc" | null;
 
 const initialOrders: Order[] = [
   {
-    id: "ORD-001",
-    itemName: "Product A",
+    order_id: "ORD-001",
+    item_name: "Sample Item",
     quantity: 2,
-    unitPrice: 100.0,
-    employee: "John Doe",
-    userName: "Jane Smith",
-    paymentStatus: PaymentStatus.PENDING,
+    unit_price: 1000,
+    subtotal: 2000,
+    employee_name: "John Doe",
+    user_name: "Jane Smith",
+    total_amount: 2000,
+    payment_status: "PENDING",
   },
 ];
 
@@ -24,39 +34,35 @@ export function useOrders(defaultOrders: Order[] = initialOrders) {
   // States
   const [orders, setOrders] = useState<Order[]>(defaultOrders);
   const [filterValue, setFilterValue] = useState("");
-  const [editingOrder, setEditingOrder] = useState<Order | null>(null);
-  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
-  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
-  const [columnsVisible, setColumnsVisible] = useState({
-    orderId: true,
-    itemName: true,
-    quantity: true,
-    unitPrice: true,
-    subtotal: true,
-    employee: true,
-    userName: true,
-    totalAmount: true,
-    paymentStatus: true,
-  });
+  const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
+  const [isDetailsDialogOpen, setIsDetailsDialogOpen] = useState(false);
   const [sortColumn, setSortColumn] = useState<keyof Order | null>(null);
   const [sortDirection, setSortDirection] = useState<SortDirection>(null);
   const [pageSize, setPageSize] = useState(10);
   const [currentPage, setCurrentPage] = useState(1);
+  const [statusFilter, setStatusFilter] = useState<string[]>([]);
 
   // Filtering and sorting
   const filteredOrders = useMemo(() => {
-    const ordersToFilter = orders || [];
+    let result = [...orders];
     const searchTerm = filterValue.toLowerCase();
 
-    const result = ordersToFilter.filter((order) => {
+    // Apply status filter
+    if (statusFilter.length > 0) {
+      result = result.filter((order) =>
+        statusFilter.includes(order.payment_status)
+      );
+    }
+
+    // Apply search filter
+    result = result.filter((order) => {
       const searchableFields = [
-        order.itemName || "",
-        order.employee || "",
-        order.userName || "",
-        order.paymentStatus || "",
-        order.quantity?.toString() || "",
-        order.unitPrice?.toString() || "",
-        order.totalAmount?.toString() || "",
+        order.order_id,
+        order.item_name,
+        order.employee_name,
+        order.user_name,
+        order.payment_status,
+        order.total_amount.toString(),
       ];
 
       return searchableFields.some((field) =>
@@ -64,12 +70,13 @@ export function useOrders(defaultOrders: Order[] = initialOrders) {
       );
     });
 
+    // Apply sorting
     if (sortColumn) {
       result.sort((a, b) => {
         const aValue = a[sortColumn];
         const bValue = b[sortColumn];
 
-        // Handle number type specifically for quantity, unit price, and total amount
+        // Handle number type for numeric fields
         if (typeof aValue === "number" && typeof bValue === "number") {
           return sortDirection === "asc" ? aValue - bValue : bValue - aValue;
         }
@@ -88,7 +95,7 @@ export function useOrders(defaultOrders: Order[] = initialOrders) {
     }
 
     return result;
-  }, [orders, filterValue, sortColumn, sortDirection]);
+  }, [orders, filterValue, sortColumn, sortDirection, statusFilter]);
 
   // Pagination
   const paginatedOrders = useMemo(() => {
@@ -113,39 +120,16 @@ export function useOrders(defaultOrders: Order[] = initialOrders) {
     }
   };
 
-  const handleAddOrder = (data: OrderFormData) => {
-    const newId = `ORD-${String(orders.length + 1).padStart(3, "0")}`;
-    const newOrder: Order = {
-      id: newId,
-      ...data,
-      subtotal: data.quantity * data.unitPrice,
-      totalAmount: data.quantity * data.unitPrice,
-    };
-    setOrders((prev) => [...prev, newOrder]);
-    setIsAddDialogOpen(false);
-  };
-
-  const handleEditOrder = (data: OrderFormData) => {
-    if (!editingOrder) return;
+  const handleUpdatePaymentStatus = (updatedOrder: Order) => {
     setOrders((prev) =>
       prev.map((order) =>
-        order.id === editingOrder.id
-          ? {
-              ...order,
-              itemName: data.itemName,
-              quantity: data.quantity,
-              unitPrice: data.unitPrice,
-              employee: data.employee,
-              userName: data.userName,
-              paymentStatus: data.paymentStatus,
-              subtotal: data.quantity * data.unitPrice,
-              totalAmount: data.quantity * data.unitPrice,
-            }
+        order.order_id === updatedOrder.order_id
+          ? { ...order, payment_status: updatedOrder.payment_status }
           : order
       )
     );
-    setIsEditDialogOpen(false);
-    setEditingOrder(null);
+    setIsDetailsDialogOpen(false);
+    setSelectedOrder(null);
   };
 
   const handlePageChange = (page: number) => {
@@ -157,28 +141,34 @@ export function useOrders(defaultOrders: Order[] = initialOrders) {
     setCurrentPage(1);
   };
 
+  const handleStatusFilterChange = (status: string) => {
+    setStatusFilter((prev) => {
+      if (prev.includes(status)) {
+        return prev.filter((s) => s !== status);
+      }
+      return [...prev, status];
+    });
+  };
+
   return {
     // Data
     orders,
     paginatedOrders,
     filteredOrders,
-    editingOrder,
+    selectedOrder,
 
     // State setters
     setOrders,
-    setEditingOrder,
+    setSelectedOrder,
 
     // UI state
     filterValue,
     setFilterValue,
-    isAddDialogOpen,
-    setIsAddDialogOpen,
-    isEditDialogOpen,
-    setIsEditDialogOpen,
+    isDetailsDialogOpen,
+    setIsDetailsDialogOpen,
+    statusFilter,
 
     // Table state
-    columnsVisible,
-    setColumnsVisible,
     pageSize,
     currentPage,
     sortColumn,
@@ -186,9 +176,9 @@ export function useOrders(defaultOrders: Order[] = initialOrders) {
 
     // Handlers
     handleSort,
-    handleAddOrder,
-    handleEditOrder,
+    handleUpdatePaymentStatus,
     handlePageChange,
     handlePageSizeChange,
+    handleStatusFilterChange,
   };
 }

@@ -6,132 +6,85 @@ import { SidebarLayout } from "@/components/common/dashboard/business/retail/own
 import { OrderTable } from "@/components/dashboard/business/retail/owner/orders/OrderTable";
 import { OrderTableSettings } from "@/components/dashboard/business/retail/owner/orders/OrderTableSettings";
 import { OrderTablePagination } from "@/components/dashboard/business/retail/owner/orders/OrderTablePagination";
-import { OrderForm } from "@/components/dashboard/business/retail/owner/orders/OrderForm";
 import { useOrders } from "@/hooks/dashboard/business/retail/owner/order";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { CirclePlus } from "lucide-react";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
-import {
-  Order,
-  OrderFormData,
-  ColumnVisibility,
-} from "@/types/dashboard/business/retail/owner/order";
+import { Order } from "@/types/dashboard/business/retail/owner/order";
 
 export default function OrdersPage() {
   const {
     orders,
     filterValue,
     setFilterValue,
-    handleAddOrder,
-    handleEditOrder,
-    isAddDialogOpen,
-    setIsAddDialogOpen,
-    isEditDialogOpen,
-    setIsEditDialogOpen,
-    editingOrder,
-    setEditingOrder,
-    columnsVisible,
-    setColumnsVisible,
+    handleUpdatePaymentStatus,
+    isDetailsDialogOpen,
+    setIsDetailsDialogOpen,
+    selectedOrder,
+    setSelectedOrder,
     handleSort,
     filteredOrders,
     paginatedOrders,
+    statusFilter,
+    handleStatusFilterChange,
+    pageSize,
+    currentPage,
+    handlePageChange,
+    handlePageSizeChange,
   } = useOrders();
 
+  // Calculate totals
   const totalOrders = orders?.length || 0;
-
-  const handleEditSubmit = (data: OrderFormData) => {
-    if (editingOrder) {
-      handleEditOrder({
-        ...data,
-        id: editingOrder.id,
-        subtotal: data.quantity * data.unitPrice,
-        totalAmount: data.quantity * data.unitPrice,
-      });
-    }
-  };
+  const totalAmount =
+    orders?.reduce((sum, order) => sum + order.total_amount, 0) || 0;
 
   return (
     <SidebarLayout>
       <Header />
       <div className="flex-1 p-6">
         <div className="flex flex-col gap-6">
-          {/* Header with Add Button */}
+          {/* Header with Summary */}
           <div className="flex items-center justify-between">
             <div>
               <h1 className="text-2xl font-bold">Orders</h1>
-              <p className="text-sm text-gray-500">
-                Total orders: {totalOrders}
-              </p>
+              <div className="flex gap-4 text-sm text-gray-500">
+                <p>Total orders: {totalOrders}</p>
+                <p>Total amount: ETB {totalAmount.toLocaleString()}</p>
+              </div>
             </div>
-            <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
-              <DialogTrigger asChild>
-                <Button>
-                  <CirclePlus className="w-4 h-4 mr-2" />
-                  Add Order
-                </Button>
-              </DialogTrigger>
-              <DialogContent>
-                <DialogHeader>
-                  <DialogTitle>Add New Order</DialogTitle>
-                  <DialogDescription>
-                    Enter the details for the new order.
-                  </DialogDescription>
-                </DialogHeader>
-                <OrderForm onSubmit={handleAddOrder} />
-              </DialogContent>
-            </Dialog>
           </div>
 
           {/* Filter and Settings */}
           <div className="flex items-center gap-2">
             <Input
-              placeholder="Filter orders..."
+              placeholder="Search orders..."
               className="max-w-sm"
               value={filterValue}
               onChange={(e) => setFilterValue(e.target.value)}
             />
             <OrderTableSettings
-              columnsVisible={columnsVisible as ColumnVisibility}
-              onColumnVisibilityChange={(
-                column: keyof ColumnVisibility,
-                visible: boolean
-              ) =>
-                setColumnsVisible((prev) => ({ ...prev, [column]: visible }))
-              }
+              showCurrency={true}
+              onShowCurrencyChange={() => {}}
+              statusFilter={statusFilter}
+              onStatusFilterChange={handleStatusFilterChange}
             />
           </div>
 
           {/* Table */}
           <OrderTable
             orders={paginatedOrders ?? []}
-            columnsVisible={columnsVisible}
-            onEdit={(order: Order) => {
-              setEditingOrder({
-                ...order,
-              });
-              setIsEditDialogOpen(true);
-            }}
-            isEditDialogOpen={isEditDialogOpen}
-            setIsEditDialogOpen={setIsEditDialogOpen}
-            editingOrder={editingOrder}
-            onEditSubmit={handleEditSubmit}
+            onSort={handleSort}
+            onStatusUpdate={handleUpdatePaymentStatus}
+            isDetailsDialogOpen={isDetailsDialogOpen}
+            setIsDetailsDialogOpen={setIsDetailsDialogOpen}
+            selectedOrder={selectedOrder}
           />
 
           {/* Pagination */}
           <OrderTablePagination
             totalItems={filteredOrders?.length ?? 0}
-            pageSize={10}
-            currentPage={1}
-            onPageChange={() => {}}
-            onPageSizeChange={() => {}}
+            pageSize={pageSize}
+            currentPage={currentPage}
+            onPageChange={handlePageChange}
+            onPageSizeChange={handlePageSizeChange}
           />
         </div>
       </div>
