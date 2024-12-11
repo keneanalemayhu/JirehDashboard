@@ -19,7 +19,7 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar";
 import { useLanguage } from "@/components/context/LanguageContext";
-import { translations } from "@/translations/dashboard/business/retail/owner";
+import { translations } from "@/translations/dashboard/business/retail/warehouse";
 
 export function NavUser({
   user,
@@ -32,7 +32,7 @@ export function NavUser({
 }) {
   const { isMobile } = useSidebar();
   const { language } = useLanguage();
-  const t = translations[language].dashboard.owner.sidebar.userMenu;
+  const t = translations[language].dashboard.warehouse.sidebar.userMenu;
 
   const defaultAvatar = "/api/placeholder/32/32";
 
@@ -94,7 +94,7 @@ export function NavUser({
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuGroup>
-              <Link href="/dashboard/business/retail/owner/settings" passHref>
+              <Link href="/dashboard/business/retail/warehouse/settings" passHref>
                 <DropdownMenuItem asChild>
                   <span>
                     <User className="mr-2 h-4 w-4" />

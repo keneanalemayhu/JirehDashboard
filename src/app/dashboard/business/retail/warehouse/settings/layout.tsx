@@ -1,6 +1,6 @@
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Header } from "@/components/common/dashboard/business/retail/owner/Header";
-import { SidebarLayout } from "@/components/common/dashboard/business/retail/owner/Sidebar";
+import { Header } from "@/components/common/dashboard/business/retail/warehouse/Header";
+import { SidebarLayout } from "@/components/common/dashboard/business/retail/warehouse/Sidebar";
 import Link from "next/link";
 
 export default function SettingsLayout({

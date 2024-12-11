@@ -1,4 +1,4 @@
-// translations/dashboard/warehouse/am.ts
+// translations/dashboard/owner/am.ts
 export const am = {
   dashboard: {
     warehouse: {
@@ -13,15 +13,30 @@ export const am = {
         label: "ተጠቃሚዎች",
         shortcutPrefix: "⌘",
         teams: {
+          owner: "ባለቤት",
+          admin: "አስተዳዳሪ",
+          sales: "ሽያጭ",
           warehouse: "መጋዘን",
         },
         plans: {
+          management: "አስተዳደር",
+          revenue_operations: "የሽያጭ ስራዎች",
           inventory_management: "የዕቃ አስተዳደር",
         },
       },
       sidebar: {
+        home: "ዋና ገጽ",
+        orders: "ትዕዛዞች",
+        inventory: "ዕቃዎች",
+        customers: "ደንበኞች",
         teams: {
+          owner: "ባለቤት",
+          admin: "አስተዳዳሪ",
+          sales: "ሽያጭ",
           warehouse: "መጋዘን",
+          ownerPlan: "አስተዳደር",
+          adminPlan: "አስተዳደር",
+          salesPlan: "የሽያጭ ስራዎች",
           warehousePlan: "የዕቃ አስተዳደር",
         },
         projects: {
@@ -29,9 +44,21 @@ export const am = {
           items: "እቃዎች",
           orders: "ትዕዛዞች",
         },
+        manage: {
+          title: "አስተዳድር",
+          locations: "ቦታዎች",
+          categories: "ምድቦች",
+          items: "እቃዎች",
+          employees: "ሰራተኞች",
+          users: "ተጠቃሚዎች",
+        },
         userMenu: {
           account: "አካውንት እና የግለሰብ መረጃ",
           logout: "ውጣ",
+        },
+        settingsSection: {
+          title: "ማስተካከያዎች",
+          profile: "መገለጫ",
         },
       },
     },

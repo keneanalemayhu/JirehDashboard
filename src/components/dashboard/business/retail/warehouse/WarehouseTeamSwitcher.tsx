@@ -1,7 +1,6 @@
 "use client";
 
 import * as React from "react";
-import { ChevronsUpDown } from "lucide-react";
 import Link from "next/link";
 import {
   DropdownMenu,
@@ -61,30 +60,8 @@ export function TeamSwitcher({
                   ] || activeTeam.plan}
                 </span>
               </div>
-              <ChevronsUpDown className="ml-auto" />
             </SidebarMenuButton>
           </DropdownMenuTrigger>
-          <DropdownMenuContent
-            className="w-[--radix-dropdown-menu-trigger-width] min-w-56 rounded-lg"
-            align="start"
-            side={isMobile ? "bottom" : "right"}
-            sideOffset={4}
-          >
-            <DropdownMenuLabel className="text-xs text-muted-foreground">
-              {t.label}
-            </DropdownMenuLabel>
-            {teams.map((team, index) => (
-              <DropdownMenuItem asChild key={team.name} className="gap-2 p-2">
-                <Link href={team.url} onClick={() => setActiveTeam(team)}>
-                  <div className="flex size-6 items-center justify-center rounded-sm border">
-                    <team.logo className="size-4 shrink-0" />
-                  </div>
-                  {t.teams?.[team.name.toLowerCase()] || team.name}
-                </Link>
-              </DropdownMenuItem>
-            ))}
-            <DropdownMenuSeparator />
-          </DropdownMenuContent>
         </DropdownMenu>
       </SidebarMenuItem>
     </SidebarMenu>

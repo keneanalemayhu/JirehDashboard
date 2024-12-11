@@ -1,4 +1,4 @@
-// translations/dashboard/warehouse/en.ts
+// translations/dashboard/owner/en.ts
 export const en = {
   dashboard: {
     warehouse: {
@@ -13,15 +13,30 @@ export const en = {
         label: "Users",
         shortcutPrefix: "⌘",
         teams: {
+          owner: "Owner",
+          admin: "Admin",
+          sales: "Sales",
           warehouse: "Warehouse",
         },
         plans: {
+          management: "Management",
+          revenue_operations: "Revenue Operations",
           inventory_management: "Inventory Management",
         },
       },
       sidebar: {
+        home: "Home",
+        orders: "Orders",
+        inventory: "Inventory",
+        customers: "Customers",
         teams: {
+          owner: "Owner",
+          admin: "Admin",
+          sales: "Sales",
           warehouse: "Warehouse",
+          ownerPlan: "Management",
+          adminPlan: "Management",
+          salesPlan: "Revenue Operations",
           warehousePlan: "Inventory Management",
         },
         projects: {
@@ -29,9 +44,21 @@ export const en = {
           items: "Items",
           orders: "Orders",
         },
+        manage: {
+          title: "Manage",
+          locations: "Locations",
+          categories: "Categories",
+          items: "Items",
+          employees: "Employees",
+          users: "Users",
+        },
         userMenu: {
           account: "Account & Profile",
           logout: "Log out",
+        },
+        settingsSection: {
+          title: "Settings",
+          profile: "Profile",
         },
       },
     },
