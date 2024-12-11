@@ -1,36 +1,55 @@
-import { AppSidebar } from "@/components/dashboard/business/retail/warehouse/WarehouseSidebar";
-import { NavActions } from "@/components/dashboard/business/retail/warehouse/WarehouseNavAction";
-import { Separator } from "@/components/ui/separator";
-import {
-  SidebarInset,
-  SidebarProvider,
-  SidebarTrigger,
-} from "@/components/ui/sidebar";
+"use client";
+import React from "react";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Button } from "@/components/ui/button";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { CalendarDateRangePicker } from "@/components/dashboard/business/retail/warehouse/overview/DateRangePicker";
+import { Header } from "@/components/common/dashboard/business/retail/warehouse/Header";
+import { SidebarLayout } from "@/components/common/dashboard/business/retail/warehouse/Sidebar";
+import { Download } from "lucide-react";
 
-export default function Home() {
+export default function DashboardPage() {
+  const [value, setValue] = React.useState("overview");
+
   return (
-    <SidebarProvider>
-      <AppSidebar />
-      <SidebarInset>
-        <header className="flex h-16 shrink-0 items-center gap-2 transition-[width,height] ease-linear group-has-[[data-collapsible=icon]]/sidebar-wrapper:h-12">
-          <div className="flex items-center gap-2 px-4">
-            <SidebarTrigger className="-ml-1" />
-            <Separator orientation="vertical" className="mr-2 h-4" />
-            <p>Warehouse Dashboard</p>
-          </div>
-          <div className="ml-auto px-3">
-            <NavActions />
-          </div>
-        </header>
-        <div className="flex flex-1 flex-col gap-4 p-4 pt-0">
-          <div className="grid auto-rows-min gap-4 md:grid-cols-3">
-            <div className="aspect-video rounded-xl bg-muted/50" />
-            <div className="aspect-video rounded-xl bg-muted/50" />
-            <div className="aspect-video rounded-xl bg-muted/50" />
-          </div>
-          <div className="min-h-[100vh] flex-1 rounded-xl bg-muted/50 md:min-h-min" />
+    <SidebarLayout>
+      <Header />
+      <main className="flex-1 overflow-auto">
+        <div className="container mx-auto p-4 space-y-4">
+          <h2 className="text-2xl font-bold tracking-tight">
+            {value.charAt(0).toUpperCase() + value.slice(1)}
+          </h2>
+
+          <Tabs
+            defaultValue="overview"
+            className="space-y-4"
+            onValueChange={(value) => setValue(value)}
+          >
+            <div className="flex flex-col gap-6">
+              <div className="flex flex-col-reverse sm:flex-row justify-between items-start sm:items-center gap-4">
+                <ScrollArea className="w-full sm:w-fit whitespace-nowrap">
+                  <TabsList className="w-fit justify-start">
+                    <TabsTrigger value="overview">Overview</TabsTrigger>
+                    <TabsTrigger value="analytics">Analytics</TabsTrigger>
+                    <TabsTrigger value="reports">Reports</TabsTrigger>
+                  </TabsList>
+                </ScrollArea>
+
+                <div className="flex items-center gap-3 w-full sm:w-auto">
+                  <CalendarDateRangePicker />
+                  <Button className="w-fit">
+                    <Download className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
+
+              <div className="border-b" />
+            </div>
+
+            <TabsContent value="overview" className="space-y-4"></TabsContent>
+          </Tabs>
         </div>
-      </SidebarInset>
-    </SidebarProvider>
+      </main>
+    </SidebarLayout>
   );
 }

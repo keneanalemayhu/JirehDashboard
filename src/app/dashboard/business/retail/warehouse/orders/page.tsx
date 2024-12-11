@@ -1,36 +1,93 @@
-import { AppSidebar } from "@/components/dashboard/business/retail/warehouse/WarehouseSidebar";
-import { NavActions } from "@/components/dashboard/business/retail/warehouse/WarehouseNavAction";
-import { Separator } from "@/components/ui/separator";
-import {
-  SidebarInset,
-  SidebarProvider,
-  SidebarTrigger,
-} from "@/components/ui/sidebar";
+"use client";
 
-export default function Home() {
+import * as React from "react";
+import { Header } from "@/components/common/dashboard/business/retail/warehouse/Header";
+import { SidebarLayout } from "@/components/common/dashboard/business/retail/warehouse/Sidebar";
+import { OrderTable } from "@/components/dashboard/business/retail/warehouse/orders/OrderTable";
+import { OrderTableSettings } from "@/components/dashboard/business/retail/warehouse/orders/OrderTableSettings";
+import { OrderTablePagination } from "@/components/dashboard/business/retail/warehouse/orders/OrderTablePagination";
+import { useOrders } from "@/hooks/dashboard/business/retail/warehouse/order";
+import { Input } from "@/components/ui/input";
+import { Order } from "@/types/dashboard/business/retail/warehouse/order";
+
+export default function OrdersPage() {
+  const {
+    orders,
+    filterValue,
+    setFilterValue,
+    handleUpdatePaymentStatus,
+    isDetailsDialogOpen,
+    setIsDetailsDialogOpen,
+    selectedOrder,
+    setSelectedOrder,
+    handleSort,
+    filteredOrders,
+    paginatedOrders,
+    statusFilter,
+    handleStatusFilterChange,
+    pageSize,
+    currentPage,
+    handlePageChange,
+    handlePageSizeChange,
+  } = useOrders();
+
+  // Calculate totals
+  const totalOrders = orders?.length || 0;
+  const totalAmount =
+    orders?.reduce((sum, order) => sum + order.total_amount, 0) || 0;
+
   return (
-    <SidebarProvider>
-      <AppSidebar />
-      <SidebarInset>
-        <header className="flex h-16 shrink-0 items-center gap-2 transition-[width,height] ease-linear group-has-[[data-collapsible=icon]]/sidebar-wrapper:h-12">
-          <div className="flex items-center gap-2 px-4">
-            <SidebarTrigger className="-ml-1" />
-            <Separator orientation="vertical" className="mr-2 h-4" />
-            <p>Warehouse Dashboard</p>
+    <SidebarLayout>
+      <Header />
+      <div className="flex-1 p-6">
+        <div className="flex flex-col gap-6">
+          {/* Header with Summary */}
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-2xl font-bold">Orders</h1>
+              <div className="flex gap-4 text-sm text-gray-500">
+                <p>Total orders: {totalOrders}</p>
+                <p>Total amount: ETB {totalAmount.toLocaleString()}</p>
+              </div>
+            </div>
           </div>
-          <div className="ml-auto px-3">
-            <NavActions />
+
+          {/* Filter and Settings */}
+          <div className="flex items-center gap-2">
+            <Input
+              placeholder="Search orders..."
+              className="max-w-sm"
+              value={filterValue}
+              onChange={(e) => setFilterValue(e.target.value)}
+            />
+            <OrderTableSettings
+              showCurrency={true}
+              onShowCurrencyChange={() => {}}
+              statusFilter={statusFilter}
+              onStatusFilterChange={handleStatusFilterChange}
+            />
           </div>
-        </header>
-        <div className="flex flex-1 flex-col gap-4 p-4 pt-0">
-          <div className="grid auto-rows-min gap-4 md:grid-cols-3">
-            <div className="aspect-video rounded-xl bg-muted/50" />
-            <div className="aspect-video rounded-xl bg-muted/50" />
-            <div className="aspect-video rounded-xl bg-muted/50" />
-          </div>
-          <div className="min-h-[100vh] flex-1 rounded-xl bg-muted/50 md:min-h-min" />
+
+          {/* Table */}
+          <OrderTable
+            orders={paginatedOrders ?? []}
+            onSort={handleSort}
+            onStatusUpdate={handleUpdatePaymentStatus}
+            isDetailsDialogOpen={isDetailsDialogOpen}
+            setIsDetailsDialogOpen={setIsDetailsDialogOpen}
+            selectedOrder={selectedOrder}
+          />
+
+          {/* Pagination */}
+          <OrderTablePagination
+            totalItems={filteredOrders?.length ?? 0}
+            pageSize={pageSize}
+            currentPage={currentPage}
+            onPageChange={handlePageChange}
+            onPageSizeChange={handlePageSizeChange}
+          />
         </div>
-      </SidebarInset>
-    </SidebarProvider>
+      </div>
+    </SidebarLayout>
   );
 }

@@ -5,9 +5,17 @@ import {
   Item,
   ItemFormData,
   SortDirection,
-  DEFAULT_COLUMN_VISIBILITY,
-  initialItems,
-} from "@/types/dashboard/business/retail/owner/item";
+} from "@/types/dashboard/business/retail/admin/item";
+
+const initialItems: Item[] = [
+  {
+    id: "ITM-001",
+    name: "Item 1",
+    price: "9.99",
+    category: "Category 1",
+    isHidden: false,
+  },
+];
 
 export function useItems(defaultItems: Item[] = initialItems) {
   const [items, setItems] = useState<Item[]>(defaultItems);
@@ -16,9 +24,12 @@ export function useItems(defaultItems: Item[] = initialItems) {
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-  const [columnsVisible, setColumnsVisible] = useState(
-    DEFAULT_COLUMN_VISIBILITY
-  );
+  const [columnsVisible, setColumnsVisible] = useState({
+    id: true,
+    name: true,
+    price: true,
+    category: true,
+  });
   const [sortColumn, setSortColumn] = useState<keyof Item | null>(null);
   const [sortDirection, setSortDirection] = useState<SortDirection>(null);
   const [pageSize, setPageSize] = useState(10);
@@ -28,13 +39,7 @@ export function useItems(defaultItems: Item[] = initialItems) {
     const itemsToFilter = items || [];
 
     const result = itemsToFilter.filter((item) =>
-      [
-        item.name,
-        item.barcode,
-        item.price,
-        item.category,
-        item.quantity.toString(),
-      ]
+      [item.name, item.price, item.category]
         .join(" ")
         .toLowerCase()
         .includes(filterValue.toLowerCase())
@@ -45,21 +50,10 @@ export function useItems(defaultItems: Item[] = initialItems) {
         const aValue = a[sortColumn];
         const bValue = b[sortColumn];
 
-        // Handle different types of sorting
         if (sortColumn === "price") {
           return sortDirection === "asc"
             ? parseFloat(aValue as string) - parseFloat(bValue as string)
             : parseFloat(bValue as string) - parseFloat(aValue as string);
-        }
-
-        if (sortColumn === "quantity") {
-          return sortDirection === "asc"
-            ? (aValue as number) - (bValue as number)
-            : (bValue as number) - (aValue as number);
-        }
-
-        if (typeof aValue === "boolean") {
-          return sortDirection === "asc" ? (aValue ? 1 : -1) : aValue ? -1 : 1;
         }
 
         if (sortDirection === "asc") {
@@ -103,9 +97,6 @@ export function useItems(defaultItems: Item[] = initialItems) {
       name: data.name,
       price: data.price,
       category: data.category,
-      barcode: data.barcode,
-      quantity: data.quantity,
-      isActive: data.isActive,
       isHidden: data.isHidden,
     };
 
@@ -148,48 +139,6 @@ export function useItems(defaultItems: Item[] = initialItems) {
     setCurrentPage(1);
   };
 
-  const handleExport = () => {
-    const headers = [
-      "ID",
-      "Name",
-      "Barcode",
-      "Price",
-      "Quantity",
-      "Category",
-      "Status",
-      "Visibility",
-    ];
-
-    const csvContent = [
-      headers.join(","),
-      ...filteredItems.map((item) =>
-        [
-          item.id,
-          `"${item.name}"`,
-          `"${item.barcode || ""}"`,
-          item.price,
-          item.quantity,
-          `"${item.category}"`,
-          item.isActive ? "Active" : "Inactive",
-          item.isHidden ? "Hidden" : "Visible",
-        ].join(",")
-      ),
-    ].join("\n");
-
-    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
-    const link = document.createElement("a");
-    const url = URL.createObjectURL(blob);
-
-    link.setAttribute("href", url);
-    link.setAttribute(
-      "download",
-      `items-export-${new Date().toISOString().split("T")[0]}.csv`
-    );
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-  };
-
   return {
     items,
     filterValue,
@@ -214,6 +163,5 @@ export function useItems(defaultItems: Item[] = initialItems) {
     currentPage,
     handlePageChange,
     handlePageSizeChange,
-    handleExport,
   };
 }

@@ -7,7 +7,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { ChevronsUpDownIcon } from "lucide-react";
+import { ArrowUpDown } from "lucide-react";
 
 interface Order {
   order_id: string;
@@ -48,7 +48,7 @@ export function OrderTableHeader({ onSort }: OrderTableHeaderProps) {
     <DropdownMenu>
       <DropdownMenuTrigger className="flex items-center">
         {column.label}
-        <ChevronsUpDownIcon className="ml-2 h-4 w-4" />
+        <ArrowUpDown className="ml-2 h-4 w-4" />
       </DropdownMenuTrigger>
       <DropdownMenuContent>
         <DropdownMenuItem onClick={() => onSort(column.key)}>

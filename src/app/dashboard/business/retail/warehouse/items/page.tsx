@@ -1,36 +1,141 @@
-import { AppSidebar } from "@/components/dashboard/business/retail/warehouse/WarehouseSidebar";
-import { NavActions } from "@/components/dashboard/business/retail/warehouse/WarehouseNavAction";
-import { Separator } from "@/components/ui/separator";
-import {
-  SidebarInset,
-  SidebarProvider,
-  SidebarTrigger,
-} from "@/components/ui/sidebar";
+"use client";
 
-export default function Home() {
+import * as React from "react";
+import { Header } from "@/components/common/dashboard/business/retail/warehouse/Header";
+import { SidebarLayout } from "@/components/common/dashboard/business/retail/warehouse/Sidebar";
+import { ItemTable } from "@/components/dashboard/business/retail/warehouse/items/ItemTable";
+import { ItemTableSettings } from "@/components/dashboard/business/retail/warehouse/items/ItemTableSettings";
+import { ItemTablePagination } from "@/components/dashboard/business/retail/warehouse/items/ItemTablePagination";
+import { useItems } from "@/hooks/dashboard/business/retail/warehouse/item";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { CirclePlus } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { ItemForm } from "@/components/dashboard/business/retail/warehouse/items/ItemForm";
+
+// Define interfaces for better type safety
+interface Item {
+  id: string;
+  [key: string]: any;
+}
+
+interface ColumnVisibility {
+  [key: string]: boolean;
+}
+
+export default function ItemsPage() {
+  const {
+    items,
+    filterValue,
+    setFilterValue,
+    handleAddItem,
+    handleEditItem,
+    handleDeleteItem,
+    isAddDialogOpen,
+    setIsAddDialogOpen,
+    isEditDialogOpen,
+    setIsEditDialogOpen,
+    isDeleteDialogOpen,
+    setIsDeleteDialogOpen,
+    editingItem,
+    setEditingItem,
+    columnsVisible,
+    setColumnsVisible,
+    handleSort,
+    filteredItems,
+  } = useItems();
+
+  // Calculate total items
+  const totalItems = items?.length || 0;
+
   return (
-    <SidebarProvider>
-      <AppSidebar />
-      <SidebarInset>
-        <header className="flex h-16 shrink-0 items-center gap-2 transition-[width,height] ease-linear group-has-[[data-collapsible=icon]]/sidebar-wrapper:h-12">
-          <div className="flex items-center gap-2 px-4">
-            <SidebarTrigger className="-ml-1" />
-            <Separator orientation="vertical" className="mr-2 h-4" />
-            <p>Warehouse Dashboard</p>
+    <SidebarLayout>
+      <Header />
+      <div className="flex-1 p-6">
+        <div className="flex flex-col gap-6">
+          {/* Header with Add Button */}
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-2xl font-bold">Items</h1>
+              <p className="text-sm text-gray-500">Total items: {totalItems}</p>
+            </div>
+            <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
+              <DialogTrigger asChild>
+                <Button>
+                  <CirclePlus className="w-4 h-4 mr-2" />
+                  Add Item
+                </Button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Add New Item</DialogTitle>
+                  <DialogDescription>
+                    Enter the details for the new item.
+                  </DialogDescription>
+                </DialogHeader>
+                <ItemForm onSubmit={handleAddItem} />
+              </DialogContent>
+            </Dialog>
           </div>
-          <div className="ml-auto px-3">
-            <NavActions />
+
+          {/* Filter and Settings */}
+          <div className="flex items-center gap-2">
+            <Input
+              placeholder="Filter items..."
+              className="max-w-sm"
+              value={filterValue}
+              onChange={(e) => setFilterValue(e.target.value)}
+            />
+            <ItemTableSettings
+              columnsVisible={columnsVisible as ColumnVisibility}
+              onColumnVisibilityChange={(
+                column: keyof ColumnVisibility,
+                visible: boolean
+              ) =>
+                setColumnsVisible((prev) => ({ ...prev, [column]: visible }))
+              }
+            />
           </div>
-        </header>
-        <div className="flex flex-1 flex-col gap-4 p-4 pt-0">
-          <div className="grid auto-rows-min gap-4 md:grid-cols-3">
-            <div className="aspect-video rounded-xl bg-muted/50" />
-            <div className="aspect-video rounded-xl bg-muted/50" />
-            <div className="aspect-video rounded-xl bg-muted/50" />
-          </div>
-          <div className="min-h-[100vh] flex-1 rounded-xl bg-muted/50 md:min-h-min" />
+
+          {/* Table */}
+          <ItemTable
+            items={filteredItems ?? []}
+            columnsVisible={columnsVisible}
+            onSort={handleSort}
+            onEdit={(item: Item) => {
+              setEditingItem(item);
+              setIsEditDialogOpen(true);
+            }}
+            onDelete={(item: Item) => {
+              setEditingItem(item);
+              setIsDeleteDialogOpen(true);
+            }}
+            isEditDialogOpen={isEditDialogOpen}
+            setIsEditDialogOpen={setIsEditDialogOpen}
+            isDeleteDialogOpen={isDeleteDialogOpen}
+            setIsDeleteDialogOpen={setIsDeleteDialogOpen}
+            editingItem={editingItem}
+            onEditSubmit={handleEditItem}
+            onDeleteConfirm={handleDeleteItem}
+          />
+
+          {/* Pagination */}
+          <ItemTablePagination
+            totalItems={filteredItems?.length ?? 0}
+            pageSize={10}
+            currentPage={1}
+            onPageChange={() => {}}
+            onPageSizeChange={() => {}}
+          />
         </div>
-      </SidebarInset>
-    </SidebarProvider>
+      </div>
+    </SidebarLayout>
   );
 }
