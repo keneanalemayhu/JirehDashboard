@@ -11,17 +11,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
-type ColumnKey =
-  | "id"
-  | "name"
-  | "price"
-  | "category"
-  | "barcode"
-  | "quantity"
-  | "isActive"
-  | "isHidden";
-
-interface ColumnVisibility {
+type ColumnVisibility = {
   id: boolean;
   name: boolean;
   price: boolean;
@@ -30,12 +20,20 @@ interface ColumnVisibility {
   quantity: boolean;
   isActive: boolean;
   isHidden: boolean;
-}
+};
 
-interface ItemTableSettingsProps {
-  columnsVisible: ColumnVisibility;
-  onColumnVisibilityChange: (column: ColumnKey, visible: boolean) => void;
-}
+const DEFAULT_COLUMNS_VISIBLE: ColumnVisibility = {
+  id: true,
+  name: true,
+  price: true,
+  category: true,
+  barcode: true,
+  quantity: true,
+  isActive: true,
+  isHidden: true,
+};
+
+type ColumnKey = keyof ColumnVisibility;
 
 interface ColumnItem {
   key: ColumnKey;
@@ -73,14 +71,15 @@ const COLUMN_GROUPS: ColumnGroup[] = [
   },
 ];
 
+interface ItemTableSettingsProps {
+  columnsVisible?: Partial<ColumnVisibility>;
+  onColumnVisibilityChange: (column: ColumnKey, visible: boolean) => void;
+}
+
 export function ItemTableSettings({
-  columnsVisible,
+  columnsVisible = DEFAULT_COLUMNS_VISIBLE,
   onColumnVisibilityChange,
 }: ItemTableSettingsProps) {
-  if (!columnsVisible) {
-    return null;
-  }
-
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -98,7 +97,7 @@ export function ItemTableSettings({
             {group.columns.map((column) => (
               <DropdownMenuCheckboxItem
                 key={column.key}
-                checked={columnsVisible[column.key]}
+                checked={columnsVisible[column.key] ?? true}
                 onCheckedChange={(checked) =>
                   onColumnVisibilityChange(column.key, checked)
                 }

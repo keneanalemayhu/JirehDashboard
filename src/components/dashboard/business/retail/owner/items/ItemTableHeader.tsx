@@ -1,3 +1,4 @@
+// ItemTableHeader.tsx
 "use client";
 
 import { TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -8,41 +9,9 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { ChevronsUpDownIcon } from "lucide-react";
+import { ColumnConfig } from "@/types/dashboard/business/retail/owner/item";
 
-type ColumnKey =
-  | "id"
-  | "name"
-  | "price"
-  | "category"
-  | "barcode"
-  | "quantity"
-  | "isActive"
-  | "isHidden";
-
-interface ColumnVisibility {
-  id: boolean;
-  name: boolean;
-  price: boolean;
-  category: boolean;
-  barcode: boolean;
-  quantity: boolean;
-  isActive: boolean;
-  isHidden: boolean;
-}
-
-interface Column {
-  key: ColumnKey;
-  label: string;
-  width: string;
-  sortable: boolean;
-}
-
-interface ItemTableHeaderProps {
-  columnsVisible: ColumnVisibility;
-  onSort: (column: ColumnKey) => void;
-}
-
-const COLUMNS: Column[] = [
+export const DEFAULT_COLUMN_CONFIG: ColumnConfig[] = [
   { key: "id", label: "ID", width: "w-[100px]", sortable: true },
   { key: "name", label: "Name", width: "w-[200px]", sortable: true },
   { key: "barcode", label: "Barcode", width: "w-[150px]", sortable: true },
@@ -53,30 +22,53 @@ const COLUMNS: Column[] = [
   { key: "isHidden", label: "Visibility", width: "w-[100px]", sortable: false },
 ];
 
-export function ItemTableHeader({
-  columnsVisible,
-  onSort,
-}: ItemTableHeaderProps) {
-  if (!columnsVisible) {
-    return null;
-  }
+interface ItemTableHeaderProps {
+  columnsVisible: Record<string, boolean>;
+  onSort: (columnKey: keyof (typeof DEFAULT_COLUMN_CONFIG)[0]) => void;
+  sortColumn?: string | null;
+  sortDirection?: "asc" | "desc" | null;
+}
 
-  const renderSortableHeader = (column: Column) => {
+export function ItemTableHeader({
+  columnsVisible = {},
+  onSort,
+  sortColumn,
+  sortDirection,
+}: ItemTableHeaderProps) {
+  const renderSortableHeader = (column: ColumnConfig) => {
     if (!column.sortable) {
       return column.label;
     }
+
+    const isActive = sortColumn === column.key;
 
     return (
       <DropdownMenu>
         <DropdownMenuTrigger className="flex items-center">
           {column.label}
-          <ChevronsUpDownIcon className="ml-2 h-4 w-4" />
+          <ChevronsUpDownIcon
+            className={`ml-2 h-4 w-4 ${isActive ? "text-primary" : ""}`}
+          />
         </DropdownMenuTrigger>
-        <DropdownMenuContent>
-          <DropdownMenuItem onClick={() => onSort(column.key)}>
+        <DropdownMenuContent align="start">
+          <DropdownMenuItem
+            onClick={() => onSort(column.key)}
+            className={
+              sortColumn === column.key && sortDirection === "asc"
+                ? "bg-accent"
+                : ""
+            }
+          >
             Sort Ascending
           </DropdownMenuItem>
-          <DropdownMenuItem onClick={() => onSort(column.key)}>
+          <DropdownMenuItem
+            onClick={() => onSort(column.key)}
+            className={
+              sortColumn === column.key && sortDirection === "desc"
+                ? "bg-accent"
+                : ""
+            }
+          >
             Sort Descending
           </DropdownMenuItem>
         </DropdownMenuContent>
@@ -87,8 +79,8 @@ export function ItemTableHeader({
   return (
     <TableHeader>
       <TableRow>
-        {COLUMNS.map((column) =>
-          columnsVisible[column.key] ? (
+        {DEFAULT_COLUMN_CONFIG.map((column) =>
+          columnsVisible[column.key] !== false ? (
             <TableHead
               key={column.key}
               className={`${column.width} ${

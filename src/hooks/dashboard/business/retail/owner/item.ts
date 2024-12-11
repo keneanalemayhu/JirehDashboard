@@ -1,45 +1,40 @@
-"use client";
+// src/hooks/dashboard/business/retail/owner/item.ts
 
 import { useState, useMemo } from "react";
 import {
   Item,
   ItemFormData,
   SortDirection,
-} from "@/types/dashboard/business/retail/admin/item";
-
-const initialItems: Item[] = [
-  {
-    id: "ITM-001",
-    name: "Item 1",
-    price: "9.99",
-    category: "Category 1",
-    isHidden: false,
-  },
-];
+  DEFAULT_COLUMN_VISIBILITY,
+  initialItems,
+} from "@/types/dashboard/business/retail/owner/item";
 
 export function useItems(defaultItems: Item[] = initialItems) {
-  const [items, setItems] = useState<Item[]>(defaultItems);
+  const [items, setItems] = useState<Item[]>(defaultItems || []); // Ensure items is initialized as an empty array if defaultItems is undefined
   const [filterValue, setFilterValue] = useState("");
   const [editingItem, setEditingItem] = useState<Item | null>(null);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-  const [columnsVisible, setColumnsVisible] = useState({
-    id: true,
-    name: true,
-    price: true,
-    category: true,
-  });
+  const [columnsVisible, setColumnsVisible] = useState(
+    DEFAULT_COLUMN_VISIBILITY
+  );
   const [sortColumn, setSortColumn] = useState<keyof Item | null>(null);
   const [sortDirection, setSortDirection] = useState<SortDirection>(null);
   const [pageSize, setPageSize] = useState(10);
   const [currentPage, setCurrentPage] = useState(1);
 
   const filteredItems = useMemo(() => {
-    const itemsToFilter = items || [];
+    const itemsToFilter = items; // No need to check for undefined since items is guaranteed to be an array
 
     const result = itemsToFilter.filter((item) =>
-      [item.name, item.price, item.category]
+      [
+        item.name,
+        item.barcode,
+        item.price,
+        item.category,
+        item.quantity.toString(),
+      ]
         .join(" ")
         .toLowerCase()
         .includes(filterValue.toLowerCase())
@@ -50,18 +45,30 @@ export function useItems(defaultItems: Item[] = initialItems) {
         const aValue = a[sortColumn];
         const bValue = b[sortColumn];
 
+        // Handle different types of sorting
         if (sortColumn === "price") {
           return sortDirection === "asc"
             ? parseFloat(aValue as string) - parseFloat(bValue as string)
             : parseFloat(bValue as string) - parseFloat(aValue as string);
         }
 
-        if (sortDirection === "asc") {
-          return aValue < bValue ? -1 : aValue > bValue ? 1 : 0;
-        } else if (sortDirection === "desc") {
-          return aValue > bValue ? -1 : aValue < bValue ? 1 : 0;
+        if (sortColumn === "quantity" || sortColumn === "lastInventoryUpdate") {
+          const aVal = aValue as number | Date;
+          const bVal = bValue as number | Date;
+          return sortDirection === "asc"
+            ? Number(aVal) - Number(bVal)
+            : Number(bVal) - Number(aVal);
         }
-        return 0;
+
+        if (typeof aValue === "boolean") {
+          return sortDirection === "asc" ? (aValue ? 1 : -1) : aValue ? -1 : 1;
+        }
+
+        if (sortDirection === "asc") {
+          return String(aValue).localeCompare(String(bValue));
+        } else {
+          return String(bValue).localeCompare(String(aValue));
+        }
       });
     }
 
@@ -89,15 +96,21 @@ export function useItems(defaultItems: Item[] = initialItems) {
     }
   };
 
+  const generateNewId = () => {
+    const maxId = items.reduce((max, item) => {
+      const idNumber = parseInt(item.id.replace("ITM-", ""), 10);
+      return idNumber > max ? idNumber : max;
+    }, 0);
+    return `ITM-${String(maxId + 1).padStart(3, "0")}`;
+  };
+
   const handleAddItem = (data: ItemFormData) => {
-    const newId = `ITM-${String(items.length + 1).padStart(3, "0")}`;
+    const newId = generateNewId();
 
     const newItem: Item = {
       id: newId,
-      name: data.name,
-      price: data.price,
-      category: data.category,
-      isHidden: data.isHidden,
+      ...data,
+      lastInventoryUpdate: new Date(),
     };
 
     setItems((prev) => [...prev, newItem]);
@@ -113,6 +126,7 @@ export function useItems(defaultItems: Item[] = initialItems) {
           ? {
               ...item,
               ...data,
+              lastInventoryUpdate: new Date(),
             }
           : item
       )
@@ -139,6 +153,52 @@ export function useItems(defaultItems: Item[] = initialItems) {
     setCurrentPage(1);
   };
 
+  const handleExport = () => {
+    const headers = [
+      "ID",
+      "Name",
+      "Barcode",
+      "Price",
+      "Quantity",
+      "Category",
+      "Status",
+      "Visibility",
+      "Last Updated",
+    ];
+
+    const csvContent = [
+      headers.join(","),
+      ...filteredItems.map((item) =>
+        [
+          item.id,
+          `"${item.name}"`,
+          `"${item.barcode || ""}"`,
+          item.price,
+          item.quantity,
+          `"${item.category}"`,
+          item.isActive ? "Active" : "Inactive",
+          item.isHidden ? "Hidden" : "Visible",
+          item.lastInventoryUpdate
+            ? new Date(item.lastInventoryUpdate).toLocaleString()
+            : "",
+        ].join(",")
+      ),
+    ].join("\n");
+
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const link = document.createElement("a");
+    const url = URL.createObjectURL(blob);
+
+    link.setAttribute("href", url);
+    link.setAttribute(
+      "download",
+      `items-export-${new Date().toISOString().split("T")[0]}.csv`
+    );
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   return {
     items,
     filterValue,
@@ -163,5 +223,6 @@ export function useItems(defaultItems: Item[] = initialItems) {
     currentPage,
     handlePageChange,
     handlePageSizeChange,
+    handleExport,
   };
 }

@@ -6,28 +6,34 @@ import { Edit, Trash2 } from "lucide-react";
 import { Item } from "@/types/dashboard/business/retail/owner/item";
 import { Badge } from "@/components/ui/badge";
 
+// Define default column visibility
+const DEFAULT_COLUMNS_VISIBLE = {
+  id: true,
+  name: true,
+  price: true,
+  category: true,
+  barcode: true,
+  quantity: true,
+  isActive: true,
+  isHidden: true,
+};
+
 interface ItemTableRowProps {
   item: Item;
-  columnsVisible: {
-    id: boolean;
-    name: boolean;
-    price: boolean;
-    category: boolean;
-    barcode: boolean;
-    quantity: boolean;
-    isActive: boolean;
-    isHidden: boolean;
-  };
+  columnsVisible?: Partial<typeof DEFAULT_COLUMNS_VISIBLE>;
   onEdit: (item: Item) => void;
   onDelete: (item: Item) => void;
 }
 
 export function ItemTableRow({
   item,
-  columnsVisible,
+  columnsVisible = DEFAULT_COLUMNS_VISIBLE,
   onEdit,
   onDelete,
 }: ItemTableRowProps) {
+  // Merge provided columns with defaults
+  const visibleColumns = { ...DEFAULT_COLUMNS_VISIBLE, ...columnsVisible };
+
   const formatPrice = (price: string | undefined) => {
     if (typeof price !== "string" || !price) {
       return "N/A";
@@ -82,38 +88,40 @@ export function ItemTableRow({
     return "text-green-500";
   };
 
+  if (!item) {
+    return null;
+  }
+
   return (
-    <TableRow className={item.isHidden ?? false ? "opacity-50" : ""}>
-      {columnsVisible.id && (
-        <TableCell>{typeof item.id === "string" ? item.id : "N/A"}</TableCell>
+    <TableRow className={item.isHidden ? "opacity-50" : ""}>
+      {visibleColumns.id && <TableCell>{item.id || "N/A"}</TableCell>}
+      {visibleColumns.name && (
+        <TableCell className="font-medium">{item.name || "N/A"}</TableCell>
       )}
-      {columnsVisible.name && (
-        <TableCell className="font-medium">{item.name ?? "N/A"}</TableCell>
-      )}
-      {columnsVisible.barcode && (
+      {visibleColumns.barcode && (
         <TableCell className="font-mono text-sm">
-          {item.barcode ?? "—"}
+          {item.barcode || "—"}
         </TableCell>
       )}
-      {columnsVisible.price && (
+      {visibleColumns.price && (
         <TableCell className="font-medium">
           ${formatPrice(item.price)}
         </TableCell>
       )}
-      {columnsVisible.quantity && (
+      {visibleColumns.quantity && (
         <TableCell className={`font-medium ${getQuantityColor(item.quantity)}`}>
           {typeof item.quantity === "number" ? item.quantity : "N/A"}
         </TableCell>
       )}
-      {columnsVisible.category && (
-        <TableCell>{item.category ?? "N/A"}</TableCell>
+      {visibleColumns.category && (
+        <TableCell>{item.category || "N/A"}</TableCell>
       )}
-      {columnsVisible.isActive && (
+      {visibleColumns.isActive && (
         <TableCell className="text-center">
           {getStatusBadge(item.isActive)}
         </TableCell>
       )}
-      {columnsVisible.isHidden && (
+      {visibleColumns.isHidden && (
         <TableCell className="text-center">
           {getVisibilityBadge(item.isHidden)}
         </TableCell>
@@ -128,7 +136,7 @@ export function ItemTableRow({
             className="hover:text-primary"
           >
             <Edit className="w-4 h-4" />
-            <span className="sr-only">Edit {item.name ?? "Item"}</span>
+            <span className="sr-only">Edit {item.name || "Item"}</span>
           </Button>
           <Button
             variant="ghost"
@@ -137,7 +145,7 @@ export function ItemTableRow({
             onClick={() => onDelete(item)}
           >
             <Trash2 className="w-4 h-4" />
-            <span className="sr-only">Delete {item.name ?? "Item"}</span>
+            <span className="sr-only">Delete {item.name || "Item"}</span>
           </Button>
         </div>
       </TableCell>

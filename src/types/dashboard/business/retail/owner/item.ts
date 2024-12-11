@@ -7,9 +7,13 @@ import {
   SortDirection,
   DEFAULT_COLUMN_VISIBILITY,
   initialItems,
+  FilterConfig,
+  PaginationConfig,
+  SortConfig,
 } from "@/types/dashboard/business/retail/owner/item";
 
 export function useItems(defaultItems: Item[] = initialItems) {
+  // State management
   const [items, setItems] = useState<Item[]>(defaultItems);
   const [filterValue, setFilterValue] = useState("");
   const [editingItem, setEditingItem] = useState<Item | null>(null);
@@ -23,12 +27,23 @@ export function useItems(defaultItems: Item[] = initialItems) {
   const [sortDirection, setSortDirection] = useState<SortDirection>(null);
   const [pageSize, setPageSize] = useState(10);
   const [currentPage, setCurrentPage] = useState(1);
+  const [filter, setFilter] = useState<FilterConfig>({
+    search: "",
+    isActive: undefined,
+    category: undefined,
+    minPrice: undefined,
+    maxPrice: undefined,
+    minQuantity: undefined,
+    maxQuantity: undefined,
+  });
 
+  // Memoized filtered items
   const filteredItems = useMemo(() => {
     const itemsToFilter = items || [];
 
-    const result = itemsToFilter.filter((item) =>
-      [
+    const result = itemsToFilter.filter((item) => {
+      // Basic search filter
+      const searchMatch = [
         item.name,
         item.barcode,
         item.price,
@@ -37,8 +52,28 @@ export function useItems(defaultItems: Item[] = initialItems) {
       ]
         .join(" ")
         .toLowerCase()
-        .includes(filterValue.toLowerCase())
-    );
+        .includes(filterValue.toLowerCase());
+
+      // Advanced filters
+      const categoryMatch =
+        !filter.category || item.category === filter.category;
+      const activeMatch =
+        filter.isActive === undefined || item.isActive === filter.isActive;
+      const priceMatch =
+        (!filter.minPrice || parseFloat(item.price) >= filter.minPrice) &&
+        (!filter.maxPrice || parseFloat(item.price) <= filter.maxPrice);
+      const quantityMatch =
+        (!filter.minQuantity || item.quantity >= filter.minQuantity) &&
+        (!filter.maxQuantity || item.quantity <= filter.maxQuantity);
+
+      return (
+        searchMatch &&
+        categoryMatch &&
+        activeMatch &&
+        priceMatch &&
+        quantityMatch
+      );
+    });
 
     if (sortColumn) {
       result.sort((a, b) => {
@@ -58,6 +93,14 @@ export function useItems(defaultItems: Item[] = initialItems) {
             : (bValue as number) - (aValue as number);
         }
 
+        if (sortColumn === "lastInventoryUpdate") {
+          const aDate = aValue as Date;
+          const bDate = bValue as Date;
+          return sortDirection === "asc"
+            ? aDate.getTime() - bDate.getTime()
+            : bDate.getTime() - aDate.getTime();
+        }
+
         if (typeof aValue === "boolean") {
           return sortDirection === "asc" ? (aValue ? 1 : -1) : aValue ? -1 : 1;
         }
@@ -72,13 +115,15 @@ export function useItems(defaultItems: Item[] = initialItems) {
     }
 
     return result;
-  }, [items, filterValue, sortColumn, sortDirection]);
+  }, [items, filterValue, sortColumn, sortDirection, filter]);
 
+  // Memoized paginated items
   const paginatedItems = useMemo(() => {
     const startIndex = (currentPage - 1) * pageSize;
     return filteredItems.slice(startIndex, startIndex + pageSize);
   }, [filteredItems, currentPage, pageSize]);
 
+  // Handlers
   const handleSort = (column: keyof Item) => {
     if (sortColumn === column) {
       setSortDirection((prev) => {
@@ -107,6 +152,7 @@ export function useItems(defaultItems: Item[] = initialItems) {
       quantity: data.quantity,
       isActive: data.isActive,
       isHidden: data.isHidden,
+      lastInventoryUpdate: new Date(),
     };
 
     setItems((prev) => [...prev, newItem]);
@@ -122,6 +168,7 @@ export function useItems(defaultItems: Item[] = initialItems) {
           ? {
               ...item,
               ...data,
+              lastInventoryUpdate: new Date(),
             }
           : item
       )
@@ -148,6 +195,11 @@ export function useItems(defaultItems: Item[] = initialItems) {
     setCurrentPage(1);
   };
 
+  const handleFilterChange = (newFilter: Partial<FilterConfig>) => {
+    setFilter((prev) => ({ ...prev, ...newFilter }));
+    setCurrentPage(1); // Reset to first page when filter changes
+  };
+
   const handleExport = () => {
     const headers = [
       "ID",
@@ -158,6 +210,7 @@ export function useItems(defaultItems: Item[] = initialItems) {
       "Category",
       "Status",
       "Visibility",
+      "Last Updated",
     ];
 
     const csvContent = [
@@ -172,6 +225,9 @@ export function useItems(defaultItems: Item[] = initialItems) {
           `"${item.category}"`,
           item.isActive ? "Active" : "Inactive",
           item.isHidden ? "Hidden" : "Visible",
+          item.lastInventoryUpdate
+            ? item.lastInventoryUpdate.toISOString()
+            : "",
         ].join(",")
       ),
     ].join("\n");
@@ -191,29 +247,42 @@ export function useItems(defaultItems: Item[] = initialItems) {
   };
 
   return {
+    // State
     items,
     filterValue,
     setFilterValue,
-    handleAddItem,
-    handleEditItem,
-    handleDeleteItem,
+    filter,
+    handleFilterChange,
+    editingItem,
+    setEditingItem,
+    columnsVisible,
+    setColumnsVisible,
+
+    // Dialog states
     isAddDialogOpen,
     setIsAddDialogOpen,
     isEditDialogOpen,
     setIsEditDialogOpen,
     isDeleteDialogOpen,
     setIsDeleteDialogOpen,
-    editingItem,
-    setEditingItem,
-    columnsVisible,
-    setColumnsVisible,
+
+    // Handlers
+    handleAddItem,
+    handleEditItem,
+    handleDeleteItem,
     handleSort,
+    handleExport,
+
+    // Pagination
     filteredItems,
     paginatedItems,
     pageSize,
     currentPage,
     handlePageChange,
     handlePageSizeChange,
-    handleExport,
+
+    // Sorting
+    sortColumn,
+    sortDirection,
   };
 }
