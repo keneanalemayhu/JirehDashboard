@@ -11,7 +11,7 @@ import {
 import {
   EmployeeTableSettingsProps,
   COLUMNS,
-} from "@/types/dashboard/business/retail/admin/employee";
+} from "@/types/dashboard/business/retail/owner/employee";
 
 export function EmployeeTableSettings({
   columnsVisible,

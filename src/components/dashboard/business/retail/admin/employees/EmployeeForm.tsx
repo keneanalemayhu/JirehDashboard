@@ -17,7 +17,7 @@ import {
   Employee,
   EmployeeStatus,
   locations,
-} from "@/types/dashboard/business/retail/admin/employee";
+} from "@/types/dashboard/business/retail/owner/employee";
 
 export function EmployeeForm({ initialData, onSubmit }: EmployeeFormProps) {
   const [formData, setFormData] = useState<Omit<Employee, "id">>({

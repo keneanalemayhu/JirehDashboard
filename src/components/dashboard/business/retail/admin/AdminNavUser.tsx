@@ -1,16 +1,7 @@
-"use client"
+"use client";
 
-import {
-  ChevronsUpDown,
-  User,
-  LogOut,
-} from "lucide-react"
-
-import {
-  Avatar,
-  AvatarFallback,
-  AvatarImage,
-} from "@/components/ui/avatar"
+import { ChevronsUpDown, User, LogOut } from "lucide-react";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -19,24 +10,28 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
+} from "@/components/ui/dropdown-menu";
 import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
   useSidebar,
-} from "@/components/ui/sidebar"
+} from "@/components/ui/sidebar";
+import { useLanguage } from "@/components/context/LanguageContext";
+import { translations } from "@/translations/dashboard/business/retail/admin";
 
 export function NavUser({
   user,
 }: {
   user: {
-    name: string
-    email: string
-    avatar: string
-  }
+    name: string;
+    email: string;
+    avatar: string;
+  };
 }) {
-  const { isMobile } = useSidebar()
+  const { isMobile } = useSidebar();
+  const { language } = useLanguage();
+  const t = translations[language].dashboard.admin.sidebar.userMenu;
 
   return (
     <SidebarMenu>
@@ -80,14 +75,14 @@ export function NavUser({
             <DropdownMenuSeparator />
             <DropdownMenuGroup>
               <DropdownMenuItem>
-                <User />
-                Account
+                <User className="mr-2 h-4 w-4" />
+                {t.account}
               </DropdownMenuItem>
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
             <DropdownMenuItem>
-              <LogOut />
-              Log out
+              <LogOut className="mr-2 h-4 w-4" />
+              {t.logout}
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>

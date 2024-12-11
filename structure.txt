@@ -105,7 +105,8 @@ Jireh-dashboard/
 │   │   │   └── SubscriptionForm.tsx
 │   │   ├── common/
 │   │   │   ├── auth/
-│   │   │   │   └── Icons.tsx
+│   │   │   │   ├── AuthHeader.tsx
+│   │   │   │   └── AuthIcons.tsx
 │   │   │   ├── dashboard/
 │   │   │   │   ├── business/
 │   │   │   │   │   ├── admin/
@@ -122,7 +123,8 @@ Jireh-dashboard/
 │   │   │   │   │   └── └── Sidebar.tsx
 │   │   │   │   ├── sadmin/
 │   │   │   │   │   ├── Header.tsx
-│   │   │   │   └── └── Sidebar.tsx
+│   │   │   │   ├── └── Sidebar.tsx
+│   │   │   └── LanguageToggle.tsx
 │   │   ├── context/
 │   │   │   ├── LanguageContext.tsx
 │   │   │   └── ThemeContext.tsx
@@ -334,20 +336,32 @@ Jireh-dashboard/
 │   │   └── store-provider.tsx
 │   ├── translations/
 │   │   ├── auth/
+│   │   │   ├── am.ts
+│   │   │   ├── en.ts
 │   │   │   └── index.ts
 │   │   ├── dashboard/
 │   │   │   ├── business/
 │   │   │   │   ├── garage/
 │   │   │   │   ├── retail/
 │   │   │   │   │   ├── admin/
+│   │   │   │   │   │   ├── am.ts
+│   │   │   │   │   │   ├── en.ts
 │   │   │   │   │   │   └── index.ts
 │   │   │   │   │   ├── owner/
+│   │   │   │   │   │   ├── am.ts
+│   │   │   │   │   │   ├── en.ts
 │   │   │   │   │   │   └── index.ts
 │   │   │   │   │   ├── sales/
+│   │   │   │   │   │   ├── am.ts
+│   │   │   │   │   │   ├── en.ts
 │   │   │   │   │   │   └── index.ts
-│   │   │   │   │   └── warehouse/
-│   │   │   │   │       └── index.ts
+│   │   │   │   │   ├── warehouse/
+│   │   │   │   │   │   ├── am.ts
+│   │   │   │   │   │   ├── en.ts
+│   │   │   │   │   │   └── index.ts
 │   │   │   ├── sadmin/
+│   │   │   │   ├── am.ts
+│   │   │   │   ├── en.ts
 │   │   │   │   └── index.ts
 │   ├── types/
 │   │   ├── dashboard/

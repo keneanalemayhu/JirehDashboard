@@ -1,11 +1,15 @@
 "use client";
 import React, { useState, useEffect } from "react";
-import { Sun, Moon, Languages } from "lucide-react";
+import { Sun, Moon } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useLanguage } from "@/components/context/LanguageContext";
+import { LanguageToggle } from "@/components/common/LanguageToggle";
+import { translations } from "@/translations/dashboard/business/retail/admin/index";
 
 export function NavActions() {
   const [isDarkTheme, setIsDarkTheme] = useState(false);
-  const [language, setLanguage] = useState("en");
+  const { language } = useLanguage();
+  const t = translations[language].dashboard?.admin?.nav || {};
 
   // Initialize theme from localStorage on component mount
   useEffect(() => {
@@ -37,12 +41,6 @@ export function NavActions() {
     }
   };
 
-  const toggleLanguage = () => {
-    setLanguage(language === "en" ? "am" : "en");
-    // You might want to persist language preference similarly:
-    // localStorage.setItem("language", language === "en" ? "am" : "en");
-  };
-
   return (
     <div className="flex items-center gap-2 text-sm">
       <Button
@@ -50,6 +48,7 @@ export function NavActions() {
         size="icon"
         className="h-7 w-7"
         onClick={toggleTheme}
+        aria-label={t.toggleTheme || "Toggle theme"}
       >
         {isDarkTheme ? (
           <Sun className="h-4 w-4" />
@@ -57,14 +56,7 @@ export function NavActions() {
           <Moon className="h-4 w-4" />
         )}
       </Button>
-      <Button
-        variant="ghost"
-        size="icon"
-        className="h-7 w-7"
-        onClick={toggleLanguage}
-      >
-        <Languages className="h-4 w-4" />
-      </Button>
+      <LanguageToggle />
     </div>
   );
 }

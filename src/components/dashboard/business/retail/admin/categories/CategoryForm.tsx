@@ -16,7 +16,7 @@ import { DialogFooter } from "@/components/ui/dialog";
 import {
   Category,
   locations,
-} from "@/types/dashboard/business/retail/admin/category";
+} from "@/types/dashboard/business/retail/owner/category";
 
 interface CategoryFormProps {
   initialData?: Category;

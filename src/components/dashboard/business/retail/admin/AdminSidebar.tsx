@@ -6,11 +6,10 @@ import {
   Command,
   Gauge,
   GalleryVerticalEnd,
-  Settings2,
   Wrench,
   ListOrdered,
+  BookUser,
 } from "lucide-react";
-
 import { NavMain } from "@/components/dashboard/business/retail/admin/AdminNavMain";
 import { NavUser } from "@/components/dashboard/business/retail/admin/AdminNavUser";
 import { NavProjects } from "@/components/dashboard/business/retail/admin/AdminNavProjects";
@@ -22,91 +21,90 @@ import {
   SidebarHeader,
   SidebarRail,
 } from "@/components/ui/sidebar";
-
-// This is sample data.
-const data = {
-  user: {
-    name: "shadcn",
-    email: "m@example.com",
-    avatar: "/avatars/shadcn.jpg",
-  },
-  teams: [
-    {
-      name: "Admin",
-      logo: GalleryVerticalEnd,
-      plan: "Management",
-      url: "/dashboard/business/retail/admin",
-    },
-    {
-      name: "Sales",
-      logo: AudioWaveform,
-      plan: "Revenue Operations",
-      url: "/dashboard/business/retail/sales",
-    },
-    {
-      name: "Warehouse",
-      logo: Command,
-      plan: "Inventory Management",
-      url: "/dashboard/business/retail/warehouse",
-    },
-  ],
-  projects: [
-    {
-      name: "Overview",
-      url: "/dashboard/business/retail/admin/",
-      icon: Gauge,
-    },
-    {
-      name: "Orders",
-      url: "/dashboard/business/retail/admin/orders",
-      icon: ListOrdered,
-    },
-  ],
-  navMain: [
-    {
-      title: "Manage",
-      url: "#",
-      icon: Wrench,
-      isActive: true,
-      items: [
-        {
-          title: "Locations",
-          url: "/dashboard/business/retail/admin/locations",
-        },
-        {
-          title: "Categories",
-          url: "/dashboard/business/retail/admin/categories",
-        },
-        {
-          title: "Items",
-          url: "/dashboard/business/retail/admin/items",
-        },
-        {
-          title: "Employees",
-          url: "/dashboard/business/retail/admin/employees",
-        },
-        {
-          title: "Users",
-          url: "/dashboard/business/retail/admin/users",
-        },
-      ],
-    },
-    {
-      title: "Settings",
-      url: "#",
-      icon: Settings2,
-      isactive: true,
-      items: [
-        {
-          title: "Profile",
-          url: "/dashboard/business/retail/admin/profile",
-        },
-      ],
-    },
-  ],
-};
+import { useLanguage } from "@/components/context/LanguageContext";
+import { translations } from "@/translations/dashboard/business/retail/admin";
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
+  const { language } = useLanguage();
+  const t = translations[language].dashboard.admin.sidebar;
+
+  // This is sample data with translations
+  const data = {
+    user: {
+      name: "shadcn",
+      email: "m@example.com",
+      avatar: "/avatars/shadcn.jpg",
+    },
+    teams: [
+      {
+        name: t.teams.admin,
+        logo: BookUser,
+        plan: t.teams.adminPlan,
+        url: "/dashboard/business/retail/admin",
+      },
+      {
+        name: t.teams.admin,
+        logo: GalleryVerticalEnd,
+        plan: t.teams.adminPlan,
+        url: "/dashboard/business/retail/admin",
+      },
+      {
+        name: t.teams.sales,
+        logo: AudioWaveform,
+        plan: t.teams.salesPlan,
+        url: "/dashboard/business/retail/sales",
+      },
+      {
+        name: t.teams.warehouse,
+        logo: Command,
+        plan: t.teams.warehousePlan,
+        url: "/dashboard/business/retail/warehouse",
+      },
+    ],
+    projects: [
+      {
+        name: t.projects.overview,
+        url: "/dashboard/business/retail/admin/",
+        icon: Gauge,
+      },
+      {
+        name: t.projects.orders,
+        url: "/dashboard/business/retail/admin/orders",
+        icon: ListOrdered,
+      },
+    ],
+    navMain: [
+      {
+        title: t.manage.title,
+        url: "#",
+        icon: Wrench,
+        isActive: true,
+        items: [
+          {
+            title: t.manage.locations,
+            url: "/dashboard/business/retail/admin/locations",
+          },
+          {
+            title: t.manage.categories,
+            url: "/dashboard/business/retail/admin/categories",
+          },
+          {
+            title: t.manage.items,
+            url: "/dashboard/business/retail/admin/items",
+          },
+          {
+            title: t.manage.employees,
+            url: "/dashboard/business/retail/admin/employees",
+          },
+          {
+            title: t.manage.users,
+            url: "/dashboard/business/retail/admin/users",
+          },
+        ],
+      },
+    ],
+  };
+
   return (
     <Sidebar collapsible="icon" {...props}>
       <SidebarHeader>

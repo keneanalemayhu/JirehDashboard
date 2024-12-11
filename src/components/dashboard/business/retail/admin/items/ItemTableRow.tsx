@@ -3,15 +3,15 @@
 import { TableCell, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Edit, Trash2 } from "lucide-react";
-import { Item } from "@/types/dashboard/business/retail/admin/item";
+import { Item } from "@/types/dashboard/business/retail/owner/item";
 
 interface ItemTableRowProps {
   item: Item;
   columnsVisible: {
     id: boolean;
     name: boolean;
-    description: boolean;
-    location: boolean;
+    price: boolean;
+    category: boolean;
   };
   onEdit: (item: Item) => void;
   onDelete: (item: Item) => void;
@@ -25,19 +25,17 @@ export function ItemTableRow({
 }: ItemTableRowProps) {
   return (
     <TableRow className={item.isHidden ? "opacity-50" : ""}>
-      {/* ID Column */}
       {columnsVisible.id && <TableCell>{item.id}</TableCell>}
-
-      {/* Name Column */}
       {columnsVisible.name && <TableCell>{item.name}</TableCell>}
+      {columnsVisible.price && (
+        <TableCell>
+          {parseFloat(item.price)
+            .toFixed(2)
+            .replace(/\B(?=(\d{3})+(?!\d))/g, ",")}
+        </TableCell>
+      )}
+      {columnsVisible.category && <TableCell>{item.category}</TableCell>}
 
-      {/* Description Column */}
-      {columnsVisible.description && <TableCell>{item.description}</TableCell>}
-
-      {/* Location Column */}
-      {columnsVisible.location && <TableCell>{item.location}</TableCell>}
-
-      {/* Actions Column */}
       <TableCell>
         <div className="flex space-x-2">
           <Button variant="ghost" size="icon" onClick={() => onEdit(item)}>

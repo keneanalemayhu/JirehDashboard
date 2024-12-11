@@ -5,7 +5,7 @@ import {
   Location,
   ColumnVisibility,
   LocationFormData,
-} from "@/types/dashboard/business/retail/admin/location";
+} from "@/types/dashboard/business/retail/owner/location";
 import { LocationTableHeader } from "./LocationTableHeader";
 import { LocationTableRow } from "./LocationTableRow";
 import {

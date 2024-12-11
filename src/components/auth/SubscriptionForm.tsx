@@ -2,14 +2,13 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Check, Sun, Moon, MoveLeft } from "lucide-react";
+import { Check, MoveLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useTheme } from "next-themes";
 import {
   useLanguage,
   LanguageProvider,
 } from "@/components/context/LanguageContext";
-import { LanguageToggle } from "@/components/common/LanguageToggle";
+import AuthHeader from "@/components/common/auth/AuthHeader";
 import { translations } from "@/translations/auth/index";
 import {
   Card,
@@ -22,9 +21,10 @@ import {
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { Badge } from "@/components/ui/badge";
 
+interface FormProps extends React.FormHTMLAttributes<HTMLFormElement> {}
+
 function SubscriptionFormContent() {
   const [isYearly, setIsYearly] = useState(false);
-  const { theme, setTheme } = useTheme();
   const { language } = useLanguage();
   const t = translations[language].subscription;
 
@@ -72,19 +72,7 @@ function SubscriptionFormContent() {
       </div>
 
       {/* Theme and Language Toggles - Fixed position */}
-      <div className="fixed top-4 right-4 flex items-center space-x-2 z-50">
-        <button
-          onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-          className="rounded-md p-2 hover:bg-accent"
-        >
-          {theme === "dark" ? (
-            <Sun className="w-5 h-5" />
-          ) : (
-            <Moon className="w-5 h-5" />
-          )}
-        </button>
-        <LanguageToggle />
-      </div>
+      <AuthHeader />
 
       <div className="container mx-auto pt-20">
         <h1 className="text-3xl font-bold text-center mb-10">{t.title}</h1>

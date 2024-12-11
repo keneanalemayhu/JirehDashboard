@@ -1,7 +1,7 @@
 "use client";
 
 import { Table, TableBody } from "@/components/ui/table";
-import { Employee } from "@/types/dashboard/business/retail/admin/employee"; // You'll need to create this type
+import { Employee } from "@/types/dashboard/business/retail/owner/employee"; // You'll need to create this type
 import { EmployeeTableHeader } from "./EmployeeTableHeader";
 import { EmployeeTableRow } from "./EmployeeTableRow";
 import {

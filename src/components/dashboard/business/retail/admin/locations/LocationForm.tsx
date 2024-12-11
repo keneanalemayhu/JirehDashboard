@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { DialogFooter } from "@/components/ui/dialog";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Location } from "@/types/dashboard/business/retail/admin/location";
+import { Location } from "@/types/dashboard/business/retail/owner/location";
 
 interface LocationFormProps {
   initialData?: Location;

@@ -2,7 +2,7 @@
 import { TableCell, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Edit, Trash2 } from "lucide-react";
-import { Location } from "@/types/dashboard/business/retail/admin/location";
+import { Location } from "@/types/dashboard/business/retail/owner/location";
 
 interface LocationTableRowProps {
   location: Location;

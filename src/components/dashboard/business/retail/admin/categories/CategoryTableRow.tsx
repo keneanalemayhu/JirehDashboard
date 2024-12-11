@@ -3,7 +3,7 @@
 import { TableCell, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Edit, Trash2 } from "lucide-react";
-import { Category } from "@/types/dashboard/business/retail/admin/category";
+import { Category } from "@/types/dashboard/business/retail/owner/category";
 
 interface CategoryTableRowProps {
   category: Category;

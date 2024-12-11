@@ -8,14 +8,14 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { ChevronsUpDownIcon } from "lucide-react";
-import { Item } from "@/types/dashboard/business/retail/admin/item";
+import { Item } from "@/types/dashboard/business/retail/owner/item";
 
 interface ItemTableHeaderProps {
   columnsVisible: {
     id: boolean;
     name: boolean;
-    description: boolean;
-    location: boolean;
+    price: boolean;
+    category: boolean;
   };
   onSort: (column: keyof Item) => void;
 }
@@ -33,8 +33,8 @@ export function ItemTableHeader({
   const columns: ColumnConfig[] = [
     { key: "id", label: "ID", width: "w-[100px]" },
     { key: "name", label: "Name" },
-    { key: "description", label: "Description" },
-    { key: "location", label: "Location" },
+    { key: "price", label: "Price" },
+    { key: "category", label: "Category" },
   ];
 
   const renderSortableHeader = (column: ColumnConfig) => (

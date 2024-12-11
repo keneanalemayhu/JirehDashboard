@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { Sun, Moon, Eye, EyeOff } from "lucide-react";
+import { Eye, EyeOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -12,15 +12,12 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { useTheme } from "next-themes";
-import { cn } from "@/lib/utils";
 import { useLanguage } from "@/components/context/LanguageContext";
 import { translations } from "@/translations/auth";
 import { useState } from "react";
-import { LanguageToggle } from "@/components/common/LanguageToggle";
+import AuthHeader from "@/components/common/auth/AuthHeader";
 
 function ResetPasswordFormContent() {
-  const { theme, setTheme } = useTheme();
   const { language } = useLanguage();
   const t = translations[language].resetPassword;
   const [showPassword, setShowPassword] = useState(false);
@@ -28,19 +25,7 @@ function ResetPasswordFormContent() {
 
   return (
     <main className="min-h-screen p-4 flex items-center justify-center bg-background dark:bg-black">
-      <div className="fixed top-4 right-4 flex items-center space-x-2">
-        <button
-          onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-          className="rounded-md p-2 hover:bg-accent"
-        >
-          {theme === "dark" ? (
-            <Sun className="w-5 h-5" />
-          ) : (
-            <Moon className="w-5 h-5" />
-          )}
-        </button>
-        <LanguageToggle />
-      </div>
+      <AuthHeader />
 
       <Card className="w-full max-w-sm dark:bg-black dark:text-white dark:border dark:border-gray-800">
         <CardHeader>

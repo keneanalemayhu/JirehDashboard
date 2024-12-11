@@ -6,7 +6,7 @@ import { Edit, Trash2 } from "lucide-react";
 import {
   Employee,
   EmployeeStatus,
-} from "@/types/dashboard/business/retail/admin/employee";
+} from "@/types/dashboard/business/retail/owner/employee";
 import { cn } from "@/lib/utils";
 
 interface EmployeeTableRowProps {
@@ -29,17 +29,6 @@ export function EmployeeTableRow({
   onEdit,
   onDelete,
 }: EmployeeTableRowProps) {
-  // Format salary as currency
-  const formatSalary = (salary: number) => {
-    return new Intl.NumberFormat("en-ET", {
-      style: "currency",
-      currency: "ETB",
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0,
-    }).format(salary);
-  };
-
-  // Get status badge color
   const getStatusColor = (status: EmployeeStatus) => {
     switch (status) {
       case EmployeeStatus.FULL_TIME:
@@ -58,17 +47,13 @@ export function EmployeeTableRow({
   return (
     <TableRow className={!employee.isActive ? "opacity-50" : ""}>
       {columnsVisible.id && <TableCell>{employee.id}</TableCell>}
-
       {columnsVisible.name && <TableCell>{employee.name}</TableCell>}
-
       {columnsVisible.phone && <TableCell>{employee.phone}</TableCell>}
-
       {columnsVisible.salary && (
         <TableCell className="text-right">
-          {formatSalary(employee.salary)}
+          {employee.salary.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ",")}
         </TableCell>
       )}
-
       {columnsVisible.status && (
         <TableCell>
           <span
@@ -81,7 +66,6 @@ export function EmployeeTableRow({
           </span>
         </TableCell>
       )}
-
       {columnsVisible.location && (
         <TableCell>
           <span className="inline-flex items-center rounded-md bg-gray-50 px-2 py-1 text-xs font-medium text-gray-600 ring-1 ring-inset ring-gray-500/10">
@@ -89,7 +73,6 @@ export function EmployeeTableRow({
           </span>
         </TableCell>
       )}
-
       <TableCell>
         <div className="flex space-x-2">
           <Button variant="ghost" size="icon" onClick={() => onEdit(employee)}>

@@ -1,7 +1,7 @@
 "use client";
 
 import { Table, TableBody } from "@/components/ui/table";
-import { User } from "@/types/dashboard/business/retail/admin/user";
+import { User } from "@/types/dashboard/business/retail/owner/user";
 import { UserTableHeader } from "./UserTableHeader";
 import { UserTableRow } from "./UserTableRow";
 import {

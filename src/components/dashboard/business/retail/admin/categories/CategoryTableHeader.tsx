@@ -8,7 +8,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { ChevronsUpDownIcon } from "lucide-react";
-import { Category } from "@/types/dashboard/business/retail/admin/category";
+import { Category } from "@/types/dashboard/business/retail/owner/category";
 
 interface CategoryTableHeaderProps {
   columnsVisible: {

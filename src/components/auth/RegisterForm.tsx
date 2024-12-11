@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { Sun, Moon, Eye, EyeOff } from "lucide-react";
+import { Eye, EyeOff } from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -18,17 +18,14 @@ import {
   HoverCardContent,
   HoverCardTrigger,
 } from "@/components/ui/hover-card";
-import { useTheme } from "next-themes";
 import { useLanguage } from "@/components/context/LanguageContext";
 import { translations } from "@/translations/auth";
-import { Icons } from "@/components/common/auth/Icons";
-import { LanguageToggle } from "@/components/common/LanguageToggle";
-
+import { Icons } from "@/components/common/auth/AuthIcons";
+import AuthHeader from "@/components/common/auth/AuthHeader";
 
 interface FormProps extends React.FormHTMLAttributes<HTMLFormElement> {}
 
 export function RegisterForm() {
-  const { theme, setTheme } = useTheme();
   const { language } = useLanguage(); // Updated to remove toggleLanguage
   const t = translations[language].register;
   const [showPassword, setShowPassword] = useState(false);
@@ -66,20 +63,7 @@ export function RegisterForm() {
   return (
     <div className="h-screen w-screen flex flex-col lg:flex-row">
       {/* Theme and Language Toggles - Fixed position */}
-      <div className="fixed top-4 right-4 flex items-center space-x-2 z-50">
-        <button
-          onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-          className="rounded-md p-2 hover:bg-accent"
-        >
-          {theme === "dark" ? (
-            <Sun className="w-5 h-5" />
-          ) : (
-            <Moon className="w-5 h-5" />
-          )}
-        </button>
-        <LanguageToggle />{" "}
-        {/* Replace the old language toggle with the new component */}
-      </div>
+      <AuthHeader />
 
       {/* Left side - Personal Information */}
       <div className="lg:hidden w-full px-4 pt-6 pb-8">

@@ -11,7 +11,7 @@ import {
 import {
   CategoryTableSettingsProps,
   COLUMNS,
-} from "@/types/dashboard/business/retail/admin/category";
+} from "@/types/dashboard/business/retail/owner/category";
 
 export function CategoryTableSettings({
   columnsVisible,

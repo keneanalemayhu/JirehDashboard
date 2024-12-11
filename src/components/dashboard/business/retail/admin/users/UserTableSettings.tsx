@@ -11,7 +11,7 @@ import {
 import {
   UserTableSettingsProps,
   COLUMNS,
-} from "@/types/dashboard/business/retail/admin/user";
+} from "@/types/dashboard/business/retail/owner/user";
 
 export function UserTableSettings({
   columnsVisible,

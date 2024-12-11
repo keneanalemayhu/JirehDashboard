@@ -8,14 +8,14 @@ import {
   DropdownMenuContent,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Item } from "@/types/dashboard/business/retail/admin/item";
+import { Item } from "@/types/dashboard/business/retail/owner/item";
 
 interface ItemTableSettingsProps {
   columnsVisible: {
     id: boolean;
     name: boolean;
-    description: boolean;
-    location: boolean;
+    price: boolean;
+    category: boolean;
   };
   onColumnVisibilityChange: (
     column: keyof Omit<Item, "isHidden">,
@@ -35,8 +35,8 @@ export function ItemTableSettings({
   const columns: ColumnConfig[] = [
     { key: "id", label: "ID" },
     { key: "name", label: "Name" },
-    { key: "description", label: "Description" },
-    { key: "location", label: "Location" },
+    { key: "price", label: "Price" },
+    { key: "category", label: "Category" },
   ];
 
   return (

@@ -1,4 +1,4 @@
-// translations/index.ts
+// translations/auth/am.ts
 export const am = {
   login: {
     title: "ይግቡ",

@@ -6,7 +6,6 @@ import {
   Command,
   Gauge,
   GalleryVerticalEnd,
-  Settings2,
   Wrench,
   ListOrdered,
   BookUser,
@@ -100,18 +99,6 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           {
             title: t.manage.users,
             url: "/dashboard/business/retail/owner/users",
-          },
-        ],
-      },
-      {
-        title: t.settingsSection.title,
-        url: "#",
-        icon: Settings2,
-        isactive: true,
-        items: [
-          {
-            title: t.settingsSection.profile,
-            url: "/dashboard/business/retail/owner/profile",
           },
         ],
       },

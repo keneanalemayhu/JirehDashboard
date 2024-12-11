@@ -1,3 +1,4 @@
+// translations/auth/e,.ts
 export const en = {
   login: {
     title: "Login",

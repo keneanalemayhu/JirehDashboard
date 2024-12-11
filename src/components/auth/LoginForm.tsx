@@ -1,21 +1,19 @@
 "use client";
 
 import Link from "next/link";
-import { Sun, Moon, Eye, EyeOff } from "lucide-react";
+import { Eye, EyeOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { useTheme } from "next-themes";
 import { useLanguage } from "@/components/context/LanguageContext";
-import { LanguageToggle } from "@/components/common/LanguageToggle";
 import { translations } from "@/translations/auth";
 import { useState } from "react";
-import { Icons } from "@/components/common/auth/Icons";
+import { Icons } from "@/components/common/auth/AuthIcons";
+import AuthHeader from "@/components/common/auth/AuthHeader";
 
 interface FormProps extends React.FormHTMLAttributes<HTMLFormElement> {}
 
 function LoginFormContent() {
-  const { theme, setTheme } = useTheme();
   const { language } = useLanguage();
   const t = translations[language].login;
   const [showPassword, setShowPassword] = useState(false);
@@ -32,21 +30,7 @@ function LoginFormContent() {
   return (
     <div className="h-screen w-screen flex">
       {/* Theme and Language Toggles - Fixed position */}
-      <div className="fixed top-4 right-4 flex items-center space-x-2 z-50">
-        <button
-          onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-          className="rounded-md p-2 hover:bg-accent"
-        >
-          {theme === "dark" ? (
-            <Sun className="w-5 h-5" />
-          ) : (
-            <Moon className="w-5 h-5" />
-          )}
-        </button>
-        <LanguageToggle />
-      </div>
-
-      {/* Left side - Dark section */}
+      <AuthHeader />;{/* Left side - Dark section */}
       <div className="hidden lg:flex w-1/2 h-full bg-zinc-900 text-white flex-col justify-between p-10">
         <div className="relative z-20 flex items-center text-lg font-medium">
           <Icons.logo className="mr-2 h-6 w-6" /> Jireh-Group
@@ -58,7 +42,6 @@ function LoginFormContent() {
           </blockquote>
         </div>
       </div>
-
       {/* Right side - Login form */}
       <div className="w-full lg:w-1/2 flex items-center justify-center p-8">
         <div className="w-full max-w-[350px] space-y-6">

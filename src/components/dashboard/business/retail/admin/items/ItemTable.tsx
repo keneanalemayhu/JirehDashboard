@@ -1,7 +1,7 @@
 "use client";
 
 import { Table, TableBody } from "@/components/ui/table";
-import { Item } from "@/types/dashboard/business/retail/admin/item";
+import { Item } from "@/types/dashboard/business/retail/owner/item";
 import { ItemTableHeader } from "./ItemTableHeader";
 import { ItemTableRow } from "./ItemTableRow";
 import {
@@ -20,8 +20,8 @@ interface ItemTableProps {
   columnsVisible: {
     id: boolean;
     name: boolean;
-    description: boolean;
-    location: boolean;
+    price: boolean;
+    category: boolean;
   };
   onSort: (column: keyof Item) => void;
   onEdit: (item: Item) => void;
@@ -49,7 +49,6 @@ export function ItemTable({
   onEditSubmit,
   onDeleteConfirm,
 }: ItemTableProps) {
-  // Check if items is undefined
   if (!items) {
     return (
       <div className="border rounded-lg p-4 text-center text-gray-500">
@@ -58,7 +57,6 @@ export function ItemTable({
     );
   }
 
-  // Check if items array is empty
   if (items.length === 0) {
     return (
       <div className="border rounded-lg p-4 text-center text-gray-500">
@@ -86,7 +84,6 @@ export function ItemTable({
         </Table>
       </div>
 
-      {/* Edit Dialog */}
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
         <DialogContent>
           <DialogHeader>
@@ -101,7 +98,6 @@ export function ItemTable({
         </DialogContent>
       </Dialog>
 
-      {/* Delete Dialog */}
       <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
         <DialogContent>
           <DialogHeader>

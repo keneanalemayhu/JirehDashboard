@@ -1,13 +1,14 @@
 "use client";
 import React, { useState, useEffect } from "react";
-import { Sun, Moon, Languages } from "lucide-react";
+import { Sun, Moon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/components/context/LanguageContext";
+import { LanguageToggle } from "@/components/common/LanguageToggle";
 import { translations } from "@/translations/dashboard/business/retail/owner/index";
 
 export function NavActions() {
   const [isDarkTheme, setIsDarkTheme] = useState(false);
-  const { language, toggleLanguage } = useLanguage();
+  const { language } = useLanguage();
   const t = translations[language].dashboard?.owner?.nav || {};
 
   // Initialize theme from localStorage on component mount
@@ -55,15 +56,7 @@ export function NavActions() {
           <Moon className="h-4 w-4" />
         )}
       </Button>
-      <Button
-        variant="ghost"
-        size="icon"
-        className="h-7 w-7"
-        onClick={toggleLanguage}
-        aria-label={t.toggleLanguage || "Toggle language"}
-      >
-        <Languages className="h-4 w-4" />
-      </Button>
+      <LanguageToggle />
     </div>
   );
 }

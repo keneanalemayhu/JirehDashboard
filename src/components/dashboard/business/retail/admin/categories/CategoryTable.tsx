@@ -1,7 +1,7 @@
 "use client";
 
 import { Table, TableBody } from "@/components/ui/table";
-import { Category } from "@/types/dashboard/business/retail/admin/category";
+import { Category } from "@/types/dashboard/business/retail/owner/category";
 import { CategoryTableHeader } from "./CategoryTableHeader";
 import { CategoryTableRow } from "./CategoryTableRow";
 import {

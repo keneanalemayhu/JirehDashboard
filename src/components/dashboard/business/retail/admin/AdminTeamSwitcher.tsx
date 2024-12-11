@@ -3,7 +3,6 @@
 import * as React from "react";
 import { ChevronsUpDown } from "lucide-react";
 import Link from "next/link";
-
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -19,6 +18,8 @@ import {
   SidebarMenuItem,
   useSidebar,
 } from "@/components/ui/sidebar";
+import { useLanguage } from "@/components/context/LanguageContext";
+import { translations } from "@/translations/dashboard/business/retail/admin";
 
 export function TeamSwitcher({
   teams,
@@ -27,10 +28,16 @@ export function TeamSwitcher({
     name: string;
     logo: React.ElementType;
     plan: string;
-    url: string; // Add URL property
+    url: string;
   }[];
 }) {
   const { isMobile } = useSidebar();
+  const { language } = useLanguage();
+  const t = translations[language]?.dashboard?.admin?.teamSwitcher || {
+    label: "Users",
+    shortcutPrefix: "⌘",
+  };
+
   const [activeTeam, setActiveTeam] = React.useState(teams[0]);
 
   return (
@@ -47,9 +54,13 @@ export function TeamSwitcher({
               </div>
               <div className="grid flex-1 text-left text-sm leading-tight">
                 <span className="truncate font-semibold">
-                  {activeTeam.name}
+                  {t.teams?.[activeTeam.name.toLowerCase()] || activeTeam.name}
                 </span>
-                <span className="truncate text-xs">{activeTeam.plan}</span>
+                <span className="truncate text-xs">
+                  {t.plans?.[
+                    activeTeam.plan.toLowerCase().replace(/\s+/g, "_")
+                  ] || activeTeam.plan}
+                </span>
               </div>
               <ChevronsUpDown className="ml-auto" />
             </SidebarMenuButton>
@@ -61,23 +72,19 @@ export function TeamSwitcher({
             sideOffset={4}
           >
             <DropdownMenuLabel className="text-xs text-muted-foreground">
-              Users
+              {t.label}
             </DropdownMenuLabel>
             {teams.map((team, index) => (
-              <DropdownMenuItem
-                asChild // Use `asChild` for the Link wrapper
-                key={team.name}
-                className="gap-2 p-2"
-              >
-                <Link
-                  href={team.url}
-                  onClick={() => setActiveTeam(team)} // Update the active team
-                >
+              <DropdownMenuItem asChild key={team.name} className="gap-2 p-2">
+                <Link href={team.url} onClick={() => setActiveTeam(team)}>
                   <div className="flex size-6 items-center justify-center rounded-sm border">
                     <team.logo className="size-4 shrink-0" />
                   </div>
-                  {team.name}
-                  <DropdownMenuShortcut>⌘{index + 1}</DropdownMenuShortcut>
+                  {t.teams?.[team.name.toLowerCase()] || team.name}
+                  <DropdownMenuShortcut>
+                    {t.shortcutPrefix}
+                    {index + 1}
+                  </DropdownMenuShortcut>
                 </Link>
               </DropdownMenuItem>
             ))}

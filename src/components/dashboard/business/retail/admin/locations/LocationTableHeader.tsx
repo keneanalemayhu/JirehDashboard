@@ -8,7 +8,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { ChevronsUpDownIcon } from "lucide-react";
-import { Location } from "@/types/dashboard/business/retail/admin/location";
+import { Location } from "@/types/dashboard/business/retail/owner/location";
 
 interface LocationTableHeaderProps {
   columnsVisible: {

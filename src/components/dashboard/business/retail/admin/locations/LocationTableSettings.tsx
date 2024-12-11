@@ -11,7 +11,7 @@ import {
 import {
   Location,
   ColumnVisibility,
-} from "@/types/dashboard/business/retail/admin/location";
+} from "@/types/dashboard/business/retail/owner/location";
 
 interface LocationTableSettingsProps {
   columnsVisible: ColumnVisibility;
