@@ -13,7 +13,7 @@ import {
 } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { DialogFooter } from "@/components/ui/dialog";
-import { locations, Role } from "@/types/dashboard/business/retail/admin/user";
+import { locations, Role } from "@/types/dashboard/business/retail/owner/user";
 
 interface User {
   id?: string;
