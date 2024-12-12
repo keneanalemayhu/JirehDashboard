@@ -5,7 +5,6 @@ import {
   AudioWaveform,
   Command,
   Gauge,
-  GalleryVerticalEnd,
   Wrench,
   ListOrdered,
   BookUser,
