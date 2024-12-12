@@ -13,6 +13,8 @@ export interface Order {
   user_name: string;
   total_amount: number;
   payment_status: PaymentStatus;
+  created_at: string; // ISO string format
+  updated_at: string; // ISO string format
 }
 
 export enum PaymentStatus {
@@ -119,23 +121,6 @@ export const COLUMNS: ColumnConfig[] = [
 ];
 
 export const PAGE_SIZE_OPTIONS = [10, 20, 30, 40, 50] as const;
-
-/**
- * Initial/Default Values
- */
-export const initialOrders: Order[] = [
-  {
-    order_id: "ORD-001",
-    item_name: "Sample Product",
-    quantity: 2,
-    unit_price: 1000,
-    subtotal: 2000,
-    employee_name: "John Doe",
-    user_name: "Jane Smith",
-    total_amount: 2000,
-    payment_status: PaymentStatus.PENDING,
-  },
-];
 
 export const DEFAULT_SETTINGS = {
   showCurrency: true,

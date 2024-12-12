@@ -36,18 +36,33 @@ export function ItemTablePagination({
   const isFirstPage = currentPage === 1;
   const isLastPage = currentPage === totalPages;
 
+  // Calculate the range of items being displayed
+  const startItem = (currentPage - 1) * pageSize + 1;
+  const endItem = Math.min(currentPage * pageSize, totalItems);
+
   return (
-    <div className="flex items-center justify-between">
-      <div className="text-sm text-muted-foreground">
-        {totalItems} row(s) found
+    <div className="flex items-center justify-between px-2 py-4">
+      <div className="flex flex-col gap-1 text-sm text-muted-foreground">
+        <div>
+          Showing {totalItems > 0 ? startItem : 0} to {endItem} of {totalItems}{" "}
+          results
+        </div>
+        <div className="text-xs">
+          Page {currentPage} of {totalPages}
+        </div>
       </div>
+
       <div className="flex items-center gap-6">
         {/* Page Size Selector */}
         <div className="flex items-center space-x-2">
           <p className="text-sm font-medium">Rows per page</p>
           <Select
             value={pageSize.toString()}
-            onValueChange={(value) => onPageSizeChange(Number(value))}
+            onValueChange={(value) => {
+              onPageSizeChange(Number(value));
+              // Reset to first page when changing page size
+              onPageChange(1);
+            }}
           >
             <SelectTrigger className="w-16">
               <SelectValue placeholder={pageSize.toString()} />
@@ -62,11 +77,6 @@ export function ItemTablePagination({
           </Select>
         </div>
 
-        {/* Page Information */}
-        <div className="flex w-[100px] items-center justify-center text-sm font-medium">
-          Page {currentPage} of {totalPages}
-        </div>
-
         {/* Navigation Controls */}
         <div className="flex items-center space-x-2">
           {/* First Page */}
@@ -75,6 +85,8 @@ export function ItemTablePagination({
             size="icon"
             onClick={() => onPageChange(1)}
             disabled={isFirstPage}
+            className="hidden sm:flex"
+            title="First Page"
           >
             <ChevronFirst className="w-4 h-4" />
           </Button>
@@ -85,9 +97,15 @@ export function ItemTablePagination({
             size="icon"
             onClick={() => onPageChange(currentPage - 1)}
             disabled={isFirstPage}
+            title="Previous Page"
           >
             <ChevronLeft className="w-4 h-4" />
           </Button>
+
+          {/* Page Number Display */}
+          <div className="hidden sm:flex min-w-[100px] items-center justify-center text-sm font-medium">
+            Page {currentPage} of {totalPages}
+          </div>
 
           {/* Next Page */}
           <Button
@@ -95,6 +113,7 @@ export function ItemTablePagination({
             size="icon"
             onClick={() => onPageChange(currentPage + 1)}
             disabled={isLastPage}
+            title="Next Page"
           >
             <ChevronRight className="w-4 h-4" />
           </Button>
@@ -105,6 +124,8 @@ export function ItemTablePagination({
             size="icon"
             onClick={() => onPageChange(totalPages)}
             disabled={isLastPage}
+            className="hidden sm:flex"
+            title="Last Page"
           >
             <ChevronLast className="w-4 h-4" />
           </Button>

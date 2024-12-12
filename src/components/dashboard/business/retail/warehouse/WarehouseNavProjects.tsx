@@ -1,8 +1,6 @@
 "use client";
 
-import {
-  type LucideIcon,
-} from "lucide-react";
+import { type LucideIcon } from "lucide-react";
 
 import {
   DropdownMenu,
@@ -43,8 +41,7 @@ export function NavProjects({
                 className="w-48 rounded-lg"
                 side={isMobile ? "bottom" : "right"}
                 align={isMobile ? "end" : "start"}
-              >
-              </DropdownMenuContent>
+              ></DropdownMenuContent>
             </DropdownMenu>
           </SidebarMenuItem>
         ))}

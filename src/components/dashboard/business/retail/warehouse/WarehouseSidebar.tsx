@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { Command, Gauge, ArrowUpDown, CirclePlus } from "lucide-react";
+import { Gauge, CirclePlus, ListOrdered, Command } from "lucide-react";
 
 import { NavUser } from "@/components/dashboard/business/retail/warehouse/WarehouseNavUser";
 import { NavProjects } from "@/components/dashboard/business/retail/warehouse/WarehouseNavProjects";
@@ -13,42 +13,46 @@ import {
   SidebarHeader,
   SidebarRail,
 } from "@/components/ui/sidebar";
-
-// This is sample data.
-const data = {
-  user: {
-    name: "shadcn",
-    email: "m@example.com",
-    avatar: "/avatars/shadcn.jpg",
-  },
-  teams: [
-    {
-      name: "Warehouse",
-      logo: Command,
-      plan: "Inventory Management",
-      url: "/dashboard/warehouse",
-    },
-  ],
-  projects: [
-    {
-      name: "Overview",
-      url: "/dashboard/warehouse/",
-      icon: Gauge,
-    },
-    {
-      name: "Items",
-      url: "/dashboard/warehouse/items",
-      icon: CirclePlus,
-    },
-    {
-      name: "Orders",
-      url: "/dashboard/warehouse/orders",
-      icon: ArrowUpDown,
-    },
-  ],
-};
+import { useLanguage } from "@/components/context/LanguageContext";
+import { translations } from "@/translations/dashboard/business/retail/warehouse";
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
+  const { language } = useLanguage();
+  const t = translations[language].dashboard.warehouse.sidebar;
+
+  const data = {
+    user: {
+      name: "shadcn",
+      email: "m@example.com",
+      avatar: "/avatars/shadcn.jpg",
+    },
+    teams: [
+      {
+        name: t.teams.warehouse,
+        logo: Command,
+        plan: t.teams.warehousePlan,
+        url: "/dashboard/business/retail/warehouse",
+      },
+    ],
+    projects: [
+      {
+        name: t.projects.overview,
+        url: "/dashboard/business/retail/warehouse/",
+        icon: Gauge,
+      },
+      {
+        name: t.projects.items,
+        url: "/dashboard/business/retail/warehouse/items",
+        icon: CirclePlus,
+      },
+      {
+        name: t.projects.orders,
+        url: "/dashboard/business/retail/warehouse/orders",
+        icon: ListOrdered,
+      },
+    ],
+  };
+
   return (
     <Sidebar collapsible="icon" {...props}>
       <SidebarHeader>

@@ -31,20 +31,14 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   // This is sample data with translations
   const data = {
     user: {
-      name: "shadcn",
-      email: "m@example.com",
-      avatar: "/avatars/shadcn.jpg",
+      name: "Abebe",
+      email: "abebe@example.com",
+      avatar: "/public/avatar/avatar.png",
     },
     teams: [
       {
         name: t.teams.admin,
         logo: BookUser,
-        plan: t.teams.adminPlan,
-        url: "/dashboard/business/retail/admin",
-      },
-      {
-        name: t.teams.admin,
-        logo: GalleryVerticalEnd,
         plan: t.teams.adminPlan,
         url: "/dashboard/business/retail/admin",
       },

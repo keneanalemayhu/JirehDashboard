@@ -52,6 +52,21 @@ export function UserTable({
   onEditSubmit,
   onDeleteConfirm,
 }: UserTableProps) {
+  if (!users) {
+    return (
+      <div className="border rounded-lg p-4 text-center text-gray-500">
+        Loading items...
+      </div>
+    );
+  }
+
+  if (users.length === 0) {
+    return (
+      <div className="border rounded-lg p-4 text-center text-gray-500">
+        No users found.
+      </div>
+    );
+  }
   return (
     <div className="border rounded-lg overflow-hidden">
       <div className="overflow-x-auto">

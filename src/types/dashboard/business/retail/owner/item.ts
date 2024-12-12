@@ -1,155 +1,288 @@
-// src/types/dashboard/owner/item.ts
+"use client";
 
-/**
- * Core entity interfaces
- */
-export interface Item {
-  id: string;
-  name: string;
-  price: string;
-  category: string;
-  isHidden: boolean;
-}
+import { useState, useMemo } from "react";
+import {
+  Item,
+  ItemFormData,
+  SortDirection,
+  DEFAULT_COLUMN_VISIBILITY,
+  initialItems,
+  FilterConfig,
+  PaginationConfig,
+  SortConfig,
+} from "@/types/dashboard/business/retail/owner/item";
 
-export type ItemFormData = Omit<Item, "id">;
+export function useItems(defaultItems: Item[] = initialItems) {
+  // State management
+  const [items, setItems] = useState<Item[]>(defaultItems);
+  const [filterValue, setFilterValue] = useState("");
+  const [editingItem, setEditingItem] = useState<Item | null>(null);
+  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [columnsVisible, setColumnsVisible] = useState(
+    DEFAULT_COLUMN_VISIBILITY
+  );
+  const [sortColumn, setSortColumn] = useState<keyof Item | null>(null);
+  const [sortDirection, setSortDirection] = useState<SortDirection>(null);
+  const [pageSize, setPageSize] = useState(10);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [filter, setFilter] = useState<FilterConfig>({
+    search: "",
+    isActive: undefined,
+    category: undefined,
+    minPrice: undefined,
+    maxPrice: undefined,
+    minQuantity: undefined,
+    maxQuantity: undefined,
+  });
 
-export interface ItemFormProps {
-  initialData?: Partial<Item>;
-  onSubmit: (data: ItemFormData) => void;
-}
+  // Memoized filtered items
+  const filteredItems = useMemo(() => {
+    const itemsToFilter = items || [];
 
-/**
- * Table-related types
- */
-export type SortDirection = "asc" | "desc" | null;
+    const result = itemsToFilter.filter((item) => {
+      // Basic search filter
+      const searchMatch = [
+        item.name,
+        item.barcode,
+        item.price,
+        item.category,
+        item.quantity.toString(),
+      ]
+        .join(" ")
+        .toLowerCase()
+        .includes(filterValue.toLowerCase());
 
-export interface ColumnVisibility {
-  id: boolean;
-  name: boolean;
-  price: boolean;
-  category: boolean;
-}
+      // Advanced filters
+      const categoryMatch =
+        !filter.category || item.category === filter.category;
+      const activeMatch =
+        filter.isActive === undefined || item.isActive === filter.isActive;
+      const priceMatch =
+        (!filter.minPrice || parseFloat(item.price) >= filter.minPrice) &&
+        (!filter.maxPrice || parseFloat(item.price) <= filter.maxPrice);
+      const quantityMatch =
+        (!filter.minQuantity || item.quantity >= filter.minQuantity) &&
+        (!filter.maxQuantity || item.quantity <= filter.maxQuantity);
 
-export interface ItemTableProps {
-  items: Item[];
-  columnsVisible: ColumnVisibility;
-  onSort: (column: keyof Item) => void;
-  onEdit: (item: Item) => void;
-  onDelete: (item: Item) => void;
-  isEditDialogOpen: boolean;
-  setIsEditDialogOpen: (open: boolean) => void;
-  isDeleteDialogOpen: boolean;
-  setIsDeleteDialogOpen: (open: boolean) => void;
-  editingItem: Item | null;
-  onEditSubmit: () => void;
-  onDeleteConfirm: () => void;
-}
+      return (
+        searchMatch &&
+        categoryMatch &&
+        activeMatch &&
+        priceMatch &&
+        quantityMatch
+      );
+    });
 
-export interface ItemTableHeaderProps {
-  columnsVisible: ColumnVisibility;
-  onSort: (column: keyof Item) => void;
-}
+    if (sortColumn) {
+      result.sort((a, b) => {
+        const aValue = a[sortColumn];
+        const bValue = b[sortColumn];
 
-export interface ItemTableRowProps {
-  item: Item;
-  columnsVisible: ColumnVisibility;
-  onEdit: (item: Item) => void;
-  onDelete: (item: Item) => void;
-}
+        // Handle different types of sorting
+        if (sortColumn === "price") {
+          return sortDirection === "asc"
+            ? parseFloat(aValue as string) - parseFloat(bValue as string)
+            : parseFloat(bValue as string) - parseFloat(aValue as string);
+        }
 
-export interface ItemTablePaginationProps {
-  totalItems: number;
-  pageSize: number;
-  currentPage: number;
-  onPageChange: (page: number) => void;
-  onPageSizeChange: (pageSize: number) => void;
-}
+        if (sortColumn === "quantity") {
+          return sortDirection === "asc"
+            ? (aValue as number) - (bValue as number)
+            : (bValue as number) - (aValue as number);
+        }
 
-export interface ItemTableSettingsProps {
-  columnsVisible: ColumnVisibility;
-  onColumnVisibilityChange: (
-    column: keyof Omit<Item, "isHidden">,
-    visible: boolean
-  ) => void;
-}
+        if (sortColumn === "lastInventoryUpdate") {
+          const aDate = aValue as Date;
+          const bDate = bValue as Date;
+          return sortDirection === "asc"
+            ? aDate.getTime() - bDate.getTime()
+            : bDate.getTime() - aDate.getTime();
+        }
 
-export type ColumnKey = keyof Omit<Item, "isHidden">;
+        if (typeof aValue === "boolean") {
+          return sortDirection === "asc" ? (aValue ? 1 : -1) : aValue ? -1 : 1;
+        }
 
-export interface ColumnConfig {
-  key: ColumnKey;
-  label: string;
-  width?: string;
-}
+        if (sortDirection === "asc") {
+          return aValue < bValue ? -1 : aValue > bValue ? 1 : 0;
+        } else if (sortDirection === "desc") {
+          return aValue > bValue ? -1 : aValue < bValue ? 1 : 0;
+        }
+        return 0;
+      });
+    }
 
-export const COLUMNS: ColumnConfig[] = [
-  { key: "id", label: "ID", width: "w-[100px]" },
-  { key: "name", label: "Name" },
-  { key: "price", label: "Price" },
-  { key: "category", label: "Category" },
-];
+    return result;
+  }, [items, filterValue, sortColumn, sortDirection, filter]);
 
-export const PAGE_SIZE_OPTIONS = [10, 20, 30, 40, 50] as const;
+  // Memoized paginated items
+  const paginatedItems = useMemo(() => {
+    const startIndex = (currentPage - 1) * pageSize;
+    return filteredItems.slice(startIndex, startIndex + pageSize);
+  }, [filteredItems, currentPage, pageSize]);
 
-export const categories = ["Category 1", "Category 2", "Category 3"] as const;
+  // Handlers
+  const handleSort = (column: keyof Item) => {
+    if (sortColumn === column) {
+      setSortDirection((prev) => {
+        if (prev === "asc") return "desc";
+        if (prev === "desc") return null;
+        return "asc";
+      });
+      if (sortDirection === null) {
+        setSortColumn(null);
+      }
+    } else {
+      setSortColumn(column);
+      setSortDirection("asc");
+    }
+  };
 
-export type CategoryType = (typeof categories)[number];
+  const handleAddItem = (data: ItemFormData) => {
+    const newId = `ITM-${String(items.length + 1).padStart(3, "0")}`;
 
-export const DEFAULT_PAGE_SIZE = 10;
+    const newItem: Item = {
+      id: newId,
+      name: data.name,
+      price: data.price,
+      category: data.category,
+      barcode: data.barcode,
+      quantity: data.quantity,
+      isActive: data.isActive,
+      isHidden: data.isHidden,
+      lastInventoryUpdate: new Date(),
+    };
 
-export const DEFAULT_COLUMN_VISIBILITY: ColumnVisibility = {
-  id: true,
-  name: true,
-  price: true,
-  category: true,
-};
+    setItems((prev) => [...prev, newItem]);
+    setIsAddDialogOpen(false);
+  };
 
-export const INITIAL_FORM_DATA: ItemFormData = {
-  name: "",
-  price: "",
-  category: "",
-  isHidden: false,
-};
+  const handleEditItem = (data: ItemFormData) => {
+    if (!editingItem) return;
 
-export const initialItems: Item[] = [
-  {
-    id: "ITEM-001",
-    name: "Item 1",
-    price: "9.99",
-    category: "Category 1",
-    isHidden: false,
-  },
-  {
-    id: "ITEM-002",
-    name: "Item 2",
-    price: "19.99",
-    category: "Category 2",
-    isHidden: false,
-  },
-];
+    setItems((prev) =>
+      prev.map((item) =>
+        item.id === editingItem.id
+          ? {
+              ...item,
+              ...data,
+              lastInventoryUpdate: new Date(),
+            }
+          : item
+      )
+    );
 
-export interface UseItemsReturn {
-  items: Item[];
-  paginatedItems: Item[];
-  filteredItems: Item[];
-  editingItem: Item | null;
-  setItems: (items: Item[]) => void;
-  setEditingItem: (item: Item | null) => void;
-  filterValue: string;
-  setFilterValue: (value: string) => void;
-  isAddDialogOpen: boolean;
-  setIsAddDialogOpen: (open: boolean) => void;
-  isEditDialogOpen: boolean;
-  setIsEditDialogOpen: (open: boolean) => void;
-  isDeleteDialogOpen: boolean;
-  setIsDeleteDialogOpen: (open: boolean) => void;
-  columnsVisible: ColumnVisibility;
-  setColumnsVisible: (visibility: ColumnVisibility) => void;
-  pageSize: number;
-  currentPage: number;
-  handleSort: (column: keyof Item) => void;
-  handleAddItem: (data: ItemFormData) => void;
-  handleEditItem: (data: ItemFormData) => void;
-  handleDeleteItem: () => void;
-  handlePageChange: (page: number) => void;
-  handlePageSizeChange: (size: number) => void;
+    setIsEditDialogOpen(false);
+    setEditingItem(null);
+  };
+
+  const handleDeleteItem = () => {
+    if (!editingItem) return;
+
+    setItems((prev) => prev.filter((item) => item.id !== editingItem.id));
+    setIsDeleteDialogOpen(false);
+    setEditingItem(null);
+  };
+
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+  };
+
+  const handlePageSizeChange = (size: number) => {
+    setPageSize(size);
+    setCurrentPage(1);
+  };
+
+  const handleFilterChange = (newFilter: Partial<FilterConfig>) => {
+    setFilter((prev) => ({ ...prev, ...newFilter }));
+    setCurrentPage(1); // Reset to first page when filter changes
+  };
+
+  const handleExport = () => {
+    const headers = [
+      "ID",
+      "Name",
+      "Barcode",
+      "Price",
+      "Quantity",
+      "Category",
+      "Status",
+      "Visibility",
+      "Last Updated",
+    ];
+
+    const csvContent = [
+      headers.join(","),
+      ...filteredItems.map((item) =>
+        [
+          item.id,
+          `"${item.name}"`,
+          `"${item.barcode || ""}"`,
+          item.price,
+          item.quantity,
+          `"${item.category}"`,
+          item.isActive ? "Active" : "Inactive",
+          item.isHidden ? "Hidden" : "Visible",
+          item.lastInventoryUpdate
+            ? item.lastInventoryUpdate.toISOString()
+            : "",
+        ].join(",")
+      ),
+    ].join("\n");
+
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const link = document.createElement("a");
+    const url = URL.createObjectURL(blob);
+
+    link.setAttribute("href", url);
+    link.setAttribute(
+      "download",
+      `items-export-${new Date().toISOString().split("T")[0]}.csv`
+    );
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  return {
+    // State
+    items,
+    filterValue,
+    setFilterValue,
+    filter,
+    handleFilterChange,
+    editingItem,
+    setEditingItem,
+    columnsVisible,
+    setColumnsVisible,
+
+    // Dialog states
+    isAddDialogOpen,
+    setIsAddDialogOpen,
+    isEditDialogOpen,
+    setIsEditDialogOpen,
+    isDeleteDialogOpen,
+    setIsDeleteDialogOpen,
+
+    // Handlers
+    handleAddItem,
+    handleEditItem,
+    handleDeleteItem,
+    handleSort,
+    handleExport,
+
+    // Pagination
+    filteredItems,
+    paginatedItems,
+    pageSize,
+    currentPage,
+    handlePageChange,
+    handlePageSizeChange,
+
+    // Sorting
+    sortColumn,
+    sortDirection,
+  };
 }

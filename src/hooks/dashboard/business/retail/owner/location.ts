@@ -1,4 +1,4 @@
-// src/hooks/dashboard/admin/Item.ts
+// src/hooks/dashboard/business/retail/admin/location.ts
 
 import { useState, useMemo } from "react";
 import {
@@ -21,6 +21,62 @@ const initialLocations: Location[] = [
     address: "123 Main St, City",
     phoneNumber: "+251-91-234-5678",
     isHidden: false,
+  },
+  {
+    id: "LOC-003",
+    name: "Airport Branch",
+    address: "456 Airport Rd, City",
+    phoneNumber: "+251-98-765-4321",
+    isHidden: false,
+  },
+  {
+    id: "LOC-004",
+    name: "Downtown Branch",
+    address: "789 Elm St, City",
+    phoneNumber: "+251-92-109-8765",
+    isHidden: true,
+  },
+  {
+    id: "LOC-005",
+    name: "Subcity Branch",
+    address: "321 Oak St, City",
+    phoneNumber: "+251-95-432-1098",
+    isHidden: false,
+  },
+  {
+    id: "LOC-006",
+    name: "Kirkos Branch",
+    address: "654 Pine St, City",
+    phoneNumber: "+251-91-876-5432",
+    isHidden: true,
+  },
+  {
+    id: "LOC-007",
+    name: "Yeka Branch",
+    address: "987 Cedar St, City",
+    phoneNumber: "+251-96-543-2109",
+    isHidden: false,
+  },
+  {
+    id: "LOC-008",
+    name: "Arada Branch",
+    address: "210 Maple St, City",
+    phoneNumber: "+251-93-210-9876",
+    isHidden: true,
+  },
+  {
+    id: "LOC-009",
+    name: "Nifas Silk Lafto Branch",
+    address: "543 Birch St, City",
+    phoneNumber: "+251-97-876-5432",
+    isHidden: false,
+  },
+  {
+    id: "LOC-010",
+    name: "Kolfe Keranio Branch",
+    address: "109 Fir St, City",
+    phoneNumber: "+251-92-109-8765",
+    isHidden: true,
   },
 ];
 

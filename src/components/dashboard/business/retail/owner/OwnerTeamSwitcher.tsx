@@ -9,7 +9,6 @@ import {
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
-  DropdownMenuShortcut,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import {
@@ -81,10 +80,6 @@ export function TeamSwitcher({
                     <team.logo className="size-4 shrink-0" />
                   </div>
                   {t.teams?.[team.name.toLowerCase()] || team.name}
-                  <DropdownMenuShortcut>
-                    {t.shortcutPrefix}
-                    {index + 1}
-                  </DropdownMenuShortcut>
                 </Link>
               </DropdownMenuItem>
             ))}

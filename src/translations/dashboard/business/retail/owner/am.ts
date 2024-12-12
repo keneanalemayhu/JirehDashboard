@@ -52,7 +52,7 @@ export const am = {
           users: "ተጠቃሚዎች",
         },
         userMenu: {
-          account: "አካውንት",
+          account: "አካውንት እና የግለሰብ መረጃ",
           logout: "ውጣ",
         },
         settingsSection: {

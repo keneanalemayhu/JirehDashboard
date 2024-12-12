@@ -52,11 +52,10 @@ export const en = {
           users: "Users",
         },
         userMenu: {
-          account: "Account",
+          account: "Account & Profile",
           logout: "Log out",
         },
         settingsSection: {
-          // Changed from 'settings' to 'settingsSection'
           title: "Settings",
           profile: "Profile",
         },

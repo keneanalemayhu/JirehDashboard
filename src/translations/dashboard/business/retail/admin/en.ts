@@ -1,4 +1,4 @@
-// translations/dashboard/admin/en.ts
+// translations/dashboard/owner/en.ts
 export const en = {
   dashboard: {
     admin: {
@@ -52,7 +52,7 @@ export const en = {
           users: "Users",
         },
         userMenu: {
-          account: "Account",
+          account: "Account & Profile",
           logout: "Log out",
         },
         settingsSection: {

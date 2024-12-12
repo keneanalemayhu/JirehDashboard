@@ -51,6 +51,21 @@ export function EmployeeTable({
   onEditSubmit,
   onDeleteConfirm,
 }: EmployeeTableProps) {
+  if (!employees) {
+    return (
+      <div className="border rounded-lg p-4 text-center text-gray-500">
+        Loading items...
+      </div>
+    );
+  }
+
+  if (employees.length === 0) {
+    return (
+      <div className="border rounded-lg p-4 text-center text-gray-500">
+        No employees found.
+      </div>
+    );
+  }
   return (
     <div className="border rounded-lg overflow-hidden">
       <div className="overflow-x-auto">

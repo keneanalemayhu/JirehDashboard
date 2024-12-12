@@ -1,4 +1,4 @@
-// translations/dashboard/admin/am.ts
+// translations/dashboard/owner/am.ts
 export const am = {
   dashboard: {
     admin: {
@@ -52,7 +52,7 @@ export const am = {
           users: "ተጠቃሚዎች",
         },
         userMenu: {
-          account: "አካውንት",
+          account: "አካውንት እና የግለሰብ መረጃ",
           logout: "ውጣ",
         },
         settingsSection: {
