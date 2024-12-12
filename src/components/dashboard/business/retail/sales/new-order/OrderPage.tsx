@@ -1,12 +1,14 @@
-"use client";
-
 import { useState } from "react";
-import { CategoryAccordion } from "./CategoryAccordion";
-import { OrderForm } from "./OrderForm";
-import { CartSummary } from "./CartSummary";
-import { Item, OrderItem } from "@/types/dashboard/business/retail/sales/new-order";
-import { Toaster } from "@/components/ui/toaster";
-import { useToast } from "@/hooks/use-toast";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Separator } from "@/components/ui/separator";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -17,7 +19,16 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { QRCodeDialog } from "./QRCodeDialog"; // Updated import statement
+import { Toaster } from "@/components/ui/toaster";
+import { useToast } from "@/hooks/use-toast";
+import {
+  Item,
+  OrderItem,
+} from "@/types/dashboard/business/retail/sales/new-order";
+import { CategoryAccordion } from "./CategoryAccordion";
+import { OrderForm } from "./OrderForm";
+import { CartSummary } from "./CartSummary";
+import { QRCodeDialog } from "./QRCodeDialog";
 
 const categories = [
   {
@@ -105,37 +116,58 @@ export default function OrderPage() {
   };
 
   return (
-    <div className="container mx-auto p-4 max-w-6xl">
-      <h1 className="text-3xl font-bold mb-8 text-center">New Order</h1>
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        <div className="bg-card rounded-lg shadow-md p-6">
-          <h2 className="text-2xl font-semibold mb-4">Items Catalog</h2>
-          <div className="max-h-[600px] overflow-y-auto pr-2">
-            <CategoryAccordion categories={categories} addToCart={addToCart} />
-          </div>
-        </div>
-        <div>
-          <div className="bg-card rounded-lg shadow-md p-6 mb-6">
-            <h2 className="text-2xl font-semibold mb-4">Order Summary</h2>
-            <CartSummary
-              cart={cart}
-              removeFromCart={removeFromCart}
-              updateQuantity={updateQuantity}
-            />
-          </div>
-          <div className="bg-card rounded-lg shadow-md p-6">
-            <h2 className="text-2xl font-semibold mb-4">Buyer Information</h2>
-            <OrderForm onSubmit={handleSubmitOrder} />
-          </div>
+    <div className="mx-auto max-w-5xl p-4">
+      <div className="flex items-center justify-center mb-4">
+        <h1 className="text-2xl font-semibold tracking-tight">New Order</h1>
+      </div>
+      <Separator className="mb-4" />
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <Card className="md:max-w-md">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-lg">Items Catalog</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ScrollArea className="h-[400px] pr-4">
+              <CategoryAccordion
+                categories={categories}
+                addToCart={addToCart}
+              />
+            </ScrollArea>
+          </CardContent>
+        </Card>
+
+        <div className="space-y-4">
+          <Card className="md:max-w-md">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-lg">Order Summary</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <CartSummary
+                cart={cart}
+                removeFromCart={removeFromCart}
+                updateQuantity={updateQuantity}
+              />
+            </CardContent>
+          </Card>
+
+          <Card className="md:max-w-md">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-lg">Buyer Information</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <OrderForm onSubmit={handleSubmitOrder} />
+            </CardContent>
+          </Card>
         </div>
       </div>
+
       <AlertDialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Confirm Order Submission</AlertDialogTitle>
+            <AlertDialogTitle>Confirm Order</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to submit this order? This action cannot be
-              undone.
+              Are you sure you want to submit this order?
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -146,15 +178,16 @@ export default function OrderPage() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-      <Toaster />
+
       <QRCodeDialog
         open={isQRCodeDialogOpen}
         onOpenChange={setIsQRCodeDialogOpen}
         onGetInvoice={() => {
-          // Placeholder for invoice download functionality
           console.log("Downloading invoice...");
         }}
       />
+
+      <Toaster />
     </div>
   );
 }

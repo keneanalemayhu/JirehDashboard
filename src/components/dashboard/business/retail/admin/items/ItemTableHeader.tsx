@@ -1,3 +1,4 @@
+// ItemTableHeader.tsx
 "use client";
 
 import { TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -8,63 +9,89 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { ChevronsUpDownIcon } from "lucide-react";
-import { Item } from "@/types/dashboard/business/retail/owner/item";
+import { ColumnConfig } from "@/types/dashboard/business/retail/owner/item";
+
+export const DEFAULT_COLUMN_CONFIG: ColumnConfig[] = [
+  { key: "id", label: "ID", width: "w-[100px]", sortable: true },
+  { key: "name", label: "Name", width: "w-[200px]", sortable: true },
+  { key: "barcode", label: "Barcode", width: "w-[150px]", sortable: true },
+  { key: "price", label: "Price", width: "w-[100px]", sortable: true },
+  { key: "quantity", label: "Quantity", width: "w-[100px]", sortable: true },
+  { key: "category", label: "Category", width: "w-[150px]", sortable: true },
+  { key: "isActive", label: "Status", width: "w-[100px]", sortable: false },
+  { key: "isHidden", label: "Visibility", width: "w-[100px]", sortable: false },
+];
 
 interface ItemTableHeaderProps {
-  columnsVisible: {
-    id: boolean;
-    name: boolean;
-    price: boolean;
-    category: boolean;
-  };
-  onSort: (column: keyof Item) => void;
+  columnsVisible: Record<string, boolean>;
+  onSort: (columnKey: keyof (typeof DEFAULT_COLUMN_CONFIG)[0]) => void;
+  sortColumn?: string | null;
+  sortDirection?: "asc" | "desc" | null;
 }
 
-type ColumnConfig = {
-  key: keyof Omit<Item, "isHidden">;
-  label: string;
-  width?: string;
-};
-
 export function ItemTableHeader({
-  columnsVisible,
+  columnsVisible = {},
   onSort,
+  sortColumn,
+  sortDirection,
 }: ItemTableHeaderProps) {
-  const columns: ColumnConfig[] = [
-    { key: "id", label: "ID", width: "w-[100px]" },
-    { key: "name", label: "Name" },
-    { key: "price", label: "Price" },
-    { key: "category", label: "Category" },
-  ];
+  const renderSortableHeader = (column: ColumnConfig) => {
+    if (!column.sortable) {
+      return column.label;
+    }
 
-  const renderSortableHeader = (column: ColumnConfig) => (
-    <DropdownMenu>
-      <DropdownMenuTrigger className="flex items-center">
-        {column.label}
-        <ChevronsUpDownIcon className="ml-2 h-4 w-4" />
-      </DropdownMenuTrigger>
-      <DropdownMenuContent>
-        <DropdownMenuItem onClick={() => onSort(column.key)}>
-          Sort Ascending
-        </DropdownMenuItem>
-        <DropdownMenuItem onClick={() => onSort(column.key)}>
-          Sort Descending
-        </DropdownMenuItem>
-      </DropdownMenuContent>
-    </DropdownMenu>
-  );
+    const isActive = sortColumn === column.key;
+
+    return (
+      <DropdownMenu>
+        <DropdownMenuTrigger className="flex items-center">
+          {column.label}
+          <ChevronsUpDownIcon
+            className={`ml-2 h-4 w-4 ${isActive ? "text-primary" : ""}`}
+          />
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="start">
+          <DropdownMenuItem
+            onClick={() => onSort(column.key)}
+            className={
+              sortColumn === column.key && sortDirection === "asc"
+                ? "bg-accent"
+                : ""
+            }
+          >
+            Sort Ascending
+          </DropdownMenuItem>
+          <DropdownMenuItem
+            onClick={() => onSort(column.key)}
+            className={
+              sortColumn === column.key && sortDirection === "desc"
+                ? "bg-accent"
+                : ""
+            }
+          >
+            Sort Descending
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+    );
+  };
 
   return (
     <TableHeader>
       <TableRow>
-        {columns.map((column) =>
-          columnsVisible[column.key] ? (
-            <TableHead key={column.key} className={column.width}>
+        {DEFAULT_COLUMN_CONFIG.map((column) =>
+          columnsVisible[column.key] !== false ? (
+            <TableHead
+              key={column.key}
+              className={`${column.width} ${
+                !column.sortable ? "text-center" : ""
+              }`}
+            >
               {renderSortableHeader(column)}
             </TableHead>
           ) : null
         )}
-        <TableHead className="w-[100px]">Actions</TableHead>
+        <TableHead className="w-[100px] text-right">Actions</TableHead>
       </TableRow>
     </TableHeader>
   );

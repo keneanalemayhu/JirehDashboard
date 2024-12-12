@@ -1,4 +1,4 @@
-// translations/dashboard/admin/index.ts
+// translations/dashboard/owner/index.ts
 import { en } from "./en";
 import { am } from "./am";
 

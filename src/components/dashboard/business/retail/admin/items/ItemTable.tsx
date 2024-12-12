@@ -22,6 +22,10 @@ interface ItemTableProps {
     name: boolean;
     price: boolean;
     category: boolean;
+    barcode: boolean;
+    quantity: boolean;
+    isActive: boolean;
+    isHidden: boolean;
   };
   onSort: (column: keyof Item) => void;
   onEdit: (item: Item) => void;
@@ -85,7 +89,7 @@ export function ItemTable({
       </div>
 
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-        <DialogContent>
+        <DialogContent className="sm:max-w-[425px]">
           <DialogHeader>
             <DialogTitle>Edit Item</DialogTitle>
             <DialogDescription>

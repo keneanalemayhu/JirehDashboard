@@ -4,7 +4,7 @@ import { useState, useMemo } from "react";
 import {
   Order,
   PaymentStatus,
-} from "@/types/dashboard/business/retail/owner/order";
+} from "@/types/dashboard/business/retail/admin/order";
 
 type SortDirection = "asc" | "desc" | null;
 
