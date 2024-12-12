@@ -1,13 +1,13 @@
 "use client";
 
 import * as React from "react";
-import { Header } from "@/components/common/dashboard/business/retail/owner/Header";
-import { SidebarLayout } from "@/components/common/dashboard/business/retail/owner/Sidebar";
-import { UserTable } from "@/components/dashboard/business/retail/owner/users/UserTable";
-import { UserTableSettings } from "@/components/dashboard/business/retail/owner/users/UserTableSettings";
-import { UserTablePagination } from "@/components/dashboard/business/retail/owner/users/UserTablePagination";
-import { UserForm } from "@/components/dashboard/business/retail/owner/users/UserForm";
-import { useUsers } from "@/hooks/dashboard/business/retail/owner/user";
+import { Header } from "@/components/common/dashboard/business/retail/admin/Header";
+import { SidebarLayout } from "@/components/common/dashboard/business/retail/admin/Sidebar";
+import { UserTable } from "@/components/dashboard/business/retail/admin/users/UserTable";
+import { UserTableSettings } from "@/components/dashboard/business/retail/admin/users/UserTableSettings";
+import { UserTablePagination } from "@/components/dashboard/business/retail/admin/users/UserTablePagination";
+import { UserForm } from "@/components/dashboard/business/retail/admin/users/UserForm";
+import { useUsers } from "@/hooks/dashboard/business/retail/admin/user";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { CirclePlus, Download } from "lucide-react";
@@ -23,7 +23,7 @@ import {
   User,
   UserFormData,
   ColumnVisibility,
-} from "@/types/dashboard/business/retail/owner/user";
+} from "@/types/dashboard/business/retail/admin/user";
 
 export default function UsersPage() {
   // Pagination state
