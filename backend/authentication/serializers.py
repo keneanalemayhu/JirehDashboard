@@ -266,7 +266,7 @@ class RegisterSerializer(serializers.ModelSerializer):
             'first_name': {'required': False, 'allow_blank': True, 'allow_null': True},
             'last_name': {'required': False, 'allow_blank': True, 'allow_null': True},
             'phone_number': {'required': False, 'allow_blank': True, 'allow_null': True},
-            'role': {'required': False, 'default': 'business_admin'}  # Default role for business registration
+            'role': {'required': False, 'default': 'owner'}  # Default role for business registration
         }
 
     def create(self, validated_data):
