@@ -35,6 +35,8 @@ export const am = {
       businessName: "የስራ ስም",
       businessNamePlaceholder: "የኔ ስራ",
       businessPhone: "የስራ ስልክ",
+      businessAddress: "የስራ ቦታ",
+      businessAddressPlaceholder: "የኔ የስራ ቦታ",
       businessType: "የስራ አይነት",
       businessTypePlaceholder: "የስራ አይነት ይምረጡ",
     },

@@ -33,6 +33,8 @@ export const en = {
       businessName: "Business Name",
       businessNamePlaceholder: "My Business",
       businessPhone: "Business Phone",
+      businessAddress: "Business Address",
+      businessAddressPlaceholder: "My Business Address",
       businessType: "Business Type",
       businessTypePlaceholder: "Select Business Type",
     },

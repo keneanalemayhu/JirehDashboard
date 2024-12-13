@@ -239,6 +239,18 @@ export function RegisterForm() {
               </div>
 
               <div className="grid gap-2">
+                <Label htmlFor="businessAddress">
+                  {t.businessInfo.businessAddress}
+                </Label>
+                <Input
+                  id="businessPhone"
+                  type="text"
+                  placeholder={t.businessInfo.businessAddressPlaceholder}
+                  disabled={isLoading}
+                />
+              </div>
+
+              <div className="grid gap-2">
                 <Label htmlFor="businessType">
                   {t.businessInfo.businessType}
                 </Label>
