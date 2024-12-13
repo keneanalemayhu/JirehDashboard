@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import axios from '@/lib/axios';  // Use the configured axios instance
+import axios from '@/lib/axios';  
 import api from '@/lib/axios';
 
 export interface User {
@@ -123,16 +123,35 @@ export function useAuth() {
     }
   };
 
-  const logout = () => {
-    // Clear local storage
-    localStorage.removeItem('accessToken');
-    localStorage.removeItem('refreshToken');
-    localStorage.removeItem('user');
+  const logout = async () => {
+    try {
+      const refreshToken = localStorage.getItem('refreshToken');
+      
+      if (refreshToken) {
+        await api.post('/api/auth/logout/', {
+          refresh: refreshToken
+        });
+      }
 
-    // Reset state
-    setUser(null);
-    setIsAuthenticated(false);
-    router.push('/auth/login');
+      // Clear local storage
+      localStorage.removeItem('accessToken');
+      localStorage.removeItem('refreshToken');
+      localStorage.removeItem('user');
+
+      // Reset auth state
+      setUser(null);
+      setIsAuthenticated(false);
+
+      // Redirect to login
+      router.push('/auth/login');
+    } catch (error) {
+      console.error('Logout error:', error);
+      // Still clear local data even if server request fails
+      localStorage.clear();
+      setUser(null);
+      setIsAuthenticated(false);
+      router.push('/auth/login');
+    }
   };
 
   return { 

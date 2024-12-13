@@ -12,7 +12,7 @@ from django.contrib.auth.tokens import default_token_generator
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
-from .models import BusinessProfile
+from business_settings.models import BusinessProfile
 from django.core.validators import validate_email
 from phonenumber_field.validators import validate_international_phonenumber
 from django.core.exceptions import ValidationError
@@ -37,16 +37,22 @@ class UserSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = CustomUser
-        fields = ['id', 'email', 'first_name', 'last_name', 'full_name', 'phone_number']
+        fields = ['id', 'email', 'full_name', 'user_name', 'phone_number', 'role']
 
     def get_full_name(self, obj):
         return obj.full_name
 
 class UserUpdateSerializer(serializers.ModelSerializer):
     class Meta:
-        model = User
-        fields = ('id', 'email', 'full_name', 'user_name', 'phone')
-        read_only_fields = ('email',)
+        model = CustomUser
+        fields = ['full_name', 'user_name', 'phone_number', 'business_name']
+        
+    def update(self, instance, validated_data):
+        # Only update fields that are provided
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
+        instance.save()
+        return instance
 
 class LoginSerializer(serializers.Serializer):
     email = serializers.EmailField(required=True)
@@ -251,45 +257,45 @@ class RegisterSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = CustomUser
-        fields = ['email', 'password1', 'password2', 'first_name', 'last_name', 
-                 'phone_number', 'business_profile', 'role']
+        fields = ['email', 'password1', 'password2', 'full_name', 'user_name', 
+                  'phone_number', 'business_profile', 'role']
         extra_kwargs = {
             'email': {
                 'required': True,
-                'validators': [],
+                'validators': [validate_email],
                 'error_messages': {
                     'unique': 'A user with this email already exists.',
                     'required': 'Email is required.',
                     'blank': 'Email cannot be blank.',
                 }
             },
-            'first_name': {'required': False, 'allow_blank': True, 'allow_null': True},
-            'last_name': {'required': False, 'allow_blank': True, 'allow_null': True},
-            'phone_number': {'required': False, 'allow_blank': True, 'allow_null': True},
-            'role': {'required': False, 'default': 'owner'}  # Default role for business registration
+            'full_name': {'required': False},
+            'user_name': {'required': False},
+            'phone_number': {'required': False, 'allow_blank': True, 'allow_null': True, 'validators': [validate_international_phonenumber]},
+            'role': {'required': False}
         }
 
+    def validate(self, attrs):
+        if attrs['password1'] != attrs['password2']:
+            raise serializers.ValidationError({"password2": "Password fields didn't match."})
+        return attrs
+
     def create(self, validated_data):
-        try:
-            business_profile_data = validated_data.pop('business_profile', None)
-            validated_data.pop('password2', None)
-            password = validated_data.pop('password1')
-            
-            # Set default role for business registration
-            if business_profile_data and 'role' not in validated_data:
-                validated_data['role'] = 'owner'
-            
-            user = CustomUser.objects.create_user(
-                **validated_data, 
-                password=password
+        business_profile_data = validated_data.pop('business_profile', None)
+        validated_data.pop('password2', None)
+        password = validated_data.pop('password1')
+        
+        role = 'owner'
+        user = CustomUser.objects.create_user(
+            **validated_data, 
+            password=password,
+            role=role
+        )
+        
+        if business_profile_data:
+            BusinessProfile.objects.create(
+                user=user, 
+                **business_profile_data
             )
-            
-            if business_profile_data:
-                BusinessProfile.objects.create(
-                    user=user, 
-                    **business_profile_data
-                )
-            
-            return user
-        except Exception as e:
-            raise serializers.ValidationError(str(e))
+        
+        return user

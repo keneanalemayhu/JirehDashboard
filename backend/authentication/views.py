@@ -1,5 +1,5 @@
 from django.shortcuts import render
-from .models import BusinessProfile
+from business_settings.models import BusinessProfile
 from rest_framework import generics, permissions, status, serializers
 from rest_framework.response import Response
 from rest_framework_simplejwt.views import TokenObtainPairView
