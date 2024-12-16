@@ -1,0 +1,59 @@
+Jireh-dashboard/
+├── src/
+│   ├── app/
+│   │   ├── auth/
+│   │   │   ├── login/
+│   │   │   ├── register/
+│   │   │   └── layout.tsx
+│   │   ├── dashboard/
+│   │   │   ├── business/
+│   │   │   │   └── retail/
+│   │   │   │       ├── admin/
+│   │   │   │       │   ├── categories/
+│   │   │   │       │   ├── items/
+│   │   │   │       │   ├── orders/
+│   │   │   │       │   └── layout.tsx
+│   │   │   │       ├── owner/
+│   │   │   │       ├── sales/
+│   │   │   │       └── warehouse/
+│   │   │   └── sadmin/
+│   │   │       ├── stores/
+│   │   │       └── subscriptions/
+│   │   ├── layout.tsx
+│   │   └── page.tsx
+│   ├── components/
+│   │   ├── auth/
+│   │   │   ├── LoginForm.tsx
+│   │   │   └── RegisterForm.tsx
+│   │   └── dashboard/
+│   │       ├── business/
+│   │       │   └── retail/
+│   │       │       ├── admin/
+│   │       │       │   ├── categories/
+│   │       │       │   ├── items/
+│   │       │       │   └── orders/
+│   │       │       ├── owner/
+│   │       │       ├── sales/
+│   │       │       └── warehouse/
+│   │       └── sadmin/
+│   ├── hooks/
+│   │   └── dashboard/
+│   │       ├── business/
+│   │       │   └── retail/
+│   │       │       ├── admin/
+│   │       │       ├── owner/
+│   │       │       ├── sales/
+│   │       │       └── warehouse/
+│   │       └── sadmin/
+│   ├── types/
+│   │   └── dashboard/
+│   │       ├── business/
+│   │       │   └── retail/
+│   │       └── sadmin/
+│   └── lib/
+│      ├── api.ts
+│      └── utils.ts
+├── public/
+├── package.json
+├── tsconfig.json
+└── tailwind.config.js
