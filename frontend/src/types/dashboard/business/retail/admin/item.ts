@@ -286,3 +286,5 @@ export function useItems(defaultItems: Item[] = initialItems) {
     sortDirection,
   };
 }
+
+export { Item };

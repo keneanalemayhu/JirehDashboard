@@ -40,6 +40,8 @@ Jireh-dashboard/
     │   │   │   │   │   │   ├── page.tsx
     │   │   │   │   │   │   └── layout.tsx
     │   │   │   │   │   ├── owner/
+    │   │   │   │   │   │   ├── analysis/
+    │   │   │   │   │   │   │   └── page.tsx
     │   │   │   │   │   │   ├── categories/
     │   │   │   │   │   │   │   └── page.tsx
     │   │   │   │   │   │   ├── employees/
@@ -51,6 +53,12 @@ Jireh-dashboard/
     │   │   │   │   │   │   ├── locations/
     │   │   │   │   │   │   │   └── page.tsx
     │   │   │   │   │   │   ├── orders/
+    │   │   │   │   │   │   │   └── page.tsx
+    │   │   │   │   │   │   ├── overview/
+    │   │   │   │   │   │   │   └── page.tsx
+    │   │   │   │   │   │   ├── profit-loss/
+    │   │   │   │   │   │   │   └── page.tsx
+    │   │   │   │   │   │   ├── sales-report/
     │   │   │   │   │   │   │   └── page.tsx
     │   │   │   │   │   │   ├── settings/
     │   │   │   │   │   │   │   ├── account/

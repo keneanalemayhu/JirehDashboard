@@ -2,12 +2,11 @@
 
 import React, { useMemo } from "react";
 import { Button } from "@/components/ui/button";
-import { CalendarDateRangePicker } from "@/components/dashboard/business/retail/owner/overview/DateRangePicker";
 import { Header } from "@/components/common/dashboard/business/retail/owner/Header";
 import { SidebarLayout } from "@/components/common/dashboard/business/retail/owner/Sidebar";
 import {
   Download,
-  TrendingUp,
+  FileText,
   DollarSign,
   Package,
   Users,
@@ -18,7 +17,6 @@ import {
   Card,
   CardContent,
   CardDescription,
-  CardFooter,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
@@ -52,6 +50,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { jsPDF } from "jspdf";
+import "jspdf-autotable";
 
 const salesChartConfig = {
   sales: {
@@ -169,6 +175,107 @@ export default function SalesReportPage() {
       }));
   }, [orders]);
 
+  const handleDownloadPDF = () => {
+    const doc = new jsPDF();
+    const pageWidth = doc.internal.pageSize.width;
+    const currentDate = new Date();
+    const formattedDate = currentDate.toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    });
+
+    // Title with Date
+    doc.setFontSize(20);
+    doc.text("Sales Report", pageWidth / 2, 20, { align: "center" });
+
+    doc.setFontSize(12);
+    doc.text(`Generated on: ${formattedDate}`, pageWidth / 2, 30, {
+      align: "center",
+    });
+
+    // Summary Section
+    doc.setFontSize(16);
+    doc.text("Summary Metrics", 14, 45);
+
+    doc.setFontSize(12);
+    const summaryData = [
+      ["Total Revenue", `$${summaryMetrics.total.toLocaleString()}`],
+      ["Total Units Sold", summaryMetrics.totalUnits.toLocaleString()],
+      ["Unique Customers", summaryMetrics.uniqueCustomers.toLocaleString()],
+      ["Average Order Value", `$${summaryMetrics.avgOrderValue.toFixed(2)}`],
+    ];
+
+    doc.autoTable({
+      startY: 50,
+      head: [["Metric", "Value"]],
+      body: summaryData,
+      theme: "grid",
+    });
+
+    // Product Performance Table
+    doc.setFontSize(16);
+    doc.text("Product Performance", 14, doc.lastAutoTable.finalY + 20);
+
+    const productData = productPerformance.map((product) => [
+      product.name,
+      product.unitsSold.toLocaleString(),
+      `$${product.totalRevenue.toLocaleString()}`,
+      `$${product.averagePrice.toFixed(2)}`,
+    ]);
+
+    doc.autoTable({
+      startY: doc.lastAutoTable.finalY + 25,
+      head: [["Product Name", "Units Sold", "Revenue", "Avg. Price"]],
+      body: productData,
+      theme: "grid",
+    });
+
+    // Generate filename with date
+    const dateString = currentDate.toISOString().split("T")[0]; // YYYY-MM-DD format
+    doc.save(`sales-report-${dateString}.pdf`);
+  };
+
+  const handleDownloadCSV = () => {
+    const currentDate = new Date();
+    const dateString = currentDate.toISOString().split("T")[0];
+    const formattedDate = currentDate.toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    });
+
+    // Convert product performance data to CSV with header that includes the date
+    const csvContent = [
+      [`Sales Report - Generated on ${formattedDate}`],
+      [], // Empty row for spacing
+      ["Summary Metrics"],
+      ["Total Revenue", `$${summaryMetrics.total.toLocaleString()}`],
+      ["Total Units Sold", summaryMetrics.totalUnits.toLocaleString()],
+      ["Unique Customers", summaryMetrics.uniqueCustomers.toLocaleString()],
+      ["Average Order Value", `$${summaryMetrics.avgOrderValue.toFixed(2)}`],
+      [], // Empty row for spacing
+      ["Product Performance"],
+      ["Product Name", "Units Sold", "Revenue", "Average Price"],
+      ...productPerformance.map((product) => [
+        product.name,
+        product.unitsSold,
+        product.totalRevenue,
+        product.averagePrice,
+      ]),
+    ]
+      .map((row) => row.join(","))
+      .join("\n");
+
+    const blob = new Blob([csvContent], { type: "text/csv" });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `sales-report-${dateString}.csv`;
+    a.click();
+    window.URL.revokeObjectURL(url);
+  };  
+
   return (
     <SidebarLayout>
       <Header />
@@ -183,13 +290,26 @@ export default function SalesReportPage() {
                 Complete Sales Report on Products Sold
               </p>
             </div>
-            <div className="flex items-center gap-3">
-              <CalendarDateRangePicker />
-              <Button size="icon">
-                <Download className="h-4 w-4" />
-              </Button>
-            </div>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button>
+                  <Download className="h-4 w-4 mr-2" />
+                  Download Report
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent>
+                <DropdownMenuItem onClick={handleDownloadPDF}>
+                  <FileText className="h-4 w-4 mr-2" />
+                  Download PDF
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={handleDownloadCSV}>
+                  <FileText className="h-4 w-4 mr-2" />
+                  Download CSV
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
+
 
           {/* Summary Cards */}
           <div className="grid gap-4 md:grid-cols-4">

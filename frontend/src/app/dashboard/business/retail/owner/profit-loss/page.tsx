@@ -2,11 +2,11 @@
 
 import React, { useMemo } from "react";
 import { Button } from "@/components/ui/button";
-import { CalendarDateRangePicker } from "@/components/dashboard/business/retail/owner/overview/DateRangePicker";
 import { Header } from "@/components/common/dashboard/business/retail/owner/Header";
 import { SidebarLayout } from "@/components/common/dashboard/business/retail/owner/Sidebar";
 import {
   Download,
+  FileText,
   TrendingUp,
   TrendingDown,
   DollarSign,
@@ -19,9 +19,9 @@ import {
   Card,
   CardContent,
   CardDescription,
-  CardFooter,
   CardHeader,
   CardTitle,
+  CardFooter,
 } from "@/components/ui/card";
 import {
   Area,
@@ -54,6 +54,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { jsPDF } from "jspdf";
+import "jspdf-autotable";
 
 const profitChartConfig = {
   sales: { label: "Sales", color: "hsl(var(--chart-1))" },
@@ -216,12 +224,115 @@ export default function ProfitLossPage() {
     return transactions;
   }, [filteredOrders, filteredExpenses]);
 
+  const handleDownloadPDF = () => {
+    const doc = new jsPDF();
+    const pageWidth = doc.internal.pageSize.width;
+    const currentDate = new Date();
+    const formattedDate = currentDate.toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    });
+
+    // Title with Date
+    doc.setFontSize(20);
+    doc.text("Profit & Loss Report", pageWidth / 2, 20, { align: "center" });
+
+    doc.setFontSize(12);
+    doc.text(`Generated on: ${formattedDate}`, pageWidth / 2, 30, {
+      align: "center",
+    });
+
+    // Summary Section
+    doc.setFontSize(16);
+    doc.text("Summary Metrics", 14, 45);
+
+    doc.setFontSize(12);
+    const summaryData = [
+      ["Total Revenue", `$${summaryMetrics.totalRevenue.toLocaleString()}`],
+      ["Total Expenses", `$${summaryMetrics.totalExpenses.toLocaleString()}`],
+      ["Net Profit", `$${summaryMetrics.netProfit.toLocaleString()}`],
+      ["Profit Margin", `${summaryMetrics.profitMargin.toFixed(1)}%`],
+    ];
+
+    doc.autoTable({
+      startY: 50,
+      head: [["Metric", "Value"]],
+      body: summaryData,
+      theme: "grid",
+    });
+
+    // Recent Transactions
+    doc.setFontSize(16);
+    doc.text("Recent Transactions", 14, doc.lastAutoTable.finalY + 20);
+
+    const transactionData = recentTransactions.map((transaction) => [
+      transaction.date.toLocaleDateString(),
+      transaction.type,
+      transaction.description,
+      `${
+        transaction.isProfit ? "+" : "-"
+      }$${transaction.amount.toLocaleString()}`,
+    ]);
+
+    doc.autoTable({
+      startY: doc.lastAutoTable.finalY + 25,
+      head: [["Date", "Type", "Description", "Amount"]],
+      body: transactionData,
+      theme: "grid",
+    });
+
+    // Generate filename with date
+    const dateString = currentDate.toISOString().split("T")[0]; // YYYY-MM-DD format
+    doc.save(`profit-loss-report-${dateString}.pdf`);
+  };
+
+  const handleDownloadCSV = () => {
+    const currentDate = new Date();
+    const dateString = currentDate.toISOString().split("T")[0];
+    const formattedDate = currentDate.toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    });
+
+    // Convert transactions data to CSV with header that includes the date
+    const csvContent = [
+      [`Profit & Loss Report - Generated on ${formattedDate}`],
+      [], // Empty row for spacing
+      ["Summary Metrics"],
+      ["Total Revenue", `$${summaryMetrics.totalRevenue.toLocaleString()}`],
+      ["Total Expenses", `$${summaryMetrics.totalExpenses.toLocaleString()}`],
+      ["Net Profit", `$${summaryMetrics.netProfit.toLocaleString()}`],
+      ["Profit Margin", `${summaryMetrics.profitMargin.toFixed(1)}%`],
+      [], // Empty row for spacing
+      ["Recent Transactions"],
+      ["Date", "Type", "Description", "Amount"],
+      ...recentTransactions.map((transaction) => [
+        transaction.date.toLocaleDateString(),
+        transaction.type,
+        transaction.description,
+        `${transaction.isProfit ? "+" : "-"}${transaction.amount}`,
+      ]),
+    ]
+      .map((row) => row.join(","))
+      .join("\n");
+
+    const blob = new Blob([csvContent], { type: "text/csv" });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `profit-loss-report-${dateString}.csv`;
+    a.click();
+    window.URL.revokeObjectURL(url);
+  };
+
+
   return (
     <SidebarLayout>
       <Header />
       <main className="flex-1 overflow-auto">
         <div className="container mx-auto p-4 space-y-6">
-          {/* Header section */}
           <div className="flex justify-between items-start">
             <div className="space-y-1">
               <h2 className="text-2xl font-bold tracking-tight">
@@ -231,12 +342,24 @@ export default function ProfitLossPage() {
                 Complete breakdown of Profit & Loss Analysis
               </p>
             </div>
-            <div className="flex items-center gap-3">
-              <CalendarDateRangePicker />
-              <Button size="icon">
-                <Download className="h-4 w-4" />
-              </Button>
-            </div>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button>
+                  <Download className="h-4 w-4 mr-2" />
+                  Download Report
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent>
+                <DropdownMenuItem onClick={handleDownloadPDF}>
+                  <FileText className="h-4 w-4 mr-2" />
+                  Download PDF
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={handleDownloadCSV}>
+                  <FileText className="h-4 w-4 mr-2" />
+                  Download CSV
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
 
           {/* Summary Cards */}
