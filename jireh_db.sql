@@ -157,37 +157,98 @@ CREATE TABLE item (
     FOREIGN KEY (category_id) REFERENCES category(id)
 );
 
--- Create ORDER table
+-- Modified ORDER table with enhanced features
 CREATE TABLE `order` (
     id INT PRIMARY KEY AUTO_INCREMENT,
     store_id INT NOT NULL,
     location_id INT NOT NULL,
     user_id INT NOT NULL,
     employee_id INT NOT NULL,
+    order_number VARCHAR(20) UNIQUE NOT NULL,
+    
+    -- Customer information
+    customer_name VARCHAR(100),
+    customer_phone VARCHAR(20),
+    customer_email VARCHAR(100),
+    
+    -- Order status and timing
     order_date DATETIME NOT NULL,
     status VARCHAR(20) NOT NULL,
+    
+    -- Financial information
+    subtotal DECIMAL(10,2) NOT NULL,
+    tax_amount DECIMAL(10,2) DEFAULT 0.00,
+    discount_amount DECIMAL(10,2) DEFAULT 0.00,
     total_amount DECIMAL(10,2) NOT NULL,
+    
+    -- Payment information
     payment_status VARCHAR(20) NOT NULL,
+    payment_method VARCHAR(20) NOT NULL,
+    paid_amount DECIMAL(10,2) DEFAULT 0.00,
+    remaining_amount DECIMAL(10,2) GENERATED ALWAYS AS (total_amount - paid_amount) STORED,
+    
+    -- Refund tracking
+    refund_status VARCHAR(20) DEFAULT NULL,
+    refund_amount DECIMAL(10,2) DEFAULT 0.00,
+    refund_reason TEXT,
+    
+    -- Additional fields
+    notes TEXT,
+    tags JSON,
+    
+    -- Metadata
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    
+    -- Constraints
     FOREIGN KEY (store_id) REFERENCES store(id),
     FOREIGN KEY (location_id) REFERENCES location(id),
     FOREIGN KEY (user_id) REFERENCES user(id),
     FOREIGN KEY (employee_id) REFERENCES employee(id)
 );
 
--- Create ORDER_ITEM table
+-- Modified ORDER_ITEM table with enhanced tracking
 CREATE TABLE order_item (
     id INT PRIMARY KEY AUTO_INCREMENT,
     order_id INT NOT NULL,
     item_id INT NOT NULL,
+    category_id INT NOT NULL,
+    
+    -- Item details
     quantity INT NOT NULL,
     unit_price DECIMAL(10,2) NOT NULL,
     subtotal DECIMAL(10,2) NOT NULL,
+    
+    -- Discount tracking per item
+    discount_amount DECIMAL(10,2) DEFAULT 0.00,
+    discount_type VARCHAR(20) DEFAULT NULL,
+    
+    -- Return/Refund tracking per item
+    returned_quantity INT DEFAULT 0,
+    refunded_amount DECIMAL(10,2) DEFAULT 0.00,
+    
+    -- Metadata
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    
+    -- Constraints
     FOREIGN KEY (order_id) REFERENCES `order`(id),
-    FOREIGN KEY (item_id) REFERENCES item(id)
+    FOREIGN KEY (item_id) REFERENCES item(id),
+    FOREIGN KEY (category_id) REFERENCES category(id)  
+);
+
+-- New table for order history tracking
+CREATE TABLE order_history (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    order_id INT NOT NULL,
+    user_id INT NOT NULL,
+    action VARCHAR(50) NOT NULL,
+    previous_status VARCHAR(20),
+    new_status VARCHAR(20),
+    notes TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (order_id) REFERENCES `order`(id),
+    FOREIGN KEY (user_id) REFERENCES user(id),
 );
 
 -- Create STOCK_TRANSFER table
@@ -207,21 +268,80 @@ CREATE TABLE stock_transfer (
     FOREIGN KEY (item_id) REFERENCES item(id)
 );
 
--- Add all indexes
-CREATE INDEX idx_store_admin ON store(admin_id);
-CREATE INDEX idx_user_store ON user(store_id);
-CREATE INDEX idx_user_location ON user(location_id);
-CREATE INDEX idx_user_role ON user(role);
-CREATE INDEX idx_employee_position ON employee(position);
-CREATE INDEX idx_employee_store ON employee(store_id);
-CREATE INDEX idx_employee_location ON employee(location_id);
-CREATE INDEX idx_item_name ON item(name);
-CREATE INDEX idx_item_category ON item(category_id);
-CREATE INDEX idx_order_date ON `order`(order_date);
-CREATE INDEX idx_order_status ON `order`(status);
-CREATE INDEX idx_order_store ON `order`(store_id);
-CREATE INDEX idx_order_location ON `order`(location_id);
-CREATE INDEX idx_order_user ON `order`(user_id);
-CREATE INDEX idx_order_employee ON `order`(employee_id);
-CREATE INDEX idx_order_item_order ON order_item(order_id);
-CREATE INDEX idx_order_item_item ON order_item(item_id);
+
+-- Authentication & User Management Indices
+CREATE INDEX idx_user_auth ON user(email, password_hash);  -- For login queries
+CREATE INDEX idx_user_location_role ON user(location_id, role);  -- For role-based location access
+CREATE INDEX idx_user_store_status ON user(store_id, is_active);  -- For active users per store
+
+-- Store Management Indices
+CREATE INDEX idx_store_owner ON store(owner_id, is_active);  -- For owner's store lookup
+CREATE INDEX idx_store_admin ON store(admin_id, is_active);  -- For admin's store management
+
+-- Location Management Indices
+CREATE INDEX idx_location_store ON location(store_id, is_active);  -- For store's locations
+CREATE INDEX idx_location_status ON location(is_active, store_id);  -- For active locations lookup
+
+-- Employee Management Indices
+CREATE INDEX idx_employee_lookup ON employee(store_id, location_id, is_active);  -- For employee filtering
+CREATE INDEX idx_employee_contact ON employee(phone, email);  -- For contact lookups
+
+-- Category & Item Management Indices
+CREATE INDEX idx_category_location ON category(location_id, is_active);  -- For location's categories
+CREATE INDEX idx_item_lookup ON item(category_id, is_active, is_hidden);  -- For item filtering
+CREATE INDEX idx_item_barcode ON item(barcode);  -- For barcode scanning
+CREATE INDEX idx_item_inventory ON item(category_id, quantity);  -- For inventory management
+
+-- Order Management Indices
+CREATE INDEX idx_order_lookup ON `order`(
+    store_id, 
+    location_id, 
+    status,
+    order_date
+);  -- For order filtering and reporting
+
+CREATE INDEX idx_order_payment ON `order`(
+    payment_status,
+    payment_method,
+    total_amount
+);  -- For payment tracking
+
+CREATE INDEX idx_order_customer ON `order`(
+    customer_phone,
+    customer_email
+);  -- For customer order history
+
+CREATE INDEX idx_order_number_search ON `order`(
+    order_number,
+    status,
+    payment_status
+);  -- For order number searches
+
+-- Order Items Indices
+CREATE INDEX idx_order_items_lookup ON order_item(
+    order_id,
+    item_id,
+    category_id
+);  -- For order items lookup
+
+-- Stock Transfer Indices
+CREATE INDEX idx_stock_transfer_lookup ON stock_transfer(
+    from_location_id,
+    to_location_id,
+    status,
+    transfer_date
+);  -- For transfer tracking
+
+-- Subscription Management Indices
+CREATE INDEX idx_subscription_tracking ON subscription(
+    store_id,
+    payment_status,
+    end_date
+);  -- For subscription status tracking
+
+-- Order History Tracking Index
+CREATE INDEX idx_order_history_lookup ON order_history(
+    order_id,
+    user_id,
+    created_at
+);  -- For order history tracking
