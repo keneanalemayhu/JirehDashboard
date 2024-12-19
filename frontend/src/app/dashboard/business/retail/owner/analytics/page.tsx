@@ -24,11 +24,7 @@ import {
   ResponsiveContainer,
   Legend,
 } from "recharts";
-import {
-  Download,
-  FileText,
-  PieChart as PieChartIcon,
-} from "lucide-react";
+import { Download, FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -41,7 +37,10 @@ import { createSwapy } from "swapy";
 import { jsPDF } from "jspdf";
 import "jspdf-autotable";
 
-import { useOrders } from "@/hooks/dashboard/business/retail/owner/order";
+import {
+  useOrders,
+  initialOrders,
+} from "@/hooks/dashboard/business/retail/owner/order";
 import { useItems } from "@/hooks/dashboard/business/retail/admin/item";
 import { useCategories } from "@/hooks/dashboard/business/retail/admin/category";
 import { useEmployees } from "@/hooks/dashboard/business/retail/admin/employee";
@@ -52,7 +51,13 @@ export default function AnalysisPage() {
   const chartsContainerRef = useRef(null);
   const performanceContainerRef = useRef(null);
 
-  const { orders, getFilteredOrdersByTimeframe } = useOrders();
+  // Initialize hooks with proper data
+  const {
+    orders: allOrders,
+    getTopSellingItems,
+    getCustomerAnalytics,
+    getAnalyticsByCategory,
+  } = useOrders(initialOrders);
   const { items } = useItems();
   const { categories } = useCategories();
   const { employees } = useEmployees();
@@ -77,13 +82,39 @@ export default function AnalysisPage() {
     }
   }, []);
 
-  // Get filtered orders based on timeframe
-  const timeframeOrders = getFilteredOrdersByTimeframe(timeframe);
+  // Filter orders based on timeframe
+  const timeframeOrders = useMemo(() => {
+    const now = new Date();
+    return allOrders.filter((order) => {
+      const orderDate = new Date(order.order_date);
+      switch (timeframe) {
+        case "today":
+          return orderDate.toDateString() === now.toDateString();
+        case "week":
+          const lastWeek = new Date(now);
+          lastWeek.setDate(now.getDate() - 7);
+          return orderDate >= lastWeek;
+        case "month":
+          return (
+            orderDate.getMonth() === now.getMonth() &&
+            orderDate.getFullYear() === now.getFullYear()
+          );
+        case "quarter":
+          const quarterStart = new Date(now);
+          quarterStart.setMonth(Math.floor(now.getMonth() / 3) * 3);
+          return orderDate >= quarterStart;
+        case "year":
+          return orderDate.getFullYear() === now.getFullYear();
+        default:
+          return true;
+      }
+    });
+  }, [allOrders, timeframe]);
 
   // Sales Trend Analysis
   const salesTrends = useMemo(() => {
     const monthlyData = timeframeOrders.reduce((acc, order) => {
-      const date = new Date(order.created_at);
+      const date = new Date(order.order_date);
       const monthKey = `${date.getFullYear()}-${String(
         date.getMonth() + 1
       ).padStart(2, "0")}`;
@@ -110,69 +141,137 @@ export default function AnalysisPage() {
     );
   }, [timeframeOrders]);
 
-  // Category Performance
+  // Category Performance using the hook's getAnalyticsByCategory
   const categoryAnalysis = useMemo(() => {
-    const analysis = timeframeOrders.reduce((acc, order) => {
-      const item = items.find((i) => i.name === order.item_name);
-      const category = item?.category || "Uncategorized";
-
-      if (!acc[category]) {
-        acc[category] = {
-          category,
-          revenue: 0,
-          orders: 0,
-          averageValue: 0,
-        };
-      }
-
-      acc[category].revenue += order.total_amount;
-      acc[category].orders += 1;
-      acc[category].averageValue = acc[category].revenue / acc[category].orders;
-
-      return acc;
-    }, {});
-
-    return Object.values(analysis).sort((a, b) => b.revenue - a.revenue);
-  }, [timeframeOrders, items]);
+    const analysis = getAnalyticsByCategory();
+    return analysis.map((cat) => ({
+      category: cat.category_name,
+      revenue: cat.total_revenue,
+      orders: cat.total_sales,
+      averageValue: cat.average_order_value,
+    }));
+  }, [getAnalyticsByCategory]);
 
   // Employee Performance Metrics
   const employeePerformance = useMemo(() => {
-    return employees
-      .map((employee) => {
-        const employeeOrders = timeframeOrders.filter(
-          (order) => order.employee_name === employee.name
-        );
-        const totalSales = employeeOrders.reduce(
-          (sum, order) => sum + order.total_amount,
-          0
-        );
-        const averageOrderValue = totalSales / (employeeOrders.length || 1);
+    const empStats = new Map();
 
-        return {
-          name: employee.name,
-          totalSales,
-          orderCount: employeeOrders.length,
-          averageOrderValue,
-          conversionRate:
-            (employeeOrders.length / timeframeOrders.length) * 100,
-        };
-      })
-      .sort((a, b) => b.totalSales - a.totalSales);
-  }, [timeframeOrders, employees]);
+    timeframeOrders.forEach((order) => {
+      if (!empStats.has(order.employee_name)) {
+        empStats.set(order.employee_name, {
+          name: order.employee_name,
+          totalSales: 0,
+          orderCount: 0,
+          averageOrderValue: 0,
+        });
+      }
+
+      const stats = empStats.get(order.employee_name);
+      stats.totalSales += order.total_amount;
+      stats.orderCount += 1;
+      stats.averageOrderValue = stats.totalSales / stats.orderCount;
+    });
+
+    return Array.from(empStats.values()).sort(
+      (a, b) => b.totalSales - a.totalSales
+    );
+  }, [timeframeOrders]);
 
   // Export functionality
-  const handleExport = (type: "pdf" | "csv") => {
-    if (type === "pdf") {
-      const doc = new jsPDF();
-      doc.text(`Business Analysis Report - ${timeframe}`, 20, 20);
-      // ... rest of your PDF export logic
-      doc.save(
-        `business-analysis-${timeframe}-${
+  const handleExport = async (type: "pdf" | "csv") => {
+    try {
+      if (type === "pdf") {
+        const doc = new jsPDF();
+
+        // Add title
+        doc.setFontSize(20);
+        doc.text(`Business Analysis Report - ${timeframe}`, 20, 20);
+
+        // Add date
+        doc.setFontSize(12);
+        doc.text(`Generated on: ${new Date().toLocaleDateString()}`, 20, 30);
+
+        // Add sales trends
+        doc.autoTable({
+          startY: 40,
+          head: [["Month", "Revenue", "Orders", "Avg Order Value"]],
+          body: salesTrends.map((trend) => [
+            trend.month,
+            trend.revenue.toLocaleString(),
+            trend.orders,
+            trend.averageOrderValue.toFixed(2),
+          ]),
+        });
+
+        // Add category analysis
+        doc.addPage();
+        doc.text("Category Performance", 20, 20);
+        doc.autoTable({
+          startY: 30,
+          head: [["Category", "Revenue", "Orders", "Avg Value"]],
+          body: categoryAnalysis.map((cat) => [
+            cat.category,
+            cat.revenue.toLocaleString(),
+            cat.orders,
+            cat.averageValue.toFixed(2),
+          ]),
+        });
+
+        // Add employee performance
+        doc.addPage();
+        doc.text("Employee Performance", 20, 20);
+        doc.autoTable({
+          startY: 30,
+          head: [["Employee", "Total Sales", "Orders", "Avg Order Value"]],
+          body: employeePerformance.map((emp) => [
+            emp.name,
+            emp.totalSales.toLocaleString(),
+            emp.orderCount,
+            emp.averageOrderValue.toFixed(2),
+          ]),
+        });
+
+        doc.save(
+          `business-analysis-${timeframe}-${
+            new Date().toISOString().split("T")[0]
+          }.pdf`
+        );
+      } else {
+        // CSV Export
+        const csvContent = [
+          ["Sales Trends"],
+          ["Month", "Revenue", "Orders", "Average Order Value"],
+          ...salesTrends.map((trend) => [
+            trend.month,
+            trend.revenue,
+            trend.orders,
+            trend.averageOrderValue,
+          ]),
+          [],
+          ["Category Analysis"],
+          ["Category", "Revenue", "Orders", "Average Value"],
+          ...categoryAnalysis.map((cat) => [
+            cat.category,
+            cat.revenue,
+            cat.orders,
+            cat.averageValue,
+          ]),
+        ]
+          .map((row) => row.join(","))
+          .join("\n");
+
+        const blob = new Blob([csvContent], { type: "text/csv" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `business-analysis-${timeframe}-${
           new Date().toISOString().split("T")[0]
-        }.pdf`
-      );
-    } else {
-      // ... your CSV export logic
+        }.csv`;
+        a.click();
+        URL.revokeObjectURL(url);
+      }
+    } catch (error) {
+      console.error("Export error:", error);
     }
   };
 
@@ -222,11 +321,7 @@ export default function AnalysisPage() {
         {/* Time Navigation */}
         <Card className="border-none shadow-none">
           <CardContent className="p-0">
-            <Tabs
-              defaultValue="total"
-              value={timeframe}
-              onValueChange={setTimeframe}
-            >
+            <Tabs value={timeframe} onValueChange={setTimeframe}>
               <TabsList>
                 <TabsTrigger value="today">Today</TabsTrigger>
                 <TabsTrigger value="week">This Week</TabsTrigger>
@@ -366,7 +461,7 @@ export default function AnalysisPage() {
                         <div className="flex items-center justify-between mb-2">
                           <span className="font-medium">{emp.name}</span>
                           <span className="text-muted-foreground">
-                            ${emp.totalSales.toLocaleString()}
+                            ETB {emp.totalSales.toLocaleString()}
                           </span>
                         </div>
                         <div className="w-full bg-secondary h-2 rounded-full">

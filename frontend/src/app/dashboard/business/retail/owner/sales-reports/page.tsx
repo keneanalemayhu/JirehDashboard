@@ -35,7 +35,10 @@ import {
   ChartTooltipContent,
 } from "@/components/ui/chart";
 import { createSwapy } from "swapy";
-import { useOrders } from "@/hooks/dashboard/business/retail/owner/order";
+import {
+  useOrders,
+  initialOrders,
+} from "@/hooks/dashboard/business/retail/owner/order";
 import {
   Table,
   TableBody,
@@ -73,9 +76,9 @@ const salesChartConfig = {
 
 export default function SalesReportPage() {
   const [sortBy, setSortBy] = useState("revenue");
-  const metricsContainerRef = useRef(null);
-  const chartsContainerRef = useRef(null);
-  const { orders } = useOrders();
+  const metricsContainerRef = useRef<HTMLDivElement>(null);
+  const chartsContainerRef = useRef<HTMLDivElement>(null);
+  const { orders } = useOrders(initialOrders);
 
   useEffect(() => {
     if (metricsContainerRef.current) {
@@ -97,31 +100,48 @@ export default function SalesReportPage() {
 
   // Summary Metrics
   const summaryMetrics = useMemo(() => {
-    const total = orders.reduce((acc, order) => acc + order.total_amount, 0);
-    const totalUnits = orders.reduce((acc, order) => acc + order.quantity, 0);
-    const uniqueCustomers = new Set(orders.map((order) => order.user_name))
+    if (!orders.length) return null;
+
+    const total = orders.reduce(
+      (acc, order) => acc + (order.total_amount || 0),
+      0
+    );
+    const totalUnits = orders.reduce((acc, order) => {
+      return (
+        acc + order.items.reduce((sum, item) => sum + (item.quantity || 0), 0)
+      );
+    }, 0);
+    const uniqueCustomers = new Set(orders.map((order) => order.customer?.name))
       .size;
-    const avgOrderValue = total / orders.length;
+    const avgOrderValue = orders.length ? total / orders.length : 0;
+
+    const currentDate = new Date();
+    const currentMonth = currentDate.getMonth();
+    const currentYear = currentDate.getFullYear();
 
     const prevMonthTotal = orders
       .filter((order) => {
-        const date = new Date(order.created_at);
-        const prevMonth = new Date();
-        prevMonth.setMonth(prevMonth.getMonth() - 1);
-        return date.getMonth() === prevMonth.getMonth();
+        const orderDate = new Date(order.order_date);
+        return (
+          orderDate.getMonth() === currentMonth - 1 &&
+          orderDate.getFullYear() === currentYear
+        );
       })
-      .reduce((acc, order) => acc + order.total_amount, 0);
+      .reduce((acc, order) => acc + (order.total_amount || 0), 0);
 
     const currentMonthTotal = orders
       .filter((order) => {
-        const date = new Date(order.created_at);
-        const now = new Date();
-        return date.getMonth() === now.getMonth();
+        const orderDate = new Date(order.order_date);
+        return (
+          orderDate.getMonth() === currentMonth &&
+          orderDate.getFullYear() === currentYear
+        );
       })
-      .reduce((acc, order) => acc + order.total_amount, 0);
+      .reduce((acc, order) => acc + (order.total_amount || 0), 0);
 
-    const percentageChange =
-      ((currentMonthTotal - prevMonthTotal) / prevMonthTotal) * 100;
+    const percentageChange = prevMonthTotal
+      ? ((currentMonthTotal - prevMonthTotal) / prevMonthTotal) * 100
+      : 0;
 
     return {
       total,
@@ -134,27 +154,36 @@ export default function SalesReportPage() {
 
   // Product Performance Data
   const productPerformance = useMemo(() => {
-    const performance = orders.reduce((acc, order) => {
-      if (!acc[order.item_name]) {
-        acc[order.item_name] = {
-          name: order.item_name,
-          totalSales: 0,
-          totalRevenue: 0,
-          averagePrice: 0,
-          unitsSold: 0,
-        };
-      }
-      acc[order.item_name].totalSales += order.total_amount;
-      acc[order.item_name].unitsSold += order.quantity;
-      acc[order.item_name].totalRevenue += order.total_amount;
-      acc[order.item_name].averagePrice =
-        acc[order.item_name].totalRevenue / acc[order.item_name].unitsSold;
-      return acc;
-    }, {});
+    if (!orders.length) return [];
 
-    return Object.values(performance).sort(
-      (a, b) => b.totalSales - a.totalSales
-    );
+    const performance = orders.reduce((acc, order) => {
+      order.items.forEach((item) => {
+        if (!item.item_name) return;
+
+        if (!acc[item.item_name]) {
+          acc[item.item_name] = {
+            name: item.item_name,
+            totalSales: 0,
+            totalRevenue: 0,
+            averagePrice: 0,
+            unitsSold: 0,
+          };
+        }
+
+        const quantity = item.quantity || 0;
+        const subtotal = item.subtotal || 0;
+
+        acc[item.item_name].totalSales += subtotal;
+        acc[item.item_name].unitsSold += quantity;
+        acc[item.item_name].totalRevenue += subtotal;
+      });
+      return acc;
+    }, {} as Record<string, any>);
+
+    return Object.values(performance).map((item) => ({
+      ...item,
+      averagePrice: item.unitsSold ? item.totalRevenue / item.unitsSold : 0,
+    }));
   }, [orders]);
 
   // Sales Distribution Chart Data
@@ -552,57 +581,61 @@ export default function SalesReportPage() {
             </div>
           </div>
 
-<Card>
-  <CardHeader>
-    <div className="flex justify-between items-center">
-      <div>
-        <CardTitle>Product Performance</CardTitle>
-        <CardDescription>
-          Detailed breakdown of product sales and revenue
-        </CardDescription>
-      </div>
-      <Select value={sortBy} onValueChange={setSortBy}>
-        <SelectTrigger className="w-[180px]">
-          <SelectValue placeholder="Sort by" />
-        </SelectTrigger>
-        <SelectContent>
-          <SelectItem value="revenue">Sort by Revenue</SelectItem>
-          <SelectItem value="units">Sort by Units Sold</SelectItem>
-          <SelectItem value="average">Sort by Average Price</SelectItem>
-        </SelectContent>
-      </Select>
-    </div>
-  </CardHeader>
-  <CardContent>
-    <Table>
-      <TableHeader>
-        <TableRow>
-          <TableHead>Product Name</TableHead>
-          <TableHead className="text-right">Units Sold</TableHead>
-          <TableHead className="text-right">Revenue</TableHead>
-          <TableHead className="text-right">Avg. Price</TableHead>
-        </TableRow>
-      </TableHeader>
-      <TableBody>
-        {sortedProductPerformance.map((product) => (
-          <TableRow key={product.name}>
-            <TableCell className="font-medium">{product.name}</TableCell>
-            <TableCell className="text-right">
-              {product.unitsSold.toLocaleString()}
-            </TableCell>
-            <TableCell className="text-right">
-              ${product.totalRevenue.toLocaleString()}
-            </TableCell>
-            <TableCell className="text-right">
-              ${product.averagePrice.toFixed(2)}
-            </TableCell>
-          </TableRow>
-        ))}
-      </TableBody>
-    </Table>
-  </CardContent>
-</Card>
+          <Card>
+            <CardHeader>
+              <div className="flex justify-between items-center">
+                <div>
+                  <CardTitle>Product Performance</CardTitle>
+                  <CardDescription>
+                    Detailed breakdown of product sales and revenue
+                  </CardDescription>
+                </div>
+                <Select value={sortBy} onValueChange={setSortBy}>
+                  <SelectTrigger className="w-[180px]">
+                    <SelectValue placeholder="Sort by" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="revenue">Sort by Revenue</SelectItem>
+                    <SelectItem value="units">Sort by Units Sold</SelectItem>
+                    <SelectItem value="average">
+                      Sort by Average Price
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
+            </CardHeader>
+            <CardContent>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Product Name</TableHead>
+                    <TableHead className="text-right">Units Sold</TableHead>
+                    <TableHead className="text-right">Revenue</TableHead>
+                    <TableHead className="text-right">Avg. Price</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {sortedProductPerformance.map((product) => (
+                    <TableRow key={product.name}>
+                      <TableCell className="font-medium">
+                        {product.name}
+                      </TableCell>
+                      <TableCell className="text-right">
+                        {product.unitsSold.toLocaleString()}
+                      </TableCell>
+                      <TableCell className="text-right">
+                        ${product.totalRevenue.toLocaleString()}
+                      </TableCell>
+                      <TableCell className="text-right">
+                        ${product.averagePrice.toFixed(2)}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </CardContent>
+          </Card>
+        </div>
       </main>
     </SidebarLayout>
   );

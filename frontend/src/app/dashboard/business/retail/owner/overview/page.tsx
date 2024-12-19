@@ -2,7 +2,6 @@
 
 
 import React, { useState, useMemo } from "react";
-import html2canvas from "html2canvas";
 import { Header } from "@/components/common/dashboard/business/retail/owner/Header";
 import { SidebarLayout } from "@/components/common/dashboard/business/retail/owner/Sidebar";
 import {
@@ -33,8 +32,9 @@ import {
   ArrowUpRight,
   ArrowDownRight,
 } from "lucide-react";
+import html2canvas from "html2canvas";
 import { jsPDF } from "jspdf";
-import autoTable from "jspdf-autotable";
+import "jspdf-autotable";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -50,8 +50,7 @@ import {
 
 declare module "jspdf" {
   interface jsPDF {
-    autoTable: typeof autoTable;
-    lastAutoTable: any;
+    autoTable: (options: any) => jsPDF;
   }
 }
 
@@ -237,141 +236,142 @@ export default function OverviewPage() {
   const [isExporting, setIsExporting] = useState(false);
   const handleExport = async (type: "pdf" | "csv") => {
     try {
-    setIsExporting(true);
-    const exportMetrics = [
-      ["Revenue", `ETB ${metrics.totalRevenue.toLocaleString()}`],
-      ["Growth", `${growth.toFixed(1)}%`],
-      [
-        "Average Order Value",
-        `ETB ${metrics.averageOrderValue.toLocaleString()}`,
-      ],
-      ["Unique Customers", metrics.uniqueCustomers.toString()],
-      ["Total Orders", filteredOrders.length.toString()],
-    ];
+      setIsExporting(true);
+      const exportMetrics = [
+        ["Revenue", `ETB ${metrics.totalRevenue.toLocaleString()}`],
+        ["Growth", `${growth.toFixed(1)}%`],
+        [
+          "Average Order Value",
+          `ETB ${metrics.averageOrderValue.toLocaleString()}`,
+        ],
+        ["Unique Customers", metrics.uniqueCustomers.toString()],
+        ["Total Orders", filteredOrders.length.toString()],
+      ];
 
-    if (type === "pdf") {
-      const doc = new jsPDF();
+      if (type === "pdf") {
+        // Create new document with 'pt' units and A4 size
+        const doc = new jsPDF("p", "pt", "a4");
 
-      // Add title and date
-      doc.setFontSize(20);
-      doc.text(`Business Overview Report - ${timeframe}`, 20, 20);
-      doc.setFontSize(12);
-      doc.text(`Generated on: ${new Date().toLocaleDateString()}`, 20, 30);
+        // Add title and date
+        doc.setFontSize(20);
+        doc.text(`Business Overview Report - ${timeframe}`, 40, 40);
+        doc.setFontSize(12);
+        doc.text(`Generated on: ${new Date().toLocaleDateString()}`, 40, 60);
 
-      // Add metrics table
-      doc.autoTable({
-        startY: 40,
-        head: [["Metric", "Value"]],
-        body: exportMetrics,
-      });
+        // Add metrics table with proper configuration
+        doc.autoTable({
+          startY: 80,
+          head: [["Metric", "Value"]],
+          body: exportMetrics,
+          theme: "grid",
+          styles: { fontSize: 10 },
+          headStyles: { fillColor: [66, 66, 66] },
+          margin: { top: 80, right: 40, bottom: 40, left: 40 },
+        });
 
-      // Wait for charts to render
-      await new Promise((resolve) => setTimeout(resolve, 500));
+        // Wait for charts to render
+        await new Promise((resolve) => setTimeout(resolve, 1000));
 
-      try {
-        // Create and add revenue chart
-        const revenueChartElement = document.querySelector(
-          ".recharts-wrapper"
-        ) as HTMLElement;
-        if (revenueChartElement) {
-          const canvas = await html2canvas(revenueChartElement);
-          const imgData = canvas.toDataURL("image/png");
+        try {
+          // Capture and add revenue chart
+          const revenueChartElement = document.querySelector(
+            ".recharts-wrapper"
+          ) as HTMLElement;
+          if (revenueChartElement) {
+            const canvas = await html2canvas(revenueChartElement);
+            const imgData = canvas.toDataURL("image/png");
+            doc.addPage();
+            doc.text("Revenue Trend", 40, 40);
+            doc.addImage(imgData, "PNG", 40, 60, 500, 250);
+          }
+
+          // Capture and add payment methods pie chart
+          const pieChartElement = document.querySelectorAll(
+            ".recharts-wrapper"
+          )[1] as HTMLElement;
+          if (pieChartElement) {
+            doc.text("Payment Methods Distribution", 40, 340);
+            const canvas = await html2canvas(pieChartElement);
+            const imgData = canvas.toDataURL("image/png");
+            doc.addImage(imgData, "PNG", 40, 360, 500, 250);
+          }
+
+          // Add top selling items table
           doc.addPage();
-          doc.text("Revenue Trend", 20, 20);
-          doc.addImage(imgData, "PNG", 20, 30, 170, 80);
+          doc.text("Top Selling Items", 40, 40);
+          const topItems = getTopSellingItems(5).map((item) => [
+            item.item_name,
+            `ETB ${item.total_revenue.toLocaleString()}`,
+            `${item.total_quantity} units`,
+          ]);
+
+          doc.autoTable({
+            startY: 60,
+            head: [["Item Name", "Revenue", "Units Sold"]],
+            body: topItems,
+            theme: "grid",
+            styles: { fontSize: 10 },
+            headStyles: { fillColor: [66, 66, 66] },
+            margin: { top: 60, right: 40, bottom: 40, left: 40 },
+          });
+
+          // Add category performance table
+          const categoryData = getAnalyticsByCategory()
+            .slice(0, 5)
+            .map((cat) => [
+              cat.category_name,
+              `ETB ${cat.total_revenue.toLocaleString()}`,
+              cat.total_items.toString(),
+              `ETB ${cat.average_order_value.toFixed(2)}`,
+            ]);
+
+          doc.text(
+            "Category Performance",
+            40,
+            doc.autoTable.previous.finalY + 40
+          );
+
+          doc.autoTable({
+            startY: doc.autoTable.previous.finalY + 60,
+            head: [["Category", "Revenue", "Items Sold", "Avg Order Value"]],
+            body: categoryData,
+            theme: "grid",
+            styles: { fontSize: 10 },
+            headStyles: { fillColor: [66, 66, 66] },
+            margin: { top: 40, right: 40, bottom: 40, left: 40 },
+          });
+        } catch (error) {
+          console.error("Error capturing charts:", error);
         }
 
-        // Create and add payment methods pie chart
-        const pieChartElement = document.querySelectorAll(
-          ".recharts-wrapper"
-        )[1] as HTMLElement;
-        if (pieChartElement) {
-          const canvas = await html2canvas(pieChartElement);
-          const imgData = canvas.toDataURL("image/png");
-          doc.addImage(imgData, "PNG", 20, 130, 170, 80);
-          doc.text("Payment Methods Distribution", 20, 120);
-        }
-      } catch (error) {
-        console.error("Error capturing charts:", error);
-      }
+        // Save the PDF
+        doc.save(
+          `business-overview-${timeframe}-${
+            new Date().toISOString().split("T")[0]
+          }.pdf`
+        );
+      } else {
+        // CSV export logic remains the same
+        const csvContent = [["Metric", "Value"], ...exportMetrics]
+          .map((row) => row.join(","))
+          .join("\n");
 
-      // Create and add revenue chart
-      const revenueChartCanvas = document.querySelector(
-        ".recharts-wrapper canvas"
-      ) as HTMLCanvasElement;
-      if (revenueChartCanvas) {
-        const imgData = revenueChartCanvas.toDataURL("image/png");
-        doc.addPage();
-        doc.text("Revenue Trend", 20, 20);
-        doc.addImage(imgData, "PNG", 20, 30, 170, 80);
-      }
-
-      // Create and add payment methods pie chart
-      const pieChartCanvas = document.querySelectorAll(
-        ".recharts-wrapper canvas"
-      )[1] as HTMLCanvasElement;
-      if (pieChartCanvas) {
-        const imgData = pieChartCanvas.toDataURL("image/png");
-        doc.addImage(imgData, "PNG", 20, 130, 170, 80);
-        doc.text("Payment Methods Distribution", 20, 120);
-      }
-
-      // Add top selling items
-      doc.addPage();
-      doc.text("Top Selling Items", 20, 20);
-      const topItems = getTopSellingItems(5).map((item) => [
-        item.item_name,
-        `ETB ${item.total_revenue.toLocaleString()}`,
-        `${item.total_quantity} units`,
-      ]);
-      doc.autoTable({
-        startY: 30,
-        head: [["Item Name", "Revenue", "Units Sold"]],
-        body: topItems,
-      });
-
-      // Add category performance
-      const categoryData = getAnalyticsByCategory()
-        .slice(0, 5)
-        .map((cat) => [
-          cat.category_name,
-          `ETB ${cat.total_revenue.toLocaleString()}`,
-          cat.total_items.toString(),
-          `ETB ${cat.average_order_value.toFixed(2)}`,
-        ]);
-      doc.autoTable({
-        startY: doc.lastAutoTable.finalY + 20,
-        head: [["Category", "Revenue", "Items Sold", "Avg Order Value"]],
-        body: categoryData,
-      });
-
-      doc.save(
-        `business-overview-${timeframe}-${
+        const blob = new Blob([csvContent], { type: "text/csv" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `business-overview-${timeframe}-${
           new Date().toISOString().split("T")[0]
-        }.pdf`
-      );
-    } else {
-      // CSV export remains the same
-      const csvContent = [["Metric", "Value"], ...exportMetrics]
-        .map((row) => row.join(","))
-        .join("\n");
-
-      const blob = new Blob([csvContent], { type: "text/csv" });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = `business-overview-${timeframe}-${
-        new Date().toISOString().split("T")[0]
-      }.csv`;
-      a.click();
-      URL.revokeObjectURL(url);
-    }
-  } catch (error) {
-    console.error("Export error:", error);
+        }.csv`;
+        a.click();
+        URL.revokeObjectURL(url);
+      }
+    } catch (error) {
+      console.error("Export error:", error);
     } finally {
-    setIsExporting(false);
-  }
-};
+      setIsExporting(false);
+    }
+  };
 
   // Get analytics data
   const topSellingItems = getTopSellingItems(5);

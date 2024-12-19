@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useRef, useState, useMemo } from "react";
+import React, { useEffect, useRef, useState, UseMemo, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Header } from "@/components/common/dashboard/business/retail/owner/Header";
 import { SidebarLayout } from "@/components/common/dashboard/business/retail/owner/Sidebar";
@@ -33,22 +33,6 @@ import {
   Label,
 } from "recharts";
 import {
-  ChartContainer,
-  ChartTooltip,
-  ChartTooltipContent,
-} from "@/components/ui/chart";
-import { createSwapy } from "swapy";
-import { useExpenses } from "@/hooks/dashboard/business/retail/owner/expense";
-import { useOrders } from "@/hooks/dashboard/business/retail/owner/order";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import {
   Select,
   SelectContent,
   SelectItem,
@@ -61,6 +45,22 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import {
+  ChartContainer,
+  ChartTooltip,
+  ChartTooltipContent,
+} from "@/components/ui/chart";
+import { createSwapy } from "swapy";
+import { useExpenses } from "@/hooks/dashboard/business/retail/owner/expense";
+import { useOrders } from "@/hooks/dashboard/business/retail/owner/order";
 import { jsPDF } from "jspdf";
 import "jspdf-autotable";
 
@@ -75,15 +75,13 @@ const lossChartConfig = {
 };
 
 export default function ProfitLossPage() {
-  const { expenses, filteredExpenses } = useExpenses();
-  const { orders, filteredOrders } = useOrders();
+  const { expenses = [], filteredExpenses = [] } = useExpenses();
+  const { orders = [], filteredOrders = [] } = useOrders();
 
-  // Add refs for Swapy
   const metricsContainerRef = useRef(null);
   const chartsContainerRef = useRef(null);
   const tableContainerRef = useRef(null);
 
-  // Initialize Swapy
   useEffect(() => {
     if (metricsContainerRef.current) {
       const metricsSwap = createSwapy(metricsContainerRef.current, {
@@ -121,9 +119,9 @@ export default function ProfitLossPage() {
   const recentTransactions = useMemo(() => {
     const transactions = [
       ...filteredOrders.map((order) => ({
-        date: new Date(order.created_at),
+        date: new Date(order.order_date),
         type: "Revenue",
-        description: `Order ${order.order_id}`,
+        description: `Order ${order.order_number}`,
         amount: order.total_amount,
         isProfit: true,
       })),
@@ -134,9 +132,7 @@ export default function ProfitLossPage() {
         amount: expense.amount,
         isProfit: false,
       })),
-    ]
-      .sort((a, b) => b.date.getTime() - a.date.getTime())
-      .slice(0, 10);
+    ].sort((a, b) => b.date.getTime() - a.date.getTime());
 
     return transactions;
   }, [filteredOrders, filteredExpenses]);
@@ -144,7 +140,6 @@ export default function ProfitLossPage() {
   const processedTransactions = useMemo(() => {
     let filtered = recentTransactions;
 
-    // Apply filter
     if (transactionFilter !== "all") {
       filtered = recentTransactions.filter((transaction) =>
         transactionFilter === "revenue"
@@ -153,7 +148,6 @@ export default function ProfitLossPage() {
       );
     }
 
-    // Apply sorting
     return [...filtered].sort((a, b) => {
       if (sortConfig.key === "date") {
         return sortConfig.direction === "asc"
@@ -198,13 +192,12 @@ export default function ProfitLossPage() {
     const profitMargin =
       totalRevenue > 0 ? (netProfit / totalRevenue) * 100 : 0;
 
-    // Calculate previous month metrics
     const now = new Date();
     const currentMonth = now.getMonth();
     const lastMonth = new Date(now.getFullYear(), now.getMonth() - 1);
 
     const prevMonthOrders = filteredOrders.filter(
-      (order) => new Date(order.created_at).getMonth() === lastMonth.getMonth()
+      (order) => new Date(order.order_date).getMonth() === lastMonth.getMonth()
     );
     const prevMonthExpenses = filteredExpenses.filter(
       (expense) =>
@@ -243,23 +236,18 @@ export default function ProfitLossPage() {
 
   // Chart Data Calculations
   const profitData = useMemo(() => {
-    const totalSales = filteredOrders.length;
-    const totalRevenue = filteredOrders.reduce(
-      (acc, order) => acc + order.total_amount,
-      0
-    );
+    const totalOrders = filteredOrders.length;
+    const totalRevenue = summaryMetrics.totalRevenue;
+    const salesCount = filteredOrders.reduce((acc, order) => acc + 1, 0);
+
     return [
-      { name: "Sales", value: totalSales, fill: "hsl(var(--chart-1))" },
+      { name: "Sales", value: salesCount, fill: "hsl(var(--chart-1))" },
       { name: "Revenue", value: totalRevenue, fill: "hsl(var(--chart-2))" },
     ];
-  }, [filteredOrders]);
+  }, [filteredOrders, summaryMetrics.totalRevenue]);
 
   const lossData = useMemo(() => {
-    const totalExpenses = filteredExpenses.reduce(
-      (acc, expense) => acc + expense.amount,
-      0
-    );
-    // Assuming operational costs are 70% of total expenses
+    const totalExpenses = summaryMetrics.totalExpenses;
     const operationalCosts = totalExpenses * 0.7;
     return [
       { name: "Expenses", value: totalExpenses, fill: "hsl(var(--chart-3))" },
@@ -269,14 +257,13 @@ export default function ProfitLossPage() {
         fill: "hsl(var(--chart-4))",
       },
     ];
-  }, [filteredExpenses]);
+  }, [summaryMetrics.totalExpenses]);
 
   const trendData = useMemo(() => {
     const monthlyData = new Map();
 
-    // Process orders
     filteredOrders.forEach((order) => {
-      const date = new Date(order.created_at);
+      const date = new Date(order.order_date);
       const monthKey = `${date.getFullYear()}-${String(
         date.getMonth() + 1
       ).padStart(2, "0")}`;
@@ -288,7 +275,6 @@ export default function ProfitLossPage() {
       data.profit += order.total_amount;
     });
 
-    // Process expenses
     filteredExpenses.forEach((expense) => {
       const date = new Date(expense.expenseDate);
       const monthKey = `${date.getFullYear()}-${String(
@@ -307,6 +293,7 @@ export default function ProfitLossPage() {
       .slice(-6);
   }, [filteredOrders, filteredExpenses]);
 
+  // Report generation handlers
   const handleDownloadPDF = () => {
     const doc = new jsPDF();
     const pageWidth = doc.internal.pageSize.width;
@@ -317,7 +304,6 @@ export default function ProfitLossPage() {
       day: "numeric",
     });
 
-    // Title with Date
     doc.setFontSize(20);
     doc.text("Profit & Loss Report", pageWidth / 2, 20, { align: "center" });
 
@@ -326,7 +312,6 @@ export default function ProfitLossPage() {
       align: "center",
     });
 
-    // Summary Section
     doc.setFontSize(16);
     doc.text("Summary Metrics", 14, 45);
 
@@ -345,18 +330,19 @@ export default function ProfitLossPage() {
       theme: "grid",
     });
 
-    // Recent Transactions
     doc.setFontSize(16);
     doc.text("Recent Transactions", 14, doc.lastAutoTable.finalY + 20);
 
-    const transactionData = recentTransactions.map((transaction) => [
-      transaction.date.toLocaleDateString(),
-      transaction.type,
-      transaction.description,
-      `${
-        transaction.isProfit ? "+" : "-"
-      }$${transaction.amount.toLocaleString()}`,
-    ]);
+    const transactionData = recentTransactions
+      .slice(0, 10)
+      .map((transaction) => [
+        transaction.date.toLocaleDateString(),
+        transaction.type,
+        transaction.description,
+        `${
+          transaction.isProfit ? "+" : "-"
+        }$${transaction.amount.toLocaleString()}`,
+      ]);
 
     doc.autoTable({
       startY: doc.lastAutoTable.finalY + 25,
@@ -365,8 +351,7 @@ export default function ProfitLossPage() {
       theme: "grid",
     });
 
-    // Generate filename with date
-    const dateString = currentDate.toISOString().split("T")[0]; // YYYY-MM-DD format
+    const dateString = currentDate.toISOString().split("T")[0];
     doc.save(`profit-loss-report-${dateString}.pdf`);
   };
 
@@ -379,24 +364,25 @@ export default function ProfitLossPage() {
       day: "numeric",
     });
 
-    // Convert transactions data to CSV with header that includes the date
     const csvContent = [
       [`Profit & Loss Report - Generated on ${formattedDate}`],
-      [], // Empty row for spacing
+      [],
       ["Summary Metrics"],
       ["Total Revenue", `$${summaryMetrics.totalRevenue.toLocaleString()}`],
       ["Total Expenses", `$${summaryMetrics.totalExpenses.toLocaleString()}`],
       ["Net Profit", `$${summaryMetrics.netProfit.toLocaleString()}`],
       ["Profit Margin", `${summaryMetrics.profitMargin.toFixed(1)}%`],
-      [], // Empty row for spacing
+      [],
       ["Recent Transactions"],
       ["Date", "Type", "Description", "Amount"],
-      ...recentTransactions.map((transaction) => [
-        transaction.date.toLocaleDateString(),
-        transaction.type,
-        transaction.description,
-        `${transaction.isProfit ? "+" : "-"}${transaction.amount}`,
-      ]),
+      ...recentTransactions
+        .slice(0, 10)
+        .map((transaction) => [
+          transaction.date.toLocaleDateString(),
+          transaction.type,
+          transaction.description,
+          `${transaction.isProfit ? "+" : "-"}${transaction.amount}`,
+        ]),
     ]
       .map((row) => row.join(","))
       .join("\n");

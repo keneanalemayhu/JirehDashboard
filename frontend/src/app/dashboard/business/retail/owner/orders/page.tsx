@@ -6,7 +6,10 @@ import { SidebarLayout } from "@/components/common/dashboard/business/retail/own
 import { OrderTable } from "@/components/dashboard/business/retail/owner/orders/OrderTable";
 import { OrderTableSettings } from "@/components/dashboard/business/retail/owner/orders/OrderTableSettings";
 import { OrderTablePagination } from "@/components/dashboard/business/retail/owner/orders/OrderTablePagination";
-import { useOrders } from "@/hooks/dashboard/business/retail/owner/order";
+import {
+  useOrders,
+  initialOrders,
+} from "@/hooks/dashboard/business/retail/owner/order";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Download, FileDown, FileSpreadsheet, FileText } from "lucide-react";
@@ -18,7 +21,10 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { PaymentStatus } from "@/types/dashboard/business/retail/owner/order";
+import {
+  PaymentStatus,
+  OrderFilters,
+} from "@/types/dashboard/business/retail/owner/order";
 
 export default function OrdersPage() {
   const [timeframe, setTimeframe] = React.useState("today");
@@ -32,69 +38,53 @@ export default function OrdersPage() {
 
   const {
     orders,
-    filterValue,
-    setFilterValue,
-    handleUpdatePaymentStatus,
-    isDetailsDialogOpen,
-    setIsDetailsDialogOpen,
+    filters,
+    setFilters,
     selectedOrder,
-    handleSort,
-    filteredOrders,
     paginatedOrders,
-    statusFilter,
-    handleStatusFilterChange,
-    pageSize,
     currentPage,
-    handlePageChange,
-    handlePageSizeChange,
-    getFilteredOrdersByTimeframe,
-  } = useOrders();
+    pageSize,
+    setPage,
+    setPageSize,
+    updateOrder,
+    handleSort,
+    sortColumn,
+  } = useOrders(initialOrders);
 
-  // Calculate statistics for each timeframe
-  const timeframeStats = React.useMemo(() => {
+  // Function to get filtered orders based on timeframe
+  const getTimeframeOrders = React.useCallback(() => {
     const now = new Date();
     const startOfDay = new Date(now.setHours(0, 0, 0, 0));
     const startOfWeek = new Date(now);
     startOfWeek.setDate(now.getDate() - now.getDay());
-    startOfWeek.setHours(0, 0, 0, 0);
     const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
     const startOfYear = new Date(now.getFullYear(), 0, 1);
 
-    const calculateStats = (orders: any[]) => ({
-      count: orders.length,
-      totalAmount: orders.reduce((sum, order) => sum + order.total_amount, 0),
-      paidCount: orders.filter(
-        (order) => order.payment_status === PaymentStatus.PAID
-      ).length,
-      pendingCount: orders.filter(
-        (order) => order.payment_status === PaymentStatus.PENDING
-      ).length,
-      cancelledCount: orders.filter(
-        (order) => order.payment_status === PaymentStatus.CANCELLED
-      ).length,
-    });
+    let startDate;
+    switch (timeframe) {
+      case "today":
+        startDate = startOfDay;
+        break;
+      case "week":
+        startDate = startOfWeek;
+        break;
+      case "month":
+        startDate = startOfMonth;
+        break;
+      case "year":
+        startDate = startOfYear;
+        break;
+      default:
+        return orders;
+    }
 
-    return {
-      today: calculateStats(
-        orders.filter((order) => new Date(order.created_at) >= startOfDay)
-      ),
-      week: calculateStats(
-        orders.filter((order) => new Date(order.created_at) >= startOfWeek)
-      ),
-      month: calculateStats(
-        orders.filter((order) => new Date(order.created_at) >= startOfMonth)
-      ),
-      year: calculateStats(
-        orders.filter((order) => new Date(order.created_at) >= startOfYear)
-      ),
-      total: calculateStats(orders),
-    };
-  }, [orders]);
+    return orders.filter((order) => new Date(order.order_date) >= startDate);
+  }, [timeframe, orders]);
 
-  // Get filtered orders based on timeframe
-  const timeframeOrders = React.useMemo(() => {
-    return getFilteredOrdersByTimeframe(timeframe);
-  }, [timeframe, getFilteredOrdersByTimeframe]);
+  const timeframeOrders = React.useMemo(
+    () => getTimeframeOrders(),
+    [getTimeframeOrders]
+  );
 
   // Calculate statistics based on timeframe orders
   const stats = React.useMemo(
@@ -120,172 +110,83 @@ export default function OrdersPage() {
   // Handle timeframe change
   const handleTimeframeChange = (newTimeframe: string) => {
     setTimeframe(newTimeframe);
-    handlePageChange(1); // Use handlePageChange from useOrders instead of setCurrentPage
+    setPage(1);
   };
 
-  // Enhanced settings options
-  const tableSettings = {
-    showAmounts,
-    showEmployeeInfo,
-    showCustomerInfo,
-    sortDirection,
-    itemsPerPage,
-    statusFilter,
+  // Handle search
+  const handleSearch = (searchTerm: string) => {
+    setFilters({ ...filters, searchTerm });
   };
 
-  // Export handlers...
-  const handleCSVExport = () => {
+  // Handle status filter change
+  const handleStatusFilterChange = (statuses: PaymentStatus[]) => {
+    setFilters({ ...filters, paymentStatus: statuses });
+  };
+
+  // Handle payment status update
+  const handleUpdatePaymentStatus = async (
+    orderId: string,
+    newStatus: PaymentStatus
+  ) => {
+    await updateOrder(orderId, { payment_status: newStatus });
+  };
+
+  // Export functions
+  const handleExport = (format: "csv" | "excel" | "sheets") => {
     const headers = [
       "Order ID",
-      "Item",
-      "Quantity",
-      "Unit Price",
-      "Subtotal",
-      ...(showEmployeeInfo ? ["Employee"] : []),
-      ...(showCustomerInfo ? ["Customer"] : []),
-      ...(showAmounts ? ["Total Amount"] : []),
+      "Order Number",
+      ...(showCustomerInfo
+        ? ["Customer Name", "Customer Phone", "Customer Email"]
+        : []),
+      ...(showEmployeeInfo ? ["Employee Name"] : []),
+      "Status",
       "Payment Status",
-      "Created At",
+      ...(showAmounts ? ["Total Amount"] : []),
+      "Order Date",
     ];
 
-    const csvContent = [
-      headers.join(","),
-      ...timeframeOrders.map((order) => {
-        const row = [
-          order.order_id,
-          `"${order.item_name}"`,
-          order.quantity,
-          order.unit_price,
-          order.subtotal,
-        ];
+    const rows = timeframeOrders.map((order) => {
+      const row = [order.order_id, order.order_number];
 
-        if (showEmployeeInfo) row.push(`"${order.employee_name}"`);
-        if (showCustomerInfo) row.push(`"${order.user_name}"`);
-        if (showAmounts) row.push(order.total_amount.toString());
-
+      if (showCustomerInfo) {
         row.push(
-          `"${order.payment_status}"`,
-          new Date(order.created_at).toLocaleString()
+          order.customer.name,
+          order.customer.phone,
+          order.customer.email
         );
+      }
 
-        return row.join(",");
-      }),
-    ].join("\n");
+      if (showEmployeeInfo) {
+        row.push(order.employee_name);
+      }
 
-    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = `orders-export-${timeframe}-${
-      new Date().toISOString().split("T")[0]
-    }.csv`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-  };
+      row.push(order.status, order.payment_status);
 
-  const handleExcelExport = () => {
-    const headers = [
-      "Order ID",
-      "Item",
-      "Quantity",
-      "Unit Price",
-      "Subtotal",
-      ...(showEmployeeInfo ? ["Employee"] : []),
-      ...(showCustomerInfo ? ["Customer"] : []),
-      ...(showAmounts ? ["Total Amount"] : []),
-      "Payment Status",
-      "Created At",
-    ];
+      if (showAmounts) {
+        row.push(order.total_amount.toString());
+      }
 
-    const excelContent = [
-      headers,
-      ...timeframeOrders.map((order) => {
-        const row = [
-          order.order_id,
-          order.item_name,
-          order.quantity,
-          order.unit_price,
-          order.subtotal,
-        ];
+      row.push(new Date(order.order_date).toLocaleString());
 
-        if (showEmployeeInfo) row.push(order.employee_name);
-        if (showCustomerInfo) row.push(order.user_name);
-        if (showAmounts) row.push(order.total_amount);
-
-        row.push(
-          order.payment_status,
-          new Date(order.created_at).toLocaleString()
-        );
-
-        return row;
-      }),
-    ]
-      .map((row) => row.join("\t"))
-      .join("\n");
-
-    const blob = new Blob([excelContent], {
-      type: "application/vnd.ms-excel;charset=utf-8;",
+      return row;
     });
+
+    const content = [headers, ...rows].map((row) => row.join(",")).join("\n");
+
+    const blob = new Blob([content], {
+      type:
+        format === "csv"
+          ? "text/csv;charset=utf-8;"
+          : "application/vnd.ms-excel;charset=utf-8;",
+    });
+
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.href = url;
     link.download = `orders-export-${timeframe}-${
       new Date().toISOString().split("T")[0]
-    }.xls`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-  };
-
-  const handleGoogleSheetsExport = () => {
-    const headers = [
-      "Order ID",
-      "Item",
-      "Quantity",
-      "Unit Price",
-      "Subtotal",
-      ...(showEmployeeInfo ? ["Employee"] : []),
-      ...(showCustomerInfo ? ["Customer"] : []),
-      ...(showAmounts ? ["Total Amount"] : []),
-      "Payment Status",
-      "Created At",
-    ];
-
-    const sheetContent = [
-      headers,
-      ...timeframeOrders.map((order) => {
-        const row = [
-          order.order_id,
-          order.item_name,
-          order.quantity,
-          order.unit_price,
-          order.subtotal,
-        ];
-
-        if (showEmployeeInfo) row.push(order.employee_name);
-        if (showCustomerInfo) row.push(order.user_name);
-        if (showAmounts) row.push(order.total_amount);
-
-        row.push(
-          order.payment_status,
-          new Date(order.created_at).toLocaleString()
-        );
-
-        return row;
-      }),
-    ];
-
-    const blob = new Blob(
-      [sheetContent.map((row) => row.join("\t")).join("\n")],
-      { type: "text/tab-separated-values" }
-    );
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = `orders-export-${timeframe}-${
-      new Date().toISOString().split("T")[0]
-    }.tsv`;
+    }.${format === "csv" ? "csv" : format === "excel" ? "xls" : "tsv"}`;
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -323,15 +224,15 @@ export default function OrdersPage() {
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-[200px]">
-                <DropdownMenuItem onClick={handleGoogleSheetsExport}>
+                <DropdownMenuItem onClick={() => handleExport("sheets")}>
                   <FileText className="mr-2 h-4 w-4" />
                   <span>Export for Google Sheets</span>
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={handleExcelExport}>
+                <DropdownMenuItem onClick={() => handleExport("excel")}>
                   <FileSpreadsheet className="mr-2 h-4 w-4" />
                   <span>Export as Excel</span>
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={handleCSVExport}>
+                <DropdownMenuItem onClick={() => handleExport("csv")}>
                   <FileDown className="mr-2 h-4 w-4" />
                   <span>Export as CSV</span>
                 </DropdownMenuItem>
@@ -416,15 +317,15 @@ export default function OrdersPage() {
               <Input
                 placeholder="Search orders..."
                 className="max-w-sm"
-                value={filterValue}
-                onChange={(e) => setFilterValue(e.target.value)}
+                value={filters.searchTerm || ""}
+                onChange={(e) => handleSearch(e.target.value)}
               />
               <OrderTableSettings
                 settings={{
                   showAmounts,
                   showEmployeeInfo,
                   showCustomerInfo,
-                  statusFilter,
+                  statusFilter: filters.paymentStatus || [],
                   sortDirection,
                   itemsPerPage,
                 }}
@@ -442,22 +343,27 @@ export default function OrdersPage() {
 
           {/* Table */}
           <OrderTable
-            orders={timeframeOrders}
-            settings={tableSettings}
+            orders={paginatedOrders}
+            settings={{
+              showAmounts,
+              showEmployeeInfo,
+              showCustomerInfo,
+              sortDirection,
+              itemsPerPage,
+              statusFilter: filters.paymentStatus || [],
+            }}
             onSort={handleSort}
             onStatusUpdate={handleUpdatePaymentStatus}
-            isDetailsDialogOpen={isDetailsDialogOpen}
-            setIsDetailsDialogOpen={setIsDetailsDialogOpen}
             selectedOrder={selectedOrder}
           />
 
           {/* Pagination */}
           <OrderTablePagination
             totalItems={timeframeOrders.length}
-            pageSize={itemsPerPage}
+            pageSize={pageSize}
             currentPage={currentPage}
-            onPageChange={handlePageChange}
-            onPageSizeChange={handlePageSizeChange}
+            onPageChange={setPage}
+            onPageSizeChange={setPageSize}
           />
         </div>
       </div>
