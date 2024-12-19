@@ -1,128 +1,194 @@
 // src/types/dashboard/business/retail/owner/order.ts
 
 /**
- * Core entity interfaces
+ * Core enums
  */
-export interface Order {
-  order_id: string;
-  item_name: string;
-  quantity: number;
-  unit_price: number;
-  subtotal: number;
-  employee_name: string;
-  user_name: string;
-  total_amount: number;
-  payment_status: PaymentStatus;
-  created_at: string; // ISO string format
-  updated_at: string; // ISO string format
-}
-
 export enum PaymentStatus {
   PENDING = "PENDING",
   PAID = "PAID",
+  PARTIAL = "PARTIAL",
   CANCELLED = "CANCELLED",
+  REFUNDED = "REFUNDED",
+}
+
+export enum OrderStatus {
+  PENDING = "PENDING",
+  PROCESSING = "PROCESSING",
+  READY = "READY",
+  COMPLETED = "COMPLETED",
+  CANCELLED = "CANCELLED",
+  ON_HOLD = "ON_HOLD",
+}
+
+export enum PaymentMethod {
+  CASH = "CASH",
+  CREDIT = "CREDIT",
+  TELEBIRR = "TELEBIRR",
+  BANK_TRANSFER = "BANK_TRANSFER",
+  MOBILE_MONEY = "MOBILE_MONEY",
 }
 
 /**
- * Form-related types
+ * Base interfaces
+ */
+export interface CustomerInfo {
+  name: string | null;
+  phone: string | null;
+  email: string | null;
+}
+
+export interface OrderItem {
+  item_id: number;
+  category_id: number;
+  item_name: string;
+  category_name: string;
+  quantity: number;
+  unit_price: number;
+  subtotal: number;
+}
+
+/**
+ * Core Order interface
+ */
+export interface Order {
+  // Identifiers
+  order_id: string;
+  order_number: string;
+  store_id: number;
+  location_id: number;
+  user_id: number;
+  employee_id: number;
+
+  // Status
+  status: OrderStatus;
+  payment_status: PaymentStatus;
+  payment_method: PaymentMethod;
+
+  // Customer
+  customer: CustomerInfo;
+
+  // Order Details
+  items: OrderItem[];
+  total_amount: number;
+
+  // Metadata
+  employee_name: string;
+  user_name: string;
+  order_date: string;
+  created_at: string;
+  updated_at: string;
+}
+
+/**
+ * Analytics interfaces
+ */
+export interface CategoryAnalytics {
+  category_id: number;
+  category_name: string;
+  total_sales: number;
+  total_items: number;
+  total_revenue: number;
+  average_order_value: number;
+}
+
+export interface ItemSalesAnalytics {
+  item_id: number;
+  item_name: string;
+  category_name: string;
+  total_quantity: number;
+  total_revenue: number;
+  average_price: number;
+  stock_level: number;
+}
+
+export interface CustomerAnalytics {
+  customer_phone: string;
+  customer_name: string;
+  total_orders: number;
+  total_amount: number;
+  average_order_value: number;
+  last_order_date: string;
+}
+
+/**
+ * Component Props
  */
 export interface OrderFormProps {
-  initialData: Order;
+  initialData?: Partial<Order>;
   onSubmit: (data: Order) => void;
-}
-
-/**
- * Table-related types
- */
-export type SortDirection = "asc" | "desc" | null;
-
-export interface ColumnConfig {
-  key: keyof Order;
-  label: string;
-  width?: string;
+  isLoading?: boolean;
 }
 
 export interface OrderTableProps {
   orders: Order[];
   onSort: (column: keyof Order) => void;
-  onStatusUpdate: (order: Order) => void;
-  isDetailsDialogOpen: boolean;
-  setIsDetailsDialogOpen: (open: boolean) => void;
-  selectedOrder: Order | null;
-}
-
-export interface OrderTableHeaderProps {
-  onSort: (column: keyof Order) => void;
-}
-
-export interface OrderTablePaginationProps {
-  totalItems: number;
-  pageSize: number;
-  currentPage: number;
-  onPageChange: (page: number) => void;
-  onPageSizeChange: (pageSize: number) => void;
-}
-
-export interface OrderTableSettingsProps {
-  showCurrency: boolean;
-  onShowCurrencyChange: (show: boolean) => void;
-  statusFilter: string[];
-  onStatusFilterChange: (status: string) => void;
+  onStatusUpdate: (orderId: string, status: OrderStatus) => void;
+  onPaymentStatusUpdate: (orderId: string, status: PaymentStatus) => void;
+  isLoading?: boolean;
 }
 
 /**
- * Hook return type
+ * Filter and Sort Types
+ */
+export type SortDirection = "asc" | "desc" | null;
+
+export interface OrderFilters {
+  status?: OrderStatus[];
+  paymentStatus?: PaymentStatus[];
+  paymentMethod?: PaymentMethod[];
+  categoryIds?: number[];
+  startDate?: string;
+  endDate?: string;
+  searchTerm?: string;
+}
+
+/**
+ * Hook Return Type
  */
 export interface UseOrdersReturn {
-  // Data
+  // Data state
   orders: Order[];
-  paginatedOrders: Order[];
-  filteredOrders: Order[];
   selectedOrder: Order | null;
+  isLoading: boolean;
+  error: Error | null;
 
-  // State setters
-  setOrders: (orders: Order[]) => void;
-  setSelectedOrder: (order: Order | null) => void;
-
-  // UI state
-  filterValue: string;
-  setFilterValue: (value: string) => void;
-  isDetailsDialogOpen: boolean;
-  setIsDetailsDialogOpen: (open: boolean) => void;
-  statusFilter: string[];
-
-  // Table state
-  pageSize: number;
+  // Filters and pagination
+  filters: OrderFilters;
   currentPage: number;
-  sortColumn: keyof Order | null;
-  sortDirection: SortDirection;
+  pageSize: number;
+  totalPages: number;
 
-  // Handlers
+  // Actions
+  setFilters: (filters: Partial<OrderFilters>) => void;
+  setPage: (page: number) => void;
+  setPageSize: (size: number) => void;
+  selectOrder: (order: Order | null) => void;
+
+  // Order operations
+  createOrder: (order: Omit<Order, "order_id">) => Promise<void>;
+  updateOrder: (orderId: string, updates: Partial<Order>) => Promise<void>;
+  deleteOrder: (orderId: string) => Promise<void>;
+
+  // Analytics
+  getAnalyticsByCategory: () => CategoryAnalytics[];
+  getTopSellingItems: (limit?: number) => ItemSalesAnalytics[];
+  getCustomerAnalytics: () => CustomerAnalytics[];
+
+  sortColumn: keyof Order | null;
+  sortDirection: "asc" | "desc" | null;
   handleSort: (column: keyof Order) => void;
-  handleUpdatePaymentStatus: (order: Order) => void;
-  handlePageChange: (page: number) => void;
-  handlePageSizeChange: (size: number) => void;
-  handleStatusFilterChange: (status: string) => void;
+  paginatedOrders: Order[];
 }
 
-/**
- * Configuration and constants
- */
-export const COLUMNS: ColumnConfig[] = [
-  { key: "order_id", label: "Order ID", width: "w-[120px]" },
-  { key: "item_name", label: "Item" },
-  { key: "quantity", label: "Quantity", width: "w-[100px]" },
-  { key: "unit_price", label: "Unit Price", width: "w-[120px]" },
-  { key: "subtotal", label: "Subtotal", width: "w-[120px]" },
-  { key: "employee_name", label: "Employee" },
-  { key: "user_name", label: "Seller" },
-  { key: "total_amount", label: "Total Amount", width: "w-[120px]" },
-  { key: "payment_status", label: "Payment Status", width: "w-[130px]" },
-];
+// Constants
+export const PAGE_SIZE_OPTIONS = [10, 20, 30, 50, 100] as const;
 
-export const PAGE_SIZE_OPTIONS = [10, 20, 30, 40, 50] as const;
-
-export const DEFAULT_SETTINGS = {
-  showCurrency: true,
-  statusFilter: [],
+export const DEFAULT_FILTERS: OrderFilters = {
+  status: undefined,
+  paymentStatus: undefined,
+  paymentMethod: undefined,
+  categoryIds: undefined,
+  startDate: undefined,
+  endDate: undefined,
+  searchTerm: undefined,
 };

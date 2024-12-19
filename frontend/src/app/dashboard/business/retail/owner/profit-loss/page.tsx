@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useMemo } from "react";
+import React, { useEffect, useRef, useState, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Header } from "@/components/common/dashboard/business/retail/owner/Header";
 import { SidebarLayout } from "@/components/common/dashboard/business/retail/owner/Sidebar";
@@ -37,6 +37,7 @@ import {
   ChartTooltip,
   ChartTooltipContent,
 } from "@/components/ui/chart";
+import { createSwapy } from "swapy";
 import { useExpenses } from "@/hooks/dashboard/business/retail/owner/expense";
 import { useOrders } from "@/hooks/dashboard/business/retail/owner/order";
 import {
@@ -76,6 +77,112 @@ const lossChartConfig = {
 export default function ProfitLossPage() {
   const { expenses, filteredExpenses } = useExpenses();
   const { orders, filteredOrders } = useOrders();
+
+  // Add refs for Swapy
+  const metricsContainerRef = useRef(null);
+  const chartsContainerRef = useRef(null);
+  const tableContainerRef = useRef(null);
+
+  // Initialize Swapy
+  useEffect(() => {
+    if (metricsContainerRef.current) {
+      const metricsSwap = createSwapy(metricsContainerRef.current, {
+        animation: "dynamic",
+      });
+      return () => metricsSwap.destroy();
+    }
+  }, []);
+
+  useEffect(() => {
+    if (chartsContainerRef.current) {
+      const chartsSwap = createSwapy(chartsContainerRef.current, {
+        animation: "dynamic",
+      });
+      return () => chartsSwap.destroy();
+    }
+  }, []);
+
+  useEffect(() => {
+    if (tableContainerRef.current) {
+      const tableSwap = createSwapy(tableContainerRef.current, {
+        animation: "dynamic",
+      });
+      return () => tableSwap.destroy();
+    }
+  }, []);
+
+  const [sortConfig, setSortConfig] = useState({
+    key: "date",
+    direction: "desc" as "asc" | "desc",
+  });
+  const [transactionFilter, setTransactionFilter] = useState("all");
+
+  // Recent Transactions
+  const recentTransactions = useMemo(() => {
+    const transactions = [
+      ...filteredOrders.map((order) => ({
+        date: new Date(order.created_at),
+        type: "Revenue",
+        description: `Order ${order.order_id}`,
+        amount: order.total_amount,
+        isProfit: true,
+      })),
+      ...filteredExpenses.map((expense) => ({
+        date: new Date(expense.expenseDate),
+        type: "Expense",
+        description: expense.name,
+        amount: expense.amount,
+        isProfit: false,
+      })),
+    ]
+      .sort((a, b) => b.date.getTime() - a.date.getTime())
+      .slice(0, 10);
+
+    return transactions;
+  }, [filteredOrders, filteredExpenses]);
+
+  const processedTransactions = useMemo(() => {
+    let filtered = recentTransactions;
+
+    // Apply filter
+    if (transactionFilter !== "all") {
+      filtered = recentTransactions.filter((transaction) =>
+        transactionFilter === "revenue"
+          ? transaction.isProfit
+          : !transaction.isProfit
+      );
+    }
+
+    // Apply sorting
+    return [...filtered].sort((a, b) => {
+      if (sortConfig.key === "date") {
+        return sortConfig.direction === "asc"
+          ? a.date.getTime() - b.date.getTime()
+          : b.date.getTime() - a.date.getTime();
+      }
+      if (sortConfig.key === "amount") {
+        return sortConfig.direction === "asc"
+          ? a.amount - b.amount
+          : b.amount - a.amount;
+      }
+      if (sortConfig.key === "type" || sortConfig.key === "description") {
+        const aValue = a[sortConfig.key].toLowerCase();
+        const bValue = b[sortConfig.key].toLowerCase();
+        return sortConfig.direction === "asc"
+          ? aValue.localeCompare(bValue)
+          : bValue.localeCompare(aValue);
+      }
+      return 0;
+    });
+  }, [recentTransactions, sortConfig, transactionFilter]);
+
+  const handleSort = (key: string) => {
+    setSortConfig((current) => ({
+      key,
+      direction:
+        current.key === key && current.direction === "asc" ? "desc" : "asc",
+    }));
+  };
 
   // Summary Metrics
   const summaryMetrics = useMemo(() => {
@@ -200,30 +307,6 @@ export default function ProfitLossPage() {
       .slice(-6);
   }, [filteredOrders, filteredExpenses]);
 
-  // Recent Transactions
-  const recentTransactions = useMemo(() => {
-    const transactions = [
-      ...filteredOrders.map((order) => ({
-        date: new Date(order.created_at),
-        type: "Revenue",
-        description: `Order ${order.order_id}`,
-        amount: order.total_amount,
-        isProfit: true,
-      })),
-      ...filteredExpenses.map((expense) => ({
-        date: new Date(expense.expenseDate),
-        type: "Expense",
-        description: expense.name,
-        amount: expense.amount,
-        isProfit: false,
-      })),
-    ]
-      .sort((a, b) => b.date.getTime() - a.date.getTime())
-      .slice(0, 10);
-
-    return transactions;
-  }, [filteredOrders, filteredExpenses]);
-
   const handleDownloadPDF = () => {
     const doc = new jsPDF();
     const pageWidth = doc.internal.pageSize.width;
@@ -327,7 +410,6 @@ export default function ProfitLossPage() {
     window.URL.revokeObjectURL(url);
   };
 
-
   return (
     <SidebarLayout>
       <Header />
@@ -363,338 +445,395 @@ export default function ProfitLossPage() {
           </div>
 
           {/* Summary Cards */}
-          <div className="grid gap-4 md:grid-cols-4">
+          <div ref={metricsContainerRef} className="grid gap-4 md:grid-cols-4">
             {/* Revenue Card */}
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">
-                  Total Revenue
-                </CardTitle>
-                <DollarSign className="h-4 w-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">
-                  ${summaryMetrics.totalRevenue.toLocaleString()}
-                </div>
-                <p className="text-xs text-muted-foreground">
-                  <span
-                    className={`inline-flex items-center ${
-                      summaryMetrics.revenueChange >= 0
-                        ? "text-green-500"
-                        : "text-red-500"
-                    }`}
-                  >
-                    {summaryMetrics.revenueChange >= 0 ? (
-                      <ArrowUpRight className="h-4 w-4" />
-                    ) : (
-                      <ArrowDownRight className="h-4 w-4" />
-                    )}
-                    {Math.abs(summaryMetrics.revenueChange).toFixed(1)}% from
-                    last month
-                  </span>
-                </p>
-              </CardContent>
-            </Card>
+            <div data-swapy-slot="revenue">
+              <div data-swapy-item="revenue-card">
+                <Card>
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium">
+                      Total Revenue
+                    </CardTitle>
+                    <DollarSign className="h-4 w-4 text-muted-foreground" />
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold">
+                      ${summaryMetrics.totalRevenue.toLocaleString()}
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                      <span
+                        className={`inline-flex items-center ${
+                          summaryMetrics.revenueChange >= 0
+                            ? "text-green-500"
+                            : "text-red-500"
+                        }`}
+                      >
+                        {summaryMetrics.revenueChange >= 0 ? (
+                          <ArrowUpRight className="h-4 w-4" />
+                        ) : (
+                          <ArrowDownRight className="h-4 w-4" />
+                        )}
+                        {Math.abs(summaryMetrics.revenueChange).toFixed(1)}%
+                        from last month
+                      </span>
+                    </p>
+                  </CardContent>
+                </Card>
+              </div>
+            </div>
 
             {/* Expenses Card */}
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">
-                  Total Expenses
-                </CardTitle>
-                <Receipt className="h-4 w-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">
-                  ${summaryMetrics.totalExpenses.toLocaleString()}
-                </div>
-                <p className="text-xs text-muted-foreground">
-                  <span
-                    className={`inline-flex items-center ${
-                      summaryMetrics.expenseChange <= 0
-                        ? "text-green-500"
-                        : "text-red-500"
-                    }`}
-                  >
-                    {summaryMetrics.expenseChange <= 0 ? (
-                      <ArrowDownRight className="h-4 w-4" />
-                    ) : (
-                      <ArrowUpRight className="h-4 w-4" />
-                    )}
-                    {Math.abs(summaryMetrics.expenseChange).toFixed(1)}% from
-                    last month
-                  </span>
-                </p>
-              </CardContent>
-            </Card>
+            <div data-swapy-slot="expenses">
+              <div data-swapy-item="expenses-card">
+                <Card>
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium">
+                      Total Expenses
+                    </CardTitle>
+                    <Receipt className="h-4 w-4 text-muted-foreground" />
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold">
+                      ${summaryMetrics.totalExpenses.toLocaleString()}
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                      <span
+                        className={`inline-flex items-center ${
+                          summaryMetrics.expenseChange <= 0
+                            ? "text-green-500"
+                            : "text-red-500"
+                        }`}
+                      >
+                        {summaryMetrics.expenseChange <= 0 ? (
+                          <ArrowDownRight className="h-4 w-4" />
+                        ) : (
+                          <ArrowUpRight className="h-4 w-4" />
+                        )}
+                        {Math.abs(summaryMetrics.expenseChange).toFixed(1)}%
+                        from last month
+                      </span>
+                    </p>
+                  </CardContent>
+                </Card>
+              </div>
+            </div>
 
             {/* Net Profit Card */}
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">
-                  Net Profit
-                </CardTitle>
-                <PiggyBank className="h-4 w-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">
-                  ${summaryMetrics.netProfit.toLocaleString()}
-                </div>
-                <p className="text-xs text-muted-foreground">
-                  Net earnings after expenses
-                </p>
-              </CardContent>
-            </Card>
+            <div data-swapy-slot="net-profit">
+              <div data-swapy-item="net-profit-card">
+                <Card>
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium">
+                      Net Profit
+                    </CardTitle>
+                    <PiggyBank className="h-4 w-4 text-muted-foreground" />
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold">
+                      ${summaryMetrics.netProfit.toLocaleString()}
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                      Net earnings after expenses
+                    </p>
+                  </CardContent>
+                </Card>
+              </div>
+            </div>
 
             {/* Profit Margin Card */}
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">
-                  Profit Margin
-                </CardTitle>
-                <TrendingUp className="h-4 w-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">
-                  {summaryMetrics.profitMargin.toFixed(1)}%
-                </div>
-                <p className="text-xs text-muted-foreground">
-                  Of total revenue
-                </p>
-              </CardContent>
-            </Card>
+            <div data-swapy-slot="profit-margin">
+              <div data-swapy-item="profit-margin-card">
+                <Card>
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium">
+                      Profit Margin
+                    </CardTitle>
+                    <TrendingUp className="h-4 w-4 text-muted-foreground" />
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold">
+                      {summaryMetrics.profitMargin.toFixed(1)}%
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                      Of total revenue
+                    </p>
+                  </CardContent>
+                </Card>
+              </div>
+            </div>
           </div>
 
           {/* Charts Section */}
-          <div className="grid md:grid-cols-2 gap-4">
+          <div ref={chartsContainerRef} className="grid md:grid-cols-2 gap-4">
             {/* Profit Distribution Chart */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Profit Distribution</CardTitle>
-                <CardDescription>Revenue and Sales Overview</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <ChartContainer
-                  config={profitChartConfig}
-                  className="aspect-square h-[300px]"
-                >
-                  <PieChart>
-                    <ChartTooltip content={<ChartTooltipContent />} />
-                    <Pie
-                      data={profitData}
-                      dataKey="value"
-                      nameKey="name"
-                      innerRadius={60}
-                      stroke="none"
-                    >
-                      <Label
-                        content={({ viewBox }) => (
-                          <text
-                            x={viewBox?.cx}
-                            y={viewBox?.cy}
-                            textAnchor="middle"
-                            dominantBaseline="middle"
-                          >
-                            <tspan
+            <div data-swapy-slot="profit-chart">
+              <Card data-swapy-item="profit-distribution">
+                <CardHeader>
+                  <CardTitle>Profit Distribution</CardTitle>
+                  <CardDescription>Revenue and Sales Overview</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <ChartContainer
+                    config={profitChartConfig}
+                    className="aspect-square h-[300px]"
+                  >
+                    <PieChart>
+                      <ChartTooltip content={<ChartTooltipContent />} />
+                      <Pie
+                        data={profitData}
+                        dataKey="value"
+                        nameKey="name"
+                        innerRadius={60}
+                        stroke="none"
+                      >
+                        <Label
+                          content={({ viewBox }) => (
+                            <text
                               x={viewBox?.cx}
                               y={viewBox?.cy}
-                              className="text-2xl font-bold fill-foreground"
+                              textAnchor="middle"
+                              dominantBaseline="middle"
                             >
-                              ${summaryMetrics.totalRevenue.toLocaleString()}
-                            </tspan>
-                            <tspan
-                              x={viewBox?.cx}
-                              y={(viewBox?.cy || 0) + 20}
-                              className="text-sm fill-muted-foreground"
-                            >
-                              Total Profit
-                            </tspan>
-                          </text>
-                        )}
-                      />
-                    </Pie>
-                  </PieChart>
-                </ChartContainer>
-              </CardContent>
-              <CardFooter>
-                <div className="flex items-center gap-2">
-                  <TrendingUp className="h-4 w-4 text-green-500" />
-                  <span className="text-sm text-muted-foreground">
-                    {summaryMetrics.revenueChange.toFixed(1)}% from last month
-                  </span>
-                </div>
-              </CardFooter>
-            </Card>
+                              <tspan
+                                x={viewBox?.cx}
+                                y={viewBox?.cy}
+                                className="text-2xl font-bold fill-foreground"
+                              >
+                                ${summaryMetrics.totalRevenue.toLocaleString()}
+                              </tspan>
+                              <tspan
+                                x={viewBox?.cx}
+                                y={(viewBox?.cy || 0) + 20}
+                                className="text-sm fill-muted-foreground"
+                              >
+                                Total Profit
+                              </tspan>
+                            </text>
+                          )}
+                        />
+                      </Pie>
+                    </PieChart>
+                  </ChartContainer>
+                </CardContent>
+                <CardFooter>
+                  <div className="flex items-center gap-2">
+                    <TrendingUp className="h-4 w-4 text-green-500" />
+                    <span className="text-sm text-muted-foreground">
+                      {summaryMetrics.revenueChange.toFixed(1)}% from last month
+                    </span>
+                  </div>
+                </CardFooter>
+              </Card>
+            </div>
 
             {/* Loss Distribution Chart */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Loss Distribution</CardTitle>
-                <CardDescription>Expenses and Costs Overview</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <ChartContainer
-                  config={lossChartConfig}
-                  className="aspect-square h-[300px]"
-                >
-                  <PieChart>
-                    <ChartTooltip content={<ChartTooltipContent />} />
-                    <Pie
-                      data={lossData}
-                      dataKey="value"
-                      nameKey="name"
-                      innerRadius={60}
-                      stroke="none"
-                    >
-                      <Label
-                        content={({ viewBox }) => (
-                          <text
-                            x={viewBox?.cx}
-                            y={viewBox?.cy}
-                            textAnchor="middle"
-                            dominantBaseline="middle"
-                          >
-                            <tspan
+            <div data-swapy-slot="loss-chart">
+              <Card data-swapy-item="loss-distribution">
+                <CardHeader>
+                  <CardTitle>Loss Distribution</CardTitle>
+                  <CardDescription>Expenses and Costs Overview</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <ChartContainer
+                    config={lossChartConfig}
+                    className="aspect-square h-[300px]"
+                  >
+                    <PieChart>
+                      <ChartTooltip content={<ChartTooltipContent />} />
+                      <Pie
+                        data={lossData}
+                        dataKey="value"
+                        nameKey="name"
+                        innerRadius={60}
+                        stroke="none"
+                      >
+                        <Label
+                          content={({ viewBox }) => (
+                            <text
                               x={viewBox?.cx}
                               y={viewBox?.cy}
-                              className="text-2xl font-bold fill-foreground"
+                              textAnchor="middle"
+                              dominantBaseline="middle"
                             >
-                              ${summaryMetrics.totalExpenses.toLocaleString()}
-                            </tspan>
-                            <tspan
-                              x={viewBox?.cx}
-                              y={(viewBox?.cy || 0) + 20}
-                              className="text-sm fill-muted-foreground"
-                            >
-                              Total Loss
-                            </tspan>
-                          </text>
-                        )}
-                      />
-                    </Pie>
-                  </PieChart>
-                </ChartContainer>
-              </CardContent>
-              <CardFooter>
-                <div className="flex items-center gap-2">
-                  <TrendingDown className="h-4 w-4 text-red-500" />
-                  <span className="text-sm text-muted-foreground">
-                    {summaryMetrics.expenseChange.toFixed(1)}% from last month
-                  </span>
-                </div>
-              </CardFooter>
-            </Card>
+                              <tspan
+                                x={viewBox?.cx}
+                                y={viewBox?.cy}
+                                className="text-2xl font-bold fill-foreground"
+                              >
+                                ${summaryMetrics.totalExpenses.toLocaleString()}
+                              </tspan>
+                              <tspan
+                                x={viewBox?.cx}
+                                y={(viewBox?.cy || 0) + 20}
+                                className="text-sm fill-muted-foreground"
+                              >
+                                Total Loss
+                              </tspan>
+                            </text>
+                          )}
+                        />
+                      </Pie>
+                    </PieChart>
+                  </ChartContainer>
+                </CardContent>
+                <CardFooter>
+                  <div className="flex items-center gap-2">
+                    <TrendingDown className="h-4 w-4 text-red-500" />
+                    <span className="text-sm text-muted-foreground">
+                      {summaryMetrics.expenseChange.toFixed(1)}% from last month
+                    </span>
+                  </div>
+                </CardFooter>
+              </Card>
+            </div>
 
             {/* Trend Chart */}
-            <Card className="md:col-span-2">
-              <CardHeader>
-                <CardTitle>Profit & Loss Trends</CardTitle>
-                <CardDescription>6-Month Overview</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <ChartContainer
-                  config={profitChartConfig}
-                  className="h-[300px]"
-                >
-                  <AreaChart
-                    data={trendData}
-                    margin={{ top: 10, right: 30, left: 0, bottom: 0 }}
+            <div data-swapy-slot="trend-chart" className="md:col-span-2">
+              <Card data-swapy-item="trend-analysis" className="md:col-span-2">
+                <CardHeader>
+                  <CardTitle>Profit & Loss Trends</CardTitle>
+                  <CardDescription>6-Month Overview</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <ChartContainer
+                    config={profitChartConfig}
+                    className="h-[300px]"
                   >
-                    <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                    <XAxis
-                      dataKey="month"
-                      tickFormatter={(value) => {
-                        const [year, month] = value.split("-");
-                        return `${new Date(
-                          parseInt(year),
-                          parseInt(month) - 1
-                        ).toLocaleString("default", { month: "short" })}`;
-                      }}
-                    />
-                    <ChartTooltip content={<ChartTooltipContent />} />
-                    <Area
-                      type="monotone"
-                      dataKey="profit"
-                      stackId="1"
-                      stroke="hsl(var(--chart-1))"
-                      fill="hsl(var(--chart-1))"
-                      fillOpacity={0.5}
-                      name="Profit"
-                    />
-                    <Area
-                      type="monotone"
-                      dataKey="loss"
-                      stackId="2"
-                      stroke="hsl(var(--chart-3))"
-                      fill="hsl(var(--chart-3))"
-                      fillOpacity={0.5}
-                      name="Loss"
-                    />
-                  </AreaChart>
-                </ChartContainer>
-              </CardContent>
-              <CardFooter>
-                <div className="text-sm text-muted-foreground">
-                  Showing profit and loss trends over the last 6 months
-                </div>
-              </CardFooter>
-            </Card>
+                    <AreaChart
+                      data={trendData}
+                      margin={{ top: 10, right: 30, left: 0, bottom: 0 }}
+                    >
+                      <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                      <XAxis
+                        dataKey="month"
+                        tickFormatter={(value) => {
+                          const [year, month] = value.split("-");
+                          return `${new Date(
+                            parseInt(year),
+                            parseInt(month) - 1
+                          ).toLocaleString("default", { month: "short" })}`;
+                        }}
+                      />
+                      <ChartTooltip content={<ChartTooltipContent />} />
+                      <Area
+                        type="monotone"
+                        dataKey="profit"
+                        stackId="1"
+                        stroke="hsl(var(--chart-1))"
+                        fill="hsl(var(--chart-1))"
+                        fillOpacity={0.5}
+                        name="Profit"
+                      />
+                      <Area
+                        type="monotone"
+                        dataKey="loss"
+                        stackId="2"
+                        stroke="hsl(var(--chart-3))"
+                        fill="hsl(var(--chart-3))"
+                        fillOpacity={0.5}
+                        name="Loss"
+                      />
+                    </AreaChart>
+                  </ChartContainer>
+                </CardContent>
+                <CardFooter>
+                  <div className="text-sm text-muted-foreground">
+                    Showing profit and loss trends over the last 6 months
+                  </div>
+                </CardFooter>
+              </Card>
+            </div>
           </div>
 
           {/* Recent Transactions */}
-          <Card>
-            <CardHeader>
-              <div className="flex justify-between items-center">
-                <div>
-                  <CardTitle>Recent Transactions</CardTitle>
-                  <CardDescription>Latest financial activities</CardDescription>
+          <div ref={tableContainerRef}>
+            <Card>
+              <CardHeader>
+                <div className="flex justify-between items-center">
+                  <div>
+                    <CardTitle>Recent Transactions</CardTitle>
+                    <CardDescription>
+                      Latest financial activities
+                    </CardDescription>
+                  </div>
+                  <Select
+                    value={transactionFilter}
+                    onValueChange={setTransactionFilter}
+                  >
+                    <SelectTrigger className="w-[180px]">
+                      <SelectValue placeholder="Filter by" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Transactions</SelectItem>
+                      <SelectItem value="revenue">Revenue Only</SelectItem>
+                      <SelectItem value="expenses">Expenses Only</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
-                <Select defaultValue="all">
-                  <SelectTrigger className="w-[180px]">
-                    <SelectValue placeholder="Filter by" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All Transactions</SelectItem>
-                    <SelectItem value="revenue">Revenue Only</SelectItem>
-                    <SelectItem value="expenses">Expenses Only</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Date</TableHead>
-                    <TableHead>Type</TableHead>
-                    <TableHead>Description</TableHead>
-                    <TableHead className="text-right">Amount</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {recentTransactions.map((transaction, index) => (
-                    <TableRow key={index}>
-                      <TableCell>
-                        {transaction.date.toLocaleDateString()}
-                      </TableCell>
-                      <TableCell>{transaction.type}</TableCell>
-                      <TableCell>{transaction.description}</TableCell>
-                      <TableCell
-                        className={`text-right ${
-                          transaction.isProfit
-                            ? "text-green-600"
-                            : "text-red-600"
-                        }`}
+              </CardHeader>
+              <CardContent>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead
+                        className="cursor-pointer"
+                        onClick={() => handleSort("date")}
                       >
-                        {transaction.isProfit ? "+" : "-"}$
-                        {transaction.amount.toLocaleString()}
-                      </TableCell>
+                        Date{" "}
+                        {sortConfig.key === "date" &&
+                          (sortConfig.direction === "asc" ? "↑" : "↓")}
+                      </TableHead>
+                      <TableHead
+                        className="cursor-pointer"
+                        onClick={() => handleSort("type")}
+                      >
+                        Type{" "}
+                        {sortConfig.key === "type" &&
+                          (sortConfig.direction === "asc" ? "↑" : "↓")}
+                      </TableHead>
+                      <TableHead
+                        className="cursor-pointer"
+                        onClick={() => handleSort("description")}
+                      >
+                        Description{" "}
+                        {sortConfig.key === "description" &&
+                          (sortConfig.direction === "asc" ? "↑" : "↓")}
+                      </TableHead>
+                      <TableHead
+                        className="text-right cursor-pointer"
+                        onClick={() => handleSort("amount")}
+                      >
+                        Amount{" "}
+                        {sortConfig.key === "amount" &&
+                          (sortConfig.direction === "asc" ? "↑" : "↓")}
+                      </TableHead>
                     </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </CardContent>
-          </Card>
+                  </TableHeader>
+                  <TableBody>
+                    {processedTransactions.map((transaction, index) => (
+                      <TableRow key={index}>
+                        <TableCell>
+                          {transaction.date.toLocaleDateString()}
+                        </TableCell>
+                        <TableCell>{transaction.type}</TableCell>
+                        <TableCell>{transaction.description}</TableCell>
+                        <TableCell
+                          className={`text-right ${
+                            transaction.isProfit
+                              ? "text-green-600"
+                              : "text-red-600"
+                          }`}
+                        >
+                          {transaction.isProfit ? "+" : "-"}$
+                          {transaction.amount.toLocaleString()}
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </CardContent>
+            </Card>
+          </div>
         </div>
       </main>
     </SidebarLayout>
