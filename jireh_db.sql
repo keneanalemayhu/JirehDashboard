@@ -114,18 +114,60 @@ CREATE TABLE employee (
     FOREIGN KEY (location_id) REFERENCES location(id)
 );
 
--- Create EXPENSE table
+CREATE TABLE expense_category (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    store_id INT NOT NULL,
+    name VARCHAR(50) NOT NULL,
+    description TEXT,
+    is_active BOOLEAN DEFAULT true,
+    is_recurring BOOLEAN DEFAULT false,     -- Added: For recurring expenses
+    budget_limit DECIMAL(10,2),             -- Added: Optional budget limit per category
+    parent_category_id INT,                 -- Added: For hierarchical categories
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (store_id) REFERENCES store(id),
+    FOREIGN KEY (parent_category_id) REFERENCES expense_category(id)
+);
+
 CREATE TABLE expense (
     id INT PRIMARY KEY AUTO_INCREMENT,
     store_id INT NOT NULL,
     location_id INT NOT NULL,
-    name VARCHAR(50) NOT NULL,
+    category_id INT NOT NULL,
     amount DECIMAL(10,2) NOT NULL,
+    description TEXT,
     expense_date DATE NOT NULL,
+    payment_method VARCHAR(20),             -- Added: Cash, Card, Bank Transfer, etc.
+    receipt_number VARCHAR(50),             -- Added: For receipt tracking
+    receipt_image_url TEXT,                 -- Added: For storing receipt images
+    is_recurring BOOLEAN DEFAULT false,     -- Added: Flag for recurring expenses
+    recurring_frequency VARCHAR(20),        -- Added: daily, weekly, monthly, etc.
+    recurring_end_date DATE,                -- Added: End date for recurring expenses
+    created_by INT NOT NULL,
+    approved_by INT,                        -- Added: For expense approval workflow
+    approval_status VARCHAR(20) DEFAULT 'pending', -- Added: pending, approved, rejected
+    approval_date DATETIME,                 -- Added: When the expense was approved
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (store_id) REFERENCES store(id),
-    FOREIGN KEY (location_id) REFERENCES location(id)
+    FOREIGN KEY (location_id) REFERENCES location(id),
+    FOREIGN KEY (category_id) REFERENCES expense_category(id),
+    FOREIGN KEY (created_by) REFERENCES user(id),
+    FOREIGN KEY (approved_by) REFERENCES user(id)
+);
+
+CREATE TABLE recurring_expense (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    expense_id INT NOT NULL,
+    frequency VARCHAR(20) NOT NULL,         -- daily, weekly, monthly, yearly
+    start_date DATE NOT NULL,
+    end_date DATE,
+    last_generated_date DATE,
+    next_generation_date DATE,
+    is_active BOOLEAN DEFAULT true,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (expense_id) REFERENCES expense(id)
 );
 
 -- Create CATEGORY table
@@ -269,6 +311,18 @@ CREATE TABLE stock_transfer (
 );
 
 
+-- For expense analysis and reporting
+CREATE INDEX idx_expense_date_amount ON expense(expense_date, amount);
+CREATE INDEX idx_expense_approval ON expense(approval_status, approval_date);
+CREATE INDEX idx_expense_recurring ON expense(is_recurring, recurring_frequency);
+CREATE INDEX idx_expense_lookup ON expense(store_id, location_id, expense_date);
+CREATE INDEX idx_expense_category ON expense(category_id);
+CREATE INDEX idx_expense_category_store ON expense_category(store_id, is_active);
+
+-- For recurring expense tracking
+CREATE INDEX idx_recurring_expense_dates ON recurring_expense(next_generation_date, last_generated_date);
+CREATE INDEX idx_recurring_expense_status ON recurring_expense(is_active, frequency);
+
 -- Authentication & User Management Indices
 CREATE INDEX idx_user_auth ON user(email, password_hash);  -- For login queries
 CREATE INDEX idx_user_location_role ON user(location_id, role);  -- For role-based location access
@@ -287,6 +341,8 @@ CREATE INDEX idx_employee_lookup ON employee(store_id, location_id, is_active); 
 CREATE INDEX idx_employee_contact ON employee(phone, email);  -- For contact lookups
 
 -- Category & Item Management Indices
+CREATE INDEX idx_expense_category_parent ON expense_category(parent_category_id);
+CREATE INDEX idx_expense_category_recurring ON expense_category(is_recurring);
 CREATE INDEX idx_category_location ON category(location_id, is_active);  -- For location's categories
 CREATE INDEX idx_item_lookup ON item(category_id, is_active, is_hidden);  -- For item filtering
 CREATE INDEX idx_item_barcode ON item(barcode);  -- For barcode scanning
