@@ -34,7 +34,7 @@ function SubscriptionFormContent() {
   const tiers = [
     {
       name: t.professional.name,
-      monthlyPrice: 4999,
+      monthlyPrice: 9999,
       features: t.professional.features,
       disabled: false,
     },
