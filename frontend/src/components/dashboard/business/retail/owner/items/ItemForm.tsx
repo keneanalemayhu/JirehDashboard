@@ -13,44 +13,45 @@ import {
 } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { DialogFooter } from "@/components/ui/dialog";
-import { Item } from "@/types/dashboard/business/retail/owner/item";
-
-const DEFAULT_CATEGORIES = [
-  "Electronics",
-  "Clothing",
-  "Food",
-  "Beverages",
-  "Home & Garden",
-  "Books",
-  "Toys",
-] as const;
+import { Switch } from "@/components/ui/switch";
+import {
+  Item,
+  ItemFormData,
+} from "@/types/dashboard/business/retail/owner/item";
+import { useCategories } from "@/hooks/dashboard/business/retail/owner/category";
 
 interface ItemFormProps {
-  initialData?: Item;
-  onSubmit: (data: Omit<Item, "id">) => void;
-  categories?: string[];
+  initialData?: Partial<Item>;
+  onSubmit: (data: ItemFormData) => void;
+  defaultTemporary?: boolean;
 }
 
 export function ItemForm({
   initialData,
   onSubmit,
-  categories = DEFAULT_CATEGORIES,
+  defaultTemporary = false,
 }: ItemFormProps) {
-  const [formData, setFormData] = useState<Omit<Item, "id">>({
+  const { categories } = useCategories();
+
+  const [formData, setFormData] = useState<ItemFormData>({
     name: initialData?.name ?? "",
     price: initialData?.price ?? "",
-    category: initialData?.category ?? "",
+    categoryId: initialData?.categoryId ?? categories[0]?.id ?? 0,
     barcode: initialData?.barcode ?? "",
     quantity: initialData?.quantity ?? 0,
     isHidden: initialData?.isHidden ?? false,
     isActive: initialData?.isActive ?? true,
+    isTemporary: (defaultTemporary || initialData?.isTemporary) ?? false,
+    expiryHours: initialData?.expiryHours ?? null,
+    autoResetQuantity: initialData?.autoResetQuantity ?? false,
   });
 
   const [errors, setErrors] = useState({
     name: false,
     price: false,
-    category: false,
+    categoryId: false,
     quantity: false,
+    expiryHours: false,
   });
 
   useEffect(() => {
@@ -58,17 +59,21 @@ export function ItemForm({
       setFormData({
         name: initialData.name ?? "",
         price: initialData.price ?? "",
-        category: initialData.category ?? "",
+        categoryId: initialData.categoryId ?? 0,
         barcode: initialData.barcode ?? "",
         quantity: initialData.quantity ?? 0,
         isHidden: initialData.isHidden ?? false,
         isActive: initialData.isActive ?? true,
+        isTemporary: initialData.isTemporary ?? false,
+        expiryHours: initialData.expiryHours ?? null,
+        autoResetQuantity: initialData.autoResetQuantity ?? false,
       });
       setErrors({
         name: false,
         price: false,
-        category: false,
+        categoryId: false,
         quantity: false,
+        expiryHours: false,
       });
     }
   }, [initialData]);
@@ -79,8 +84,11 @@ export function ItemForm({
     const newErrors = {
       name: !formData.name.trim(),
       price: !formData.price || parseFloat(formData.price) <= 0,
-      category: !formData.category,
+      categoryId: !formData.categoryId,
       quantity: typeof formData.quantity !== "number" || formData.quantity < 0,
+      expiryHours:
+        formData.isTemporary &&
+        (!formData.expiryHours || formData.expiryHours <= 0),
     };
 
     setErrors(newErrors);
@@ -109,6 +117,16 @@ export function ItemForm({
       price: value === "" ? "0" : value,
     });
     setErrors({ ...errors, price: false });
+  };
+
+  const handleExpiryHoursChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    const numValue = parseInt(value);
+    setFormData({
+      ...formData,
+      expiryHours: isNaN(numValue) ? null : numValue,
+    });
+    setErrors({ ...errors, expiryHours: false });
   };
 
   return (
@@ -201,36 +219,114 @@ export function ItemForm({
 
         {/* Category Select */}
         <div className="grid grid-cols-4 items-center gap-4">
-          <Label htmlFor="category" className="text-right">
+          <Label htmlFor="categoryId" className="text-right">
             Category <span className="text-red-500">*</span>
           </Label>
           <div className="col-span-3">
             <Select
-              value={formData.category || undefined}
+              value={formData.categoryId?.toString()} // Use categoryId
               onValueChange={(value) => {
-                setFormData({ ...formData, category: value });
-                setErrors({ ...errors, category: false });
+                setFormData({ ...formData, categoryId: parseInt(value, 10) });
+                setErrors({ ...errors, categoryId: false });
               }}
               required
             >
               <SelectTrigger
-                className={errors.category ? "border-red-500" : ""}
+                className={errors.categoryId ? "border-red-500" : ""}
               >
                 <SelectValue placeholder="Select a category" />
               </SelectTrigger>
               <SelectContent>
-                {categories.map((category) => (
-                  <SelectItem key={category} value={category}>
-                    {category}
+                {categories?.map((category) => (
+                  <SelectItem key={category.id} value={category.id.toString()}>
+                    {category.name}
                   </SelectItem>
                 ))}
               </SelectContent>
             </Select>
-            {errors.category && (
+            {errors.categoryId && (
               <p className="text-sm text-red-500 mt-1">Category is required</p>
             )}
           </div>
         </div>
+
+        {/* Temporary Item Toggle */}
+        <div className="grid grid-cols-4 items-center gap-4">
+          <Label htmlFor="isTemporary" className="text-right">
+            Temporary Item
+          </Label>
+          <div className="flex items-center space-x-2">
+            <Switch
+              id="isTemporary"
+              checked={formData.isTemporary}
+              onCheckedChange={(checked) => {
+                setFormData({
+                  ...formData,
+                  isTemporary: checked,
+                  expiryHours: checked ? formData.expiryHours : null,
+                  autoResetQuantity: checked
+                    ? formData.autoResetQuantity
+                    : false,
+                });
+              }}
+            />
+            <Label
+              htmlFor="isTemporary"
+              className="text-sm text-muted-foreground"
+            >
+              Enable temporary item settings
+            </Label>
+          </div>
+        </div>
+
+        {/* Expiry Hours Input - Only shown if isTemporary is true */}
+        {formData.isTemporary && (
+          <div className="grid grid-cols-4 items-center gap-4">
+            <Label htmlFor="expiryHours" className="text-right">
+              Expiry Hours <span className="text-red-500">*</span>
+            </Label>
+            <div className="col-span-3">
+              <Input
+                id="expiryHours"
+                type="number"
+                min="1"
+                value={formData.expiryHours || ""}
+                onChange={handleExpiryHoursChange}
+                className={errors.expiryHours ? "border-red-500" : ""}
+                required={formData.isTemporary}
+              />
+              {errors.expiryHours && (
+                <p className="text-sm text-red-500 mt-1">
+                  Valid expiry hours required for temporary items
+                </p>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* Auto Reset Quantity Toggle - Only shown if isTemporary is true */}
+        {formData.isTemporary && (
+          <div className="grid grid-cols-4 items-center gap-4">
+            <Label htmlFor="autoResetQuantity" className="text-right">
+              Auto Reset Quantity
+            </Label>
+            <div className="flex items-center space-x-2">
+              <Switch
+                id="autoResetQuantity"
+                checked={formData.autoResetQuantity}
+                onCheckedChange={(checked) => {
+                  setFormData({ ...formData, autoResetQuantity: checked });
+                }}
+              />
+              <Label
+                htmlFor="autoResetQuantity"
+                className="text-sm text-muted-foreground"
+              >
+                Automatically reset quantity after expiry
+              </Label>
+            </div>
+          </div>
+        )}
 
         {/* Active Checkbox */}
         <div className="grid grid-cols-4 items-center gap-4">

@@ -3,24 +3,32 @@
  */
 export interface Item {
   id: string;
-  categoryId: number;
   name: string;
-  price: number;
-  barcode: string | null;
+  barcode: string;
+  price: string;
   quantity: number;
-  lastInventoryUpdate: Date | null;
+  categoryId: number;
   isActive: boolean;
   isHidden: boolean;
+  isTemporary: boolean;
+  expiryHours: number | null;
+  autoResetQuantity: boolean;
+  lastQuantityReset: Date | null;
+  lastInventoryUpdate: Date;
 }
 
 /**
  * Form-related types
  */
-export type ItemFormData = Omit<Item, "id" | "lastInventoryUpdate">;
+export type ItemFormData = Omit<
+  Item,
+  "id" | "lastInventoryUpdate" | "lastQuantityReset"
+>;
 
 export interface ItemFormProps {
   initialData?: Partial<Item>;
   onSubmit: (data: ItemFormData) => void;
+  defaultTemporary?: boolean;
 }
 
 /**
@@ -37,6 +45,11 @@ export interface ColumnVisibility {
   quantity: boolean;
   lastInventoryUpdate: boolean;
   isActive: boolean;
+  isHidden: boolean;
+  isTemporary: boolean;
+  expiryHours: boolean;
+  autoResetQuantity: boolean;
+  temporaryStatus: boolean;
 }
 
 export interface ItemTableProps {
@@ -52,11 +65,15 @@ export interface ItemTableProps {
   editingItem: Item | null;
   onEditSubmit: () => void;
   onDeleteConfirm: () => void;
+  showTemporaryColumns?: boolean;
 }
 
 export interface ItemTableHeaderProps {
-  columnsVisible: ColumnVisibility;
+  columnsVisible: Record<keyof Item | "temporaryStatus", boolean>;
   onSort: (column: keyof Item) => void;
+  sortColumn?: string | null;
+  sortDirection?: SortDirection;
+  showTemporaryColumns?: boolean;
 }
 
 export interface ItemTableRowProps {
@@ -64,6 +81,7 @@ export interface ItemTableRowProps {
   columnsVisible: ColumnVisibility;
   onEdit: (item: Item) => void;
   onDelete: (item: Item) => void;
+  temporaryStatus?: string;
 }
 
 export interface ItemTablePaginationProps {
@@ -72,36 +90,44 @@ export interface ItemTablePaginationProps {
   currentPage: number;
   onPageChange: (page: number) => void;
   onPageSizeChange: (pageSize: number) => void;
+  itemType?: "regular" | "temporary";
+  totalRegularItems?: number;
+  totalTemporaryItems?: number;
 }
 
 export interface ItemTableSettingsProps {
   columnsVisible: ColumnVisibility;
-  onColumnVisibilityChange: (
-    column: keyof Omit<Item, "isHidden">,
-    visible: boolean
-  ) => void;
+  onColumnVisibilityChange: (column: keyof Item, visible: boolean) => void;
+  showTemporaryColumns?: boolean;
 }
 
 /**
  * Configuration and constants
  */
-export type ColumnKey = keyof Omit<Item, "isHidden">;
+export type ColumnKey = keyof Item;
 
 export interface ColumnConfig {
-  key: ColumnKey;
+  key: keyof Item | "temporaryStatus";
   label: string;
   width?: string;
+  sortable?: boolean;
+  icon?: React.ComponentType<{ className?: string }>;
 }
 
 export const COLUMNS: ColumnConfig[] = [
-  { key: "id", label: "ID", width: "w-[100px]" },
-  { key: "categoryId", label: "Category" },
-  { key: "name", label: "Name" },
-  { key: "price", label: "Price" },
-  { key: "barcode", label: "Barcode" },
-  { key: "quantity", label: "Quantity" },
-  { key: "lastInventoryUpdate", label: "Last Updated" },
-  { key: "isActive", label: "Status" },
+  { key: "id", label: "ID", width: "w-[100px]", sortable: true },
+  { key: "categoryId", label: "Category", sortable: true },
+  { key: "name", label: "Name", sortable: true },
+  { key: "price", label: "Price", sortable: true },
+  { key: "barcode", label: "Barcode", sortable: true },
+  { key: "quantity", label: "Quantity", sortable: true },
+  { key: "lastInventoryUpdate", label: "Last Updated", sortable: true },
+  { key: "isActive", label: "Status", sortable: false },
+  { key: "isHidden", label: "Visibility", sortable: false },
+  { key: "isTemporary", label: "Type", sortable: false },
+  { key: "expiryHours", label: "Expiry Hours", sortable: true },
+  { key: "autoResetQuantity", label: "Auto Reset", sortable: false },
+  { key: "temporaryStatus", label: "Time Status", sortable: true },
 ];
 
 export const PAGE_SIZE_OPTIONS = [10, 20, 30, 40, 50] as const;
@@ -120,43 +146,25 @@ export const DEFAULT_COLUMN_VISIBILITY: ColumnVisibility = {
   quantity: true,
   lastInventoryUpdate: true,
   isActive: true,
+  isHidden: true,
+  isTemporary: true,
+  expiryHours: true,
+  autoResetQuantity: true,
+  temporaryStatus: true,
 };
 
 export const INITIAL_FORM_DATA: ItemFormData = {
   categoryId: 0,
   name: "",
-  price: 0,
-  barcode: null,
+  price: "",
+  barcode: "",
   quantity: 0,
   isActive: true,
   isHidden: false,
+  isTemporary: false,
+  expiryHours: null,
+  autoResetQuantity: false,
 };
-
-export const initialItems: Item[] = [
-  {
-    id: "ITM-001",
-    categoryId: 1,
-    name: "Item 1",
-    price: 99.99,
-    barcode: "123456789",
-    quantity: 100,
-    lastInventoryUpdate: new Date(),
-    isActive: true,
-    isHidden: false,
-  },
-  {
-    id: "ITM-002",
-    categoryId: 2,
-    name: "Item 2",
-    price: 149.99,
-    barcode: "987654321",
-    quantity: 50,
-    lastInventoryUpdate: new Date(),
-    isActive: true,
-    isHidden: false,
-  },
-  // Add more initial items as needed
-];
 
 /**
  * Hook return type
@@ -181,6 +189,8 @@ export interface UseItemsReturn {
   setIsEditDialogOpen: (open: boolean) => void;
   isDeleteDialogOpen: boolean;
   setIsDeleteDialogOpen: (open: boolean) => void;
+  activeTab: "regular" | "temporary";
+  setActiveTab: (tab: "regular" | "temporary") => void;
 
   // Table state
   columnsVisible: ColumnVisibility;
@@ -195,4 +205,5 @@ export interface UseItemsReturn {
   handleDeleteItem: () => void;
   handlePageChange: (page: number) => void;
   handlePageSizeChange: (size: number) => void;
+  handleTabChange: (tab: "regular" | "temporary") => void;
 }

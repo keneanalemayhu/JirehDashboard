@@ -9,7 +9,7 @@ import { ItemTablePagination } from "@/components/dashboard/business/retail/owne
 import { useItems } from "@/hooks/dashboard/business/retail/owner/item";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { CirclePlus, Download, Upload } from "lucide-react";
+import { CirclePlus, Download } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -18,24 +18,34 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Badge } from "@/components/ui/badge";
 import { ItemForm } from "@/components/dashboard/business/retail/owner/items/ItemForm";
 import { Item } from "@/types/dashboard/business/retail/owner/item";
+import { useCategories } from "@/hooks/dashboard/business/retail/owner/category";
 
 interface ColumnVisibility {
   id: boolean;
   name: boolean;
   price: boolean;
-  category: boolean;
+  categoryId: boolean;
   barcode: boolean;
   quantity: boolean;
   isActive: boolean;
   isHidden: boolean;
+  isTemporary: boolean;
+  expiryHours: boolean;
+  autoResetQuantity: boolean;
+  temporaryStatus: boolean;
 }
 
 export default function ItemsPage() {
-  // Pagination state
+  const { categories } = useCategories();
   const [currentPage, setCurrentPage] = React.useState(1);
   const [pageSize, setPageSize] = React.useState(10);
+  const [activeTab, setActiveTab] = React.useState<"regular" | "temporary">(
+    "regular"
+  );
 
   const {
     items,
@@ -58,48 +68,71 @@ export default function ItemsPage() {
     filteredItems,
   } = useItems();
 
+  // Separate regular and temporary items
+  const regularItems = filteredItems.filter((item) => !item.isTemporary);
+  const temporaryItems = filteredItems.filter((item) => item.isTemporary);
+
+  // Get current items based on active tab
+  const currentItems = activeTab === "regular" ? regularItems : temporaryItems;
+
   // Calculate pagination
-  const totalItems = filteredItems?.length || 0;
+  const totalItems = currentItems.length;
   const startIndex = (currentPage - 1) * pageSize;
   const endIndex = startIndex + pageSize;
-  const paginatedItems = filteredItems?.slice(startIndex, endIndex) || [];
+  const paginatedItems = currentItems.slice(startIndex, endIndex);
 
-  // Handle page changes
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
   };
 
-  // Handle page size changes
   const handlePageSizeChange = (size: number) => {
     setPageSize(size);
-    setCurrentPage(1); // Reset to first page when changing page size
+    setCurrentPage(1);
   };
 
-  // Export items
+  const handleTabChange = (value: string) => {
+    setActiveTab(value as "regular" | "temporary");
+    setCurrentPage(1);
+  };
+
   const handleExport = () => {
+    const headers = [
+      "ID",
+      "Name",
+      "Barcode",
+      "Price",
+      "Quantity",
+      "Category",
+      "Status",
+      "Visibility",
+      "Is Temporary",
+      "Expiry Hours",
+      "Auto Reset",
+      "Last Reset",
+    ];
+
     const csv = [
-      // CSV Headers
-      [
-        "ID",
-        "Name",
-        "Barcode",
-        "Price",
-        "Quantity",
-        "Category",
-        "Status",
-        "Visibility",
-      ],
-      // CSV Data
-      ...filteredItems.map((item) => [
-        item.id,
-        item.name,
-        item.barcode || "",
-        item.price,
-        item.quantity,
-        item.category,
-        item.isActive ? "Active" : "Inactive",
-        item.isHidden ? "Hidden" : "Visible",
-      ]),
+      headers,
+      ...currentItems.map((item) => {
+        const category =
+          categories?.find((c) => c.id === item.categoryId)?.name || "";
+        return [
+          item.id,
+          item.name,
+          item.barcode || "",
+          item.price,
+          item.quantity,
+          category,
+          item.isActive ? "Active" : "Inactive",
+          item.isHidden ? "Hidden" : "Visible",
+          item.isTemporary ? "Yes" : "No",
+          item.expiryHours || "",
+          item.autoResetQuantity ? "Yes" : "No",
+          item.lastQuantityReset
+            ? new Date(item.lastQuantityReset).toISOString()
+            : "",
+        ];
+      }),
     ]
       .map((row) => row.join(","))
       .join("\n");
@@ -108,7 +141,7 @@ export default function ItemsPage() {
     const url = window.URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = "items.csv";
+    a.download = `${activeTab}-items.csv`;
     a.click();
     window.URL.revokeObjectURL(url);
   };
@@ -125,7 +158,8 @@ export default function ItemsPage() {
                 Items Management
               </h1>
               <p className="text-sm text-muted-foreground">
-                Manage your inventory items, prices, and stock levels
+                Manage your inventory items, including regular and temporary
+                items
               </p>
             </div>
             <div className="flex items-center gap-2">
@@ -141,21 +175,50 @@ export default function ItemsPage() {
                 <DialogTrigger asChild>
                   <Button>
                     <CirclePlus className="w-4 h-4 mr-2" />
-                    Add Item
+                    Add {activeTab === "temporary" ? "Temporary " : ""}Item
                   </Button>
                 </DialogTrigger>
                 <DialogContent>
                   <DialogHeader>
-                    <DialogTitle>Add New Item</DialogTitle>
+                    <DialogTitle>
+                      Add New {activeTab === "temporary" ? "Temporary " : ""}
+                      Item
+                    </DialogTitle>
                     <DialogDescription>
-                      Enter the details for the new item.
+                      Enter the details for the new{" "}
+                      {activeTab === "temporary" ? "temporary " : ""}item.
                     </DialogDescription>
                   </DialogHeader>
-                  <ItemForm onSubmit={handleAddItem} />
+                  <ItemForm
+                    onSubmit={handleAddItem}
+                    defaultTemporary={activeTab === "temporary"}
+                  />
                 </DialogContent>
               </Dialog>
             </div>
           </div>
+
+          {/* Item Type Tabs */}
+          <Tabs
+            value={activeTab}
+            onValueChange={handleTabChange}
+            className="w-full"
+          >
+            <TabsList>
+              <TabsTrigger value="regular">
+                Regular Items
+                <Badge variant="secondary" className="ml-2">
+                  {regularItems.length}
+                </Badge>
+              </TabsTrigger>
+              <TabsTrigger value="temporary">
+                Temporary Items
+                <Badge variant="secondary" className="ml-2">
+                  {temporaryItems.length}
+                </Badge>
+              </TabsTrigger>
+            </TabsList>
+          </Tabs>
 
           {/* Filter and Settings */}
           <div className="flex items-center justify-between gap-4">
@@ -171,6 +234,7 @@ export default function ItemsPage() {
                 onColumnVisibilityChange={(column, visible) =>
                   setColumnsVisible((prev) => ({ ...prev, [column]: visible }))
                 }
+                showTemporaryColumns={activeTab === "temporary"}
               />
             </div>
             <div className="flex items-center gap-2">
@@ -200,6 +264,7 @@ export default function ItemsPage() {
             editingItem={editingItem}
             onEditSubmit={handleEditItem}
             onDeleteConfirm={handleDeleteItem}
+            showTemporaryColumns={activeTab === "temporary"}
           />
 
           {/* Pagination */}
@@ -209,6 +274,9 @@ export default function ItemsPage() {
             currentPage={currentPage}
             onPageChange={handlePageChange}
             onPageSizeChange={handlePageSizeChange}
+            itemType={activeTab}
+            totalRegularItems={regularItems.length}
+            totalTemporaryItems={temporaryItems.length}
           />
         </div>
       </div>

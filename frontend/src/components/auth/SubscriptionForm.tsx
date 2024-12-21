@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Check, MoveLeft } from "lucide-react";
+import { Check, MoveLeft, Info } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   useLanguage,
@@ -21,8 +21,6 @@ import {
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { Badge } from "@/components/ui/badge";
 
-interface FormProps extends React.FormHTMLAttributes<HTMLFormElement> {}
-
 function SubscriptionFormContent() {
   const [isYearly, setIsYearly] = useState(false);
   const { language } = useLanguage();
@@ -35,20 +33,8 @@ function SubscriptionFormContent() {
 
   const tiers = [
     {
-      name: t.basic.name,
-      monthlyPrice: 2499,
-      features: t.basic.features,
-      disabled: false,
-    },
-    {
-      name: t.standard.name,
-      monthlyPrice: 3499,
-      features: t.standard.features,
-      disabled: false,
-    },
-    {
       name: t.professional.name,
-      monthlyPrice: 7499,
+      monthlyPrice: 4999,
       features: t.professional.features,
       disabled: false,
     },
@@ -76,7 +62,12 @@ function SubscriptionFormContent() {
 
       <div className="container mx-auto pt-20">
         <h1 className="text-3xl font-bold text-center mb-10">{t.title}</h1>
-
+        <div className="bg-muted/50 rounded-lg p-4 mb-10 max-w-2xl mx-auto">
+          <p className="text-center text-muted-foreground text-sm flex items-center justify-center gap-2">
+            <Info className="h-4 w-4 shrink-0" />
+            {t.disclaimer}
+          </p>
+        </div>
         <div className="flex justify-center items-center mb-10">
           <ToggleGroup
             type="single"
@@ -109,7 +100,7 @@ function SubscriptionFormContent() {
           </ToggleGroup>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-3xl mx-auto">
           {tiers.map((tier) => (
             <Card
               key={tier.name}

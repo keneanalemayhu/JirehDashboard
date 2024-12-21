@@ -9,70 +9,70 @@ import {
 
 const initialCategories = [
   {
-    id: "CAT-001",
+    id: "1",
     name: "Category 1",
     description: "Gadgets, software, and digital trends",
     location: "Location 1",
     isHidden: false,
   },
   {
-    id: "CAT-002",
+    id: "2",
     name: "Category 2",
     description: "Exploring the world, one destination at a time",
     location: "Location 2",
     isHidden: false,
   },
   {
-    id: "CAT-003",
+    id: "3",
     name: "Category 3",
     description: "Delicious recipes and culinary adventures",
     location: "Location 3",
     isHidden: false,
   },
   {
-    id: "CAT-004",
+    id: "4",
     name: "Category 4",
     description: "The latest trends in style and beauty",
     location: "Location 1",
     isHidden: false,
   },
   {
-    id: "CAT-005",
+    id: "5",
     name: "Category 5",
     description: "Healthy living and workout tips",
     location: "Location 2",
     isHidden: false,
   },
   {
-    id: "CAT-006",
+    id: "6",
     name: "Category 6",
     description: "Money management and investment advice",
     location: "Location 3",
     isHidden: false,
   },
   {
-    id: "CAT-007",
+    id: "7",
     name: "Category 7",
     description: "The world of video games and esports",
     location: "Location 1",
     isHidden: false,
   },
   {
-    id: "CAT-008",
+    id: "8",
     name: "Category 8",
     description: "Literary reviews and book recommendations",
     location: "Location 2",
     isHidden: false,
   },
   {
-    id: "CAT-009",
+    id: "9",
     name: "Category 9",
     description: "Exploring the world of music, from classical to pop",
     location: "Location 3",
     isHidden: false,
   },
   {
-    id: "CAT-010",
+    id: "10",
     name: "Category 10",
     description: "Appreciating the beauty of visual arts",
     location: "Location 1",
@@ -156,19 +156,17 @@ export function useCategories(
   };
 
   const handleAddCategory = (data: CategoryFormData) => {
-    // Generate new ID
+    // Generate new ID as a string
     const newId = `CAT-${String(categories.length + 1).padStart(3, "0")}`;
 
-    // Create new category with all fields
     const newCategory: Category = {
-      id: newId,
+      id: newId, // Now newId is a string
       name: data.name,
       description: data.description,
       location: data.location,
       isHidden: data.isHidden,
     };
 
-    // Update categories
     setCategories((prev) => [...prev, newCategory]);
     setIsAddDialogOpen(false);
   };

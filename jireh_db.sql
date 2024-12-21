@@ -1,6 +1,7 @@
 -- Create database
 CREATE DATABASE IF NOT EXISTS jireh_db;
 USE jireh_db;
+SET GLOBAL event_scheduler = ON;
 
 -- Create OWNER table
 CREATE TABLE owner (
@@ -48,16 +49,19 @@ CREATE TABLE store (
     FOREIGN KEY (owner_id) REFERENCES owner(id)
 );
 
--- Create SUBSCRIPTION table
+-- Modified SUBSCRIPTION table
 CREATE TABLE subscription (
     id INT PRIMARY KEY AUTO_INCREMENT,
     store_id INT NOT NULL,
     start_date DATE NOT NULL,
     end_date DATE NOT NULL,
     amount DECIMAL(10,2) NOT NULL,
-    payment_status VARCHAR(20) NOT NULL,
+    payment_status ENUM('PENDING', 'PAID', 'FAILED', 'EXPIRED') NOT NULL DEFAULT 'PENDING',
+    subscription_status ENUM('ACTIVE', 'INACTIVE', 'SUSPENDED') NOT NULL DEFAULT 'INACTIVE',
     last_payment_date DATETIME,
     next_billing_date DATETIME NOT NULL,
+    retry_count INT DEFAULT 0,
+    last_retry_date DATETIME,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (store_id) REFERENCES store(id)
@@ -194,10 +198,15 @@ CREATE TABLE item (
     last_inventory_update DATETIME,
     is_active BOOLEAN DEFAULT true,
     is_hidden BOOLEAN DEFAULT true,
+    is_temporary BOOLEAN DEFAULT false,
+    expiry_hours INT DEFAULT NULL,
+    auto_reset_quantity BOOLEAN DEFAULT false,
+    last_quantity_reset DATETIME DEFAULT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (category_id) REFERENCES category(id)
 );
+ALTER TABLE item COMMENT 'Items table with temporary item support. Temporary items can auto-reset their quantity after specified expiry hours.';
 
 -- Modified ORDER table with enhanced features
 CREATE TABLE `order` (
@@ -310,6 +319,11 @@ CREATE TABLE stock_transfer (
     FOREIGN KEY (item_id) REFERENCES item(id)
 );
 
+CREATE TABLE db_version (
+    version VARCHAR(50),
+    applied_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
 
 -- For expense analysis and reporting
 CREATE INDEX idx_expense_date_amount ON expense(expense_date, amount);
@@ -347,6 +361,12 @@ CREATE INDEX idx_category_location ON category(location_id, is_active);  -- For 
 CREATE INDEX idx_item_lookup ON item(category_id, is_active, is_hidden);  -- For item filtering
 CREATE INDEX idx_item_barcode ON item(barcode);  -- For barcode scanning
 CREATE INDEX idx_item_inventory ON item(category_id, quantity);  -- For inventory management
+
+CREATE INDEX idx_item_temporary ON item(
+    is_temporary,
+    expiry_hours,
+    last_quantity_reset
+);
 
 -- Order Management Indices
 CREATE INDEX idx_order_lookup ON `order`(
@@ -401,3 +421,77 @@ CREATE INDEX idx_order_history_lookup ON order_history(
     user_id,
     created_at
 );  -- For order history tracking
+
+
+-- Create Event Scheduler for temporary items
+DELIMITER //
+
+CREATE EVENT reset_temporary_items_quantity
+ON SCHEDULE EVERY 1 HOUR
+DO
+BEGIN
+    UPDATE item 
+    SET 
+        quantity = 0,
+        last_quantity_reset = CURRENT_TIMESTAMP
+    WHERE 
+        is_temporary = true 
+        AND auto_reset_quantity = true
+        AND last_quantity_reset IS NOT NULL
+        AND DATE_ADD(last_quantity_reset, INTERVAL expiry_hours HOUR) <= CURRENT_TIMESTAMP;
+END //
+
+DELIMITER ;
+
+
+-- Create stored procedure for subscription reset
+DELIMITER //
+CREATE PROCEDURE reset_expired_subscriptions()
+BEGIN
+    -- Update expired subscriptions
+    UPDATE subscription 
+    SET 
+        payment_status = 'EXPIRED',
+        subscription_status = 'INACTIVE'
+    WHERE 
+        end_date < CURDATE() 
+        AND subscription_status = 'ACTIVE';
+
+    -- Create new subscription entries for the next period
+    INSERT INTO subscription (
+        store_id, 
+        start_date, 
+        end_date, 
+        amount, 
+        payment_status,
+        subscription_status, 
+        next_billing_date
+    )
+    SELECT 
+        store_id,
+        CURDATE(),
+        DATE_ADD(CURDATE(), INTERVAL 30 DAY),
+        amount,
+        'PENDING',
+        'INACTIVE',
+        DATE_ADD(CURDATE(), INTERVAL 30 DAY)
+    FROM subscription 
+    WHERE 
+        end_date < CURDATE() 
+        AND subscription_status = 'ACTIVE';
+END //
+DELIMITER ;
+
+-- Create event scheduler to run the reset procedure
+DELIMITER //
+CREATE EVENT subscription_reset_event
+ON SCHEDULE EVERY 1 DAY
+STARTS CURRENT_TIMESTAMP
+DO
+BEGIN
+    CALL reset_expired_subscriptions();
+END //
+DELIMITER ;
+
+-- Enable event scheduler
+SET GLOBAL event_scheduler = ON;

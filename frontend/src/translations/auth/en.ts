@@ -69,6 +69,8 @@ export const en = {
   },
   subscription: {
     title: "Choose Your Plan",
+    disclaimer:
+      "Prices may be subject to change due to market conditions, inflation rates, service improvements, or operational costs. We will notify all customers of any pricing updates in advance.",
     monthly: "Monthly",
     yearly: "Yearly",
     save: "Save 16%",
@@ -146,5 +148,6 @@ export const en = {
         "SLA guarantees",
       ],
     },
+    comingSoon: "Coming Soon",
   },
 };

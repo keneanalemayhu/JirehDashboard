@@ -2,55 +2,46 @@
 
 import { TableCell, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { Edit, Trash2 } from "lucide-react";
-import { Item } from "@/types/dashboard/business/retail/owner/item";
+import { Edit, Trash2, Clock, RotateCcw, AlertCircle } from "lucide-react";
+import { Item, ColumnVisibility } from "@/types/dashboard/business/retail/owner/item";
 import { Badge } from "@/components/ui/badge";
-
-// Define default column visibility
-const DEFAULT_COLUMNS_VISIBLE = {
-  id: true,
-  name: true,
-  price: true,
-  category: true,
-  barcode: true,
-  quantity: true,
-  isActive: true,
-  isHidden: true,
-};
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import { useCategories } from "@/hooks/dashboard/business/retail/owner/category";
 
 interface ItemTableRowProps {
   item: Item;
-  columnsVisible?: Partial<typeof DEFAULT_COLUMNS_VISIBLE>;
+  columnsVisible: ColumnVisibility;
   onEdit: (item: Item) => void;
   onDelete: (item: Item) => void;
+  temporaryStatus?: string;
 }
 
 export function ItemTableRow({
   item,
-  columnsVisible = DEFAULT_COLUMNS_VISIBLE,
+  columnsVisible,
   onEdit,
   onDelete,
+  temporaryStatus,
 }: ItemTableRowProps) {
-  // Merge provided columns with defaults
-  const visibleColumns = { ...DEFAULT_COLUMNS_VISIBLE, ...columnsVisible };
+  const { categories } = useCategories();
 
-  const formatPrice = (price: string | undefined) => {
-    if (typeof price !== "string" || !price) {
-      return "N/A";
-    }
-    return parseFloat(price)
-      .toFixed(2)
-      .replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+  const getCategoryName = (categoryId: number) => {
+    const category = categories.find((cat) => cat.id === categoryId);
+    return category?.name || "N/A";
   };
 
-  const getStatusBadge = (isActive: boolean | undefined) => {
-    if (typeof isActive !== "boolean") {
-      return (
-        <Badge variant="secondary" className="w-20 justify-center">
-          N/A
-        </Badge>
-      );
-    }
+  const formatPrice = (price: string) => {
+    if (!price) return "N/A";
+    return `$${parseFloat(price)
+      .toFixed(2)
+      .replace(/\B(?=(\d{3})+(?!\d))/g, ",")}`;
+  };
+
+  const getStatusBadge = (isActive: boolean) => {
     return (
       <Badge
         variant={isActive ? "success" : "secondary"}
@@ -61,14 +52,7 @@ export function ItemTableRow({
     );
   };
 
-  const getVisibilityBadge = (isHidden: boolean | undefined) => {
-    if (typeof isHidden !== "boolean") {
-      return (
-        <Badge variant="secondary" className="w-20 justify-center">
-          N/A
-        </Badge>
-      );
-    }
+  const getVisibilityBadge = (isHidden: boolean) => {
     return (
       <Badge
         variant={isHidden ? "secondary" : "outline"}
@@ -79,51 +63,134 @@ export function ItemTableRow({
     );
   };
 
-  const getQuantityColor = (quantity: number | undefined) => {
-    if (typeof quantity !== "number") {
-      return "text-gray-500";
-    }
-    if (quantity <= 0) return "text-red-500";
-    if (quantity <= 10) return "text-yellow-500";
-    return "text-green-500";
+  const getTemporaryStatusBadge = (status: string | undefined) => {
+    if (!status) return null;
+
+    const config = {
+      New: { variant: "default", icon: AlertCircle },
+      Expired: { variant: "destructive", icon: AlertCircle },
+    } as const;
+
+    const isRemaining = status.includes("remaining");
+    const variant = isRemaining
+      ? "warning"
+      : config[status as keyof typeof config]?.variant || "default";
+    const Icon = config[status as keyof typeof config]?.icon || AlertCircle;
+
+    return (
+      <Badge variant={variant} className="flex items-center gap-1">
+        <Icon className="w-3 h-3" />
+        <span>{status}</span>
+      </Badge>
+    );
   };
 
-  if (!item) {
-    return null;
-  }
+  const getAutoResetBadge = (autoReset: boolean) => {
+    return (
+      <Badge
+        variant={autoReset ? "default" : "secondary"}
+        className="flex items-center gap-1"
+      >
+        <RotateCcw className="w-3 h-3" />
+        <span>{autoReset ? "Enabled" : "Disabled"}</span>
+      </Badge>
+    );
+  };
+
+  const getQuantityStatus = (quantity: number) => {
+    if (quantity <= 0)
+      return { color: "text-red-500", tooltip: "Out of stock" };
+    if (quantity <= 10)
+      return { color: "text-yellow-500", tooltip: "Low stock" };
+    return { color: "text-green-500", tooltip: "In stock" };
+  };
+
+  if (!item) return null;
+
+  const quantityStatus = getQuantityStatus(item.quantity);
 
   return (
     <TableRow className={item.isHidden ? "opacity-50" : ""}>
-      {visibleColumns.id && <TableCell>{item.id || "N/A"}</TableCell>}
-      {visibleColumns.name && (
-        <TableCell className="font-medium">{item.name || "N/A"}</TableCell>
+      {columnsVisible.id && <TableCell>{item.id}</TableCell>}
+
+      {columnsVisible.name && (
+        <TableCell className="font-medium">
+          <div className="flex items-center gap-2">
+            {item.name}
+            {item.isTemporary && (
+              <Tooltip>
+                <TooltipTrigger>
+                  <Clock className="w-4 h-4 text-muted-foreground" />
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>Temporary Item</p>
+                </TooltipContent>
+              </Tooltip>
+            )}
+          </div>
+        </TableCell>
       )}
-      {visibleColumns.barcode && (
+
+      {columnsVisible.barcode && (
         <TableCell className="font-mono text-sm">
           {item.barcode || "—"}
         </TableCell>
       )}
-      {visibleColumns.price && (
-        <TableCell className="font-medium">
-          ${formatPrice(item.price)}
+
+      {columnsVisible.price && (
+        <TableCell className="font-medium">{formatPrice(item.price)}</TableCell>
+      )}
+
+      {columnsVisible.quantity && (
+        <TableCell>
+          <Tooltip>
+            <TooltipTrigger>
+              <span className={`font-medium ${quantityStatus.color}`}>
+                {item.quantity}
+              </span>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>{quantityStatus.tooltip}</p>
+            </TooltipContent>
+          </Tooltip>
         </TableCell>
       )}
-      {visibleColumns.quantity && (
-        <TableCell className={`font-medium ${getQuantityColor(item.quantity)}`}>
-          {typeof item.quantity === "number" ? item.quantity : "N/A"}
-        </TableCell>
+
+      {columnsVisible.categoryId && (
+        <TableCell>{getCategoryName(item.categoryId)}</TableCell>
       )}
-      {visibleColumns.category && (
-        <TableCell>{item.category || "N/A"}</TableCell>
-      )}
-      {visibleColumns.isActive && (
+
+      {columnsVisible.isActive && (
         <TableCell className="text-center">
           {getStatusBadge(item.isActive)}
         </TableCell>
       )}
-      {visibleColumns.isHidden && (
+
+      {columnsVisible.isHidden && (
         <TableCell className="text-center">
           {getVisibilityBadge(item.isHidden)}
+        </TableCell>
+      )}
+
+      {/* Temporary Item specific columns */}
+      {columnsVisible.expiryHours && item.isTemporary && (
+        <TableCell className="text-center">
+          <Badge variant="outline" className="flex items-center gap-1">
+            <Clock className="w-3 h-3" />
+            <span>{item.expiryHours || 0}h</span>
+          </Badge>
+        </TableCell>
+      )}
+
+      {columnsVisible.autoResetQuantity && item.isTemporary && (
+        <TableCell className="text-center">
+          {getAutoResetBadge(item.autoResetQuantity)}
+        </TableCell>
+      )}
+
+      {columnsVisible.temporaryStatus && item.isTemporary && (
+        <TableCell className="text-center">
+          {getTemporaryStatusBadge(temporaryStatus)}
         </TableCell>
       )}
 
@@ -136,7 +203,7 @@ export function ItemTableRow({
             className="hover:text-primary"
           >
             <Edit className="w-4 h-4" />
-            <span className="sr-only">Edit {item.name || "Item"}</span>
+            <span className="sr-only">Edit {item.name}</span>
           </Button>
           <Button
             variant="ghost"
@@ -145,7 +212,7 @@ export function ItemTableRow({
             onClick={() => onDelete(item)}
           >
             <Trash2 className="w-4 h-4" />
-            <span className="sr-only">Delete {item.name || "Item"}</span>
+            <span className="sr-only">Delete {item.name}</span>
           </Button>
         </div>
       </TableCell>

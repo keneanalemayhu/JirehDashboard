@@ -5,136 +5,72 @@ import {
   Item,
   ItemFormData,
   SortDirection,
-} from "@/types/dashboard/business/retail/admin/item";
+  ColumnVisibility,
+} from "@/types/dashboard/business/retail/owner/item";
 
-const initialItems = [
+const initialItems: Item[] = [
   {
     id: "ITM-001",
-    name: "Item 1",
+    name: "Regular Item 1",
     barcode: "890123456789",
     price: "999.99",
     quantity: 1,
-    category: "Category 1",
+    categoryId: 1,
     isActive: true,
     isHidden: false,
+    isTemporary: false,
+    expiryHours: null,
+    autoResetQuantity: false,
+    lastQuantityReset: null,
     lastInventoryUpdate: new Date("2024-03-01"),
   },
   {
     id: "ITM-002",
-    name: "Item 2",
+    name: "Temporary Item 1",
     barcode: "123456789012",
     price: "1099.99",
     quantity: 30,
-    category: "Category 1",
+    categoryId: 1,
     isActive: true,
     isHidden: false,
+    isTemporary: true,
+    expiryHours: 24,
+    autoResetQuantity: true,
+    lastQuantityReset: new Date("2024-03-02"),
     lastInventoryUpdate: new Date("2024-03-02"),
   },
-  {
-    id: "ITM-003",
-    name: "Item 3",
-    barcode: "345678901234",
-    price: "1499.99",
-    quantity: 20,
-    category: "Category 2",
-    isActive: true,
-    isHidden: true,
-    lastInventoryUpdate: new Date("2024-03-03"),
-  },
-  {
-    id: "ITM-004",
-    name: "Item 4",
-    barcode: "567890123456",
-    price: "299.99",
-    quantity: 100,
-    category: "Category 3",
-    isActive: true,
-    isHidden: false,
-    lastInventoryUpdate: new Date("2024-03-04"),
-  },
-  {
-    id: "ITM-005",
-    name: "Item 5",
-    barcode: "789012345678",
-    price: "599.99",
-    quantity: 45,
-    category: "Category 4",
-    isActive: true,
-    isHidden: false,
-    lastInventoryUpdate: new Date("2024-03-05"),
-  },
-  {
-    id: "ITM-006",
-    name: "Item 6",
-    barcode: "901234567890",
-    price: "799.99",
-    quantity: 15,
-    category: "Category 1",
-    isActive: false,
-    isHidden: true,
-    lastInventoryUpdate: new Date("2024-03-06"),
-  },
-  {
-    id: "ITM-007",
-    name: "Item 7",
-    barcode: "234567890123",
-    price: "3899.99",
-    quantity: 10,
-    category: "Category 5",
-    isActive: true,
-    isHidden: false,
-    lastInventoryUpdate: new Date("2024-03-07"),
-  },
-  {
-    id: "ITM-008",
-    name: "Item 8",
-    barcode: "456789012345",
-    price: "1999.99",
-    quantity: 25,
-    category: "Category 2",
-    isActive: true,
-    isHidden: true,
-    lastInventoryUpdate: new Date("2024-03-08"),
-  },
-  {
-    id: "ITM-009",
-    name: "Item 9",
-    barcode: "678901234567",
-    price: "249.99",
-    quantity: 75,
-    category: "Category 3",
-    isActive: true,
-    isHidden: false,
-    lastInventoryUpdate: new Date("2024-03-09"),
-  },
-  {
-    id: "ITM-010",
-    name: "Item 10",
-    barcode: "012345678901",
-    price: "1299.99",
-    quantity: 35,
-    category: "Category 2",
-    isActive: true,
-    isHidden: false,
-    lastInventoryUpdate: new Date("2024-03-10"),
-  },
+  // Add more sample items as needed
 ];
 
 export function useItems(defaultItems: Item[] = initialItems) {
+  // Basic state
   const [items, setItems] = useState<Item[]>(defaultItems);
   const [filterValue, setFilterValue] = useState("");
   const [editingItem, setEditingItem] = useState<Item | null>(null);
+  const [activeTab, setActiveTab] = useState<"regular" | "temporary">(
+    "regular"
+  );
+
+  // Dialog states
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-  const [columnsVisible, setColumnsVisible] = useState({
+
+  // Table state
+  const [columnsVisible, setColumnsVisible] = useState<ColumnVisibility>({
     id: true,
     name: true,
     barcode: true,
     price: true,
     quantity: true,
-    category: true,
+    categoryId: true,
     lastInventoryUpdate: true,
+    isActive: true,
+    isHidden: true,
+    isTemporary: true,
+    expiryHours: true,
+    autoResetQuantity: true,
+    temporaryStatus: true,
   });
   const [sortColumn, setSortColumn] = useState<keyof Item | null>(null);
   const [sortDirection, setSortDirection] = useState<SortDirection>(null);
@@ -143,28 +79,43 @@ export function useItems(defaultItems: Item[] = initialItems) {
 
   // Filtering and sorting
   const filteredItems = useMemo(() => {
-    const itemsToFilter = items || [];
+    let itemsToFilter = items || [];
 
-    const result = itemsToFilter.filter(
+    // First filter by type (regular/temporary)
+    itemsToFilter = itemsToFilter.filter((item) =>
+      activeTab === "regular" ? !item.isTemporary : item.isTemporary
+    );
+
+    // Then filter by search value
+    const filtered = itemsToFilter.filter(
       (item) =>
         item.name.toLowerCase().includes(filterValue.toLowerCase()) ||
         item.barcode.toLowerCase().includes(filterValue.toLowerCase()) ||
-        item.category.toLowerCase().includes(filterValue.toLowerCase()) ||
+        item.categoryId
+          .toString()
+          .toLowerCase()
+          .includes(filterValue.toLowerCase()) ||
         item.price.toLowerCase().includes(filterValue.toLowerCase())
     );
 
     if (sortColumn) {
-      result.sort((a, b) => {
+      filtered.sort((a, b) => {
         const aValue = a[sortColumn];
         const bValue = b[sortColumn];
 
+        // Handle different types of values
         if (sortColumn === "price") {
           return sortDirection === "asc"
             ? parseFloat(aValue as string) - parseFloat(bValue as string)
             : parseFloat(bValue as string) - parseFloat(aValue as string);
         }
 
-        if (sortColumn === "quantity" || sortColumn === "lastInventoryUpdate") {
+        if (
+          sortColumn === "quantity" ||
+          sortColumn === "lastInventoryUpdate" ||
+          sortColumn === "expiryHours" ||
+          sortColumn === "lastQuantityReset"
+        ) {
           const aVal = aValue as number | Date;
           const bVal = bValue as number | Date;
           return sortDirection === "asc"
@@ -176,16 +127,14 @@ export function useItems(defaultItems: Item[] = initialItems) {
           return sortDirection === "asc" ? (aValue ? 1 : -1) : aValue ? -1 : 1;
         }
 
-        if (sortDirection === "asc") {
-          return String(aValue).localeCompare(String(bValue));
-        } else {
-          return String(bValue).localeCompare(String(aValue));
-        }
+        return sortDirection === "asc"
+          ? String(aValue).localeCompare(String(bValue))
+          : String(bValue).localeCompare(String(aValue));
       });
     }
 
-    return result;
-  }, [items, filterValue, sortColumn, sortDirection]);
+    return filtered;
+  }, [items, filterValue, sortColumn, sortDirection, activeTab]);
 
   // Pagination
   const paginatedItems = useMemo(() => {
@@ -193,6 +142,7 @@ export function useItems(defaultItems: Item[] = initialItems) {
     return filteredItems.slice(startIndex, startIndex + pageSize);
   }, [filteredItems, currentPage, pageSize]);
 
+  // Handlers
   const handleSort = (column: keyof Item) => {
     if (sortColumn === column) {
       setSortDirection((prev) => {
@@ -216,6 +166,7 @@ export function useItems(defaultItems: Item[] = initialItems) {
       id: newId,
       ...data,
       lastInventoryUpdate: new Date(),
+      lastQuantityReset: data.isTemporary ? new Date() : null,
     };
 
     setItems((prev) => [...prev, newItem]);
@@ -232,6 +183,11 @@ export function useItems(defaultItems: Item[] = initialItems) {
               ...item,
               ...data,
               lastInventoryUpdate: new Date(),
+              lastQuantityReset: data.isTemporary
+                ? data.autoResetQuantity !== item.autoResetQuantity
+                  ? new Date()
+                  : item.lastQuantityReset
+                : null,
             }
           : item
       )
@@ -258,13 +214,23 @@ export function useItems(defaultItems: Item[] = initialItems) {
     setCurrentPage(1);
   };
 
+  const handleTabChange = (tab: "regular" | "temporary") => {
+    setActiveTab(tab);
+    setCurrentPage(1);
+  };
+
   return {
+    // Data
     items,
     paginatedItems,
     filteredItems,
     editingItem,
+
+    // State setters
     setItems,
     setEditingItem,
+
+    // UI state
     filterValue,
     setFilterValue,
     isAddDialogOpen,
@@ -273,17 +239,24 @@ export function useItems(defaultItems: Item[] = initialItems) {
     setIsEditDialogOpen,
     isDeleteDialogOpen,
     setIsDeleteDialogOpen,
+    activeTab,
+    setActiveTab,
+
+    // Table state
     columnsVisible,
     setColumnsVisible,
     pageSize,
     currentPage,
     sortColumn,
     sortDirection,
+
+    // Handlers
     handleSort,
     handleAddItem,
     handleEditItem,
     handleDeleteItem,
     handlePageChange,
     handlePageSizeChange,
+    handleTabChange,
   };
 }

@@ -13,9 +13,9 @@ import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/components/context/LanguageContext";
 
 const languages = [
-  { code: "am", name: "አማርኛ", flag: "🇪🇹" },
-  { code: "or", name: "Afaan Oromoo", flag: "🏳️‍🌈" },
-  { code: "en", name: "English", flag: "🇺🇸" },
+  { code: "am", name: "አማርኛ", flag: "🇪🇹", enabled: true },
+  { code: "en", name: "English", flag: "🇺🇸", enabled: true },
+  { code: "or", name: "Afaan Oromoo", flag: "🇪🇹", enabled: false },
 ] as const;
 
 export function LanguageToggle() {
@@ -32,11 +32,16 @@ export function LanguageToggle() {
         {languages.map((lang) => (
           <DropdownMenuItem
             key={lang.code}
-            onClick={() => setLanguage(lang.code)}
-            className="cursor-pointer"
+            onClick={() => lang.enabled && setLanguage(lang.code)}
+            className={`cursor-pointer ${
+              !lang.enabled && "opacity-50 cursor-not-allowed"
+            }`}
           >
             <span className="mr-2">{lang.flag}</span>
             {lang.name}
+            {!lang.enabled && (
+              <span className="ml-2 text-xs">(Coming soon)</span>
+            )}
             {language === lang.code && <span className="ml-auto">✓</span>}
           </DropdownMenuItem>
         ))}
