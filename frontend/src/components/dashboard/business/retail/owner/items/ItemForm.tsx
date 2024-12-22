@@ -36,7 +36,7 @@ export function ItemForm({
   const [formData, setFormData] = useState<ItemFormData>({
     name: initialData?.name ?? "",
     price: initialData?.price ?? "",
-    categoryId: initialData?.categoryId ?? categories[0]?.id ?? 0,
+    categoryId: initialData?.categoryId ?? Number(categories[0]?.id) ?? 0,
     barcode: initialData?.barcode ?? "",
     quantity: initialData?.quantity ?? 0,
     isHidden: initialData?.isHidden ?? false,

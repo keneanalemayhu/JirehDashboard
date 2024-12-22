@@ -5,78 +5,35 @@ import {
   Category,
   CategoryFormData,
   SortDirection,
-} from "@/types/dashboard/business/retail/admin/category";
+} from "@/types/dashboard/business/retail/owner/category";
 
-const initialCategories = [
+const initialCategories: Category[] = [
   {
-    id: "1",
-    name: "Category 1",
-    description: "Gadgets, software, and digital trends",
-    location: "Location 1",
+    id: 1,
+    name: "Category-1",
+    description: "Electronic devices and gadgets",
+    location: "Main Store",
+    isActive: true,
     isHidden: false,
+    lastUpdated: new Date("2024-03-01").toISOString(),
   },
   {
-    id: "2",
-    name: "Category 2",
-    description: "Exploring the world, one destination at a time",
-    location: "Location 2",
+    id: 2,
+    name: "Category-2",
+    description: "Fashion and apparel",
+    location: "Main Store",
+    isActive: true,
     isHidden: false,
+    lastUpdated: new Date("2024-03-01").toISOString(),
   },
   {
-    id: "3",
-    name: "Category 3",
-    description: "Delicious recipes and culinary adventures",
-    location: "Location 3",
+    id: 3,
+    name: "Category-3",
+    description: "Household items and appliances",
+    location: "Main Store",
+    isActive: true,
     isHidden: false,
-  },
-  {
-    id: "4",
-    name: "Category 4",
-    description: "The latest trends in style and beauty",
-    location: "Location 1",
-    isHidden: false,
-  },
-  {
-    id: "5",
-    name: "Category 5",
-    description: "Healthy living and workout tips",
-    location: "Location 2",
-    isHidden: false,
-  },
-  {
-    id: "6",
-    name: "Category 6",
-    description: "Money management and investment advice",
-    location: "Location 3",
-    isHidden: false,
-  },
-  {
-    id: "7",
-    name: "Category 7",
-    description: "The world of video games and esports",
-    location: "Location 1",
-    isHidden: false,
-  },
-  {
-    id: "8",
-    name: "Category 8",
-    description: "Literary reviews and book recommendations",
-    location: "Location 2",
-    isHidden: false,
-  },
-  {
-    id: "9",
-    name: "Category 9",
-    description: "Exploring the world of music, from classical to pop",
-    location: "Location 3",
-    isHidden: false,
-  },
-  {
-    id: "10",
-    name: "Category 10",
-    description: "Appreciating the beauty of visual arts",
-    location: "Location 1",
-    isHidden: false,
+    lastUpdated: new Date("2024-03-01").toISOString(),
   },
 ];
 
@@ -95,6 +52,9 @@ export function useCategories(
     name: true,
     description: true,
     location: true,
+    isActive: true,
+    isHidden: true,
+    lastUpdated: true,
   });
   const [sortColumn, setSortColumn] = useState<keyof Category | null>(null);
   const [sortDirection, setSortDirection] = useState<SortDirection>(null);
@@ -120,9 +80,9 @@ export function useCategories(
         const bValue = b[sortColumn];
 
         if (sortDirection === "asc") {
-          return aValue < bValue ? -1 : aValue > bValue ? 1 : 0;
+          return String(aValue).localeCompare(String(bValue));
         } else if (sortDirection === "desc") {
-          return aValue > bValue ? -1 : aValue < bValue ? 1 : 0;
+          return String(bValue).localeCompare(String(aValue));
         }
         return 0;
       });
@@ -137,10 +97,9 @@ export function useCategories(
     return filteredCategories.slice(startIndex, startIndex + pageSize);
   }, [filteredCategories, currentPage, pageSize]);
 
-  // Fixed handlers
+  // Handlers
   const handleSort = (column: keyof Category) => {
     if (sortColumn === column) {
-      // Cycle through: asc -> desc -> null
       setSortDirection((prev) => {
         if (prev === "asc") return "desc";
         if (prev === "desc") return null;
@@ -156,15 +115,17 @@ export function useCategories(
   };
 
   const handleAddCategory = (data: CategoryFormData) => {
-    // Generate new ID as a string
-    const newId = `CAT-${String(categories.length + 1).padStart(3, "0")}`;
+    const maxId = Math.max(...categories.map((c) => c.id), 0);
+    const newId = maxId + 1;
 
     const newCategory: Category = {
-      id: newId, // Now newId is a string
+      id: newId,
       name: data.name,
       description: data.description,
       location: data.location,
+      isActive: data.isActive,
       isHidden: data.isHidden,
+      lastUpdated: new Date().toISOString(),
     };
 
     setCategories((prev) => [...prev, newCategory]);
@@ -174,19 +135,18 @@ export function useCategories(
   const handleEditCategory = (data: CategoryFormData) => {
     if (!editingCategory) return;
 
-    // Update categories with edited data
     setCategories((prev) =>
       prev.map((category) =>
         category.id === editingCategory.id
           ? {
               ...category,
               ...data,
+              lastUpdated: new Date().toISOString(),
             }
           : category
       )
     );
 
-    // Reset states
     setIsEditDialogOpen(false);
     setEditingCategory(null);
   };
@@ -194,12 +154,10 @@ export function useCategories(
   const handleDeleteCategory = () => {
     if (!editingCategory) return;
 
-    // Remove the category
     setCategories((prev) =>
       prev.filter((category) => category.id !== editingCategory.id)
     );
 
-    // Reset states
     setIsDeleteDialogOpen(false);
     setEditingCategory(null);
   };
@@ -210,7 +168,7 @@ export function useCategories(
 
   const handlePageSizeChange = (size: number) => {
     setPageSize(size);
-    setCurrentPage(1); // Reset to first page
+    setCurrentPage(1);
   };
 
   return {

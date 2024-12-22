@@ -17,6 +17,8 @@ import {
   ColumnConfig,
   ColumnKey,
   Item,
+  ColumnVisibility,
+  SortDirection,
 } from "@/types/dashboard/business/retail/owner/item";
 import {
   Tooltip,
@@ -60,15 +62,15 @@ export const TEMPORARY_COLUMNS: ColumnConfig[] = [
 ];
 
 interface ItemTableHeaderProps {
-  columnsVisible: Record<ColumnKey, boolean>;
+  columnsVisible: ColumnVisibility;
   onSort: (column: keyof Item) => void;
   sortColumn?: keyof Item | null;
-  sortDirection?: "asc" | "desc" | null;
+  sortDirection?: SortDirection;
   showTemporaryColumns?: boolean;
 }
 
 export function ItemTableHeader({
-  columnsVisible = {},
+  columnsVisible,
   onSort,
   sortColumn,
   sortDirection,

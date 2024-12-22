@@ -21,6 +21,7 @@ CREATE TABLE owner (
 CREATE TABLE admin (
     id INT PRIMARY KEY AUTO_INCREMENT,
     owner_id INT NOT NULL,
+    store_id INT NOT NULL,
     full_name VARCHAR(100) NOT NULL,
     user_name VARCHAR(100) NOT NULL,
     phone VARCHAR(20) UNIQUE NOT NULL,
@@ -36,7 +37,6 @@ CREATE TABLE admin (
 -- Create STORE table
 CREATE TABLE store (
     id INT PRIMARY KEY AUTO_INCREMENT,
-    admin_id INT NOT NULL,
     owner_id INT NOT NULL,
     name VARCHAR(100) NOT NULL,
     address TEXT NOT NULL,

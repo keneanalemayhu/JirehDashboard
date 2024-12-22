@@ -4,11 +4,13 @@
  * Core entity interfaces
  */
 export interface Category {
-  id: string;
+  id: number;
   name: string;
   description: string;
   location: string;
+  isActive: boolean;
   isHidden: boolean;
+  lastUpdated: string;
 }
 
 /**
@@ -117,80 +119,9 @@ export const INITIAL_FORM_DATA: CategoryFormData = {
   description: "",
   location: "",
   isHidden: false,
+  isActive: true,
+  lastUpdated: new Date().toISOString(),
 };
-
-export const initialCategories: Category[] = [
-  {
-    id: "CAT-001",
-    name: "Category 1",
-    description: "Gadgets, software, and digital trends",
-    location: "Location 1",
-    isHidden: false,
-  },
-  {
-    id: "CAT-002",
-    name: "Category 2",
-    description: "Exploring the world, one destination at a time",
-    location: "Location 2",
-    isHidden: false,
-  },
-  {
-    id: "CAT-003",
-    name: "Category 3",
-    description: "Delicious recipes and culinary adventures",
-    location: "Location 3",
-    isHidden: false,
-  },
-  {
-    id: "CAT-004",
-    name: "Category 4",
-    description: "The latest trends in style and beauty",
-    location: "Location 1",
-    isHidden: false,
-  },
-  {
-    id: "CAT-005",
-    name: "Category 5",
-    description: "Healthy living and workout tips",
-    location: "Location 2",
-    isHidden: false,
-  },
-  {
-    id: "CAT-006",
-    name: "Category 6",
-    description: "Money management and investment advice",
-    location: "Location 3",
-    isHidden: false,
-  },
-  {
-    id: "CAT-007",
-    name: "Category 7",
-    description: "The world of video games and esports",
-    location: "Location 1",
-    isHidden: false,
-  },
-  {
-    id: "CAT-008",
-    name: "Category 8",
-    description: "Literary reviews and book recommendations",
-    location: "Location 2",
-    isHidden: false,
-  },
-  {
-    id: "CAT-009",
-    name: "Category 9",
-    description: "Exploring the world of music, from classical to pop",
-    location: "Location 3",
-    isHidden: false,
-  },
-  {
-    id: "CAT-010",
-    name: "Category 10",
-    description: "Appreciating the beauty of visual arts",
-    location: "Location 1",
-    isHidden: false,
-  },
-];
 
 /**
  * Hook return type

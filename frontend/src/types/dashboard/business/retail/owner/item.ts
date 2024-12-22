@@ -44,6 +44,7 @@ export interface ColumnVisibility {
   barcode: boolean;
   quantity: boolean;
   lastInventoryUpdate: boolean;
+  lastQuantityReset: boolean;
   isActive: boolean;
   isHidden: boolean;
   isTemporary: boolean;
@@ -58,12 +59,14 @@ export interface ItemTableProps {
   onSort: (column: keyof Item) => void;
   onEdit: (item: Item) => void;
   onDelete: (item: Item) => void;
+  activeTab?: "regular" | "temporary";
+  onTabChange?: (tab: "regular" | "temporary") => void;
   isEditDialogOpen: boolean;
   setIsEditDialogOpen: (open: boolean) => void;
   isDeleteDialogOpen: boolean;
   setIsDeleteDialogOpen: (open: boolean) => void;
   editingItem: Item | null;
-  onEditSubmit: () => void;
+  onEditSubmit: (data: ItemFormData) => void;
   onDeleteConfirm: () => void;
   showTemporaryColumns?: boolean;
 }
@@ -145,6 +148,7 @@ export const DEFAULT_COLUMN_VISIBILITY: ColumnVisibility = {
   barcode: true,
   quantity: true,
   lastInventoryUpdate: true,
+  lastQuantityReset: true,
   isActive: true,
   isHidden: true,
   isTemporary: true,

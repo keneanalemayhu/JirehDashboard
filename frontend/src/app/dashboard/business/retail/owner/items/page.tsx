@@ -18,26 +18,8 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Badge } from "@/components/ui/badge";
 import { ItemForm } from "@/components/dashboard/business/retail/owner/items/ItemForm";
-import { Item } from "@/types/dashboard/business/retail/owner/item";
 import { useCategories } from "@/hooks/dashboard/business/retail/owner/category";
-
-interface ColumnVisibility {
-  id: boolean;
-  name: boolean;
-  price: boolean;
-  categoryId: boolean;
-  barcode: boolean;
-  quantity: boolean;
-  isActive: boolean;
-  isHidden: boolean;
-  isTemporary: boolean;
-  expiryHours: boolean;
-  autoResetQuantity: boolean;
-  temporaryStatus: boolean;
-}
 
 export default function ItemsPage() {
   const { categories } = useCategories();
@@ -48,7 +30,6 @@ export default function ItemsPage() {
   );
 
   const {
-    items,
     filterValue,
     setFilterValue,
     handleAddItem,
@@ -66,6 +47,7 @@ export default function ItemsPage() {
     setColumnsVisible,
     handleSort,
     filteredItems,
+    handleTabChange: hookHandleTabChange,
   } = useItems();
 
   // Separate regular and temporary items
@@ -92,6 +74,7 @@ export default function ItemsPage() {
 
   const handleTabChange = (value: string) => {
     setActiveTab(value as "regular" | "temporary");
+    hookHandleTabChange(value as "regular" | "temporary");
     setCurrentPage(1);
   };
 
@@ -151,7 +134,6 @@ export default function ItemsPage() {
       <Header />
       <div className="flex-1 space-y-6 p-8 pt-6">
         <div className="flex flex-col gap-6">
-          {/* Header with Add Button */}
           <div className="flex items-center justify-between">
             <div>
               <h1 className="text-2xl font-bold tracking-tight">
@@ -198,28 +180,6 @@ export default function ItemsPage() {
             </div>
           </div>
 
-          {/* Item Type Tabs */}
-          <Tabs
-            value={activeTab}
-            onValueChange={handleTabChange}
-            className="w-full"
-          >
-            <TabsList>
-              <TabsTrigger value="regular">
-                Regular Items
-                <Badge variant="secondary" className="ml-2">
-                  {regularItems.length}
-                </Badge>
-              </TabsTrigger>
-              <TabsTrigger value="temporary">
-                Temporary Items
-                <Badge variant="secondary" className="ml-2">
-                  {temporaryItems.length}
-                </Badge>
-              </TabsTrigger>
-            </TabsList>
-          </Tabs>
-
           {/* Filter and Settings */}
           <div className="flex items-center justify-between gap-4">
             <div className="flex flex-1 items-center gap-2">
@@ -230,7 +190,7 @@ export default function ItemsPage() {
                 onChange={(e) => setFilterValue(e.target.value)}
               />
               <ItemTableSettings
-                columnsVisible={columnsVisible as ColumnVisibility}
+                columnsVisible={columnsVisible}
                 onColumnVisibilityChange={(column, visible) =>
                   setColumnsVisible((prev) => ({ ...prev, [column]: visible }))
                 }
@@ -244,16 +204,15 @@ export default function ItemsPage() {
             </div>
           </div>
 
-          {/* Table */}
           <ItemTable
             items={paginatedItems}
             columnsVisible={columnsVisible}
             onSort={handleSort}
-            onEdit={(item: Item) => {
+            onEdit={(item) => {
               setEditingItem(item);
               setIsEditDialogOpen(true);
             }}
-            onDelete={(item: Item) => {
+            onDelete={(item) => {
               setEditingItem(item);
               setIsDeleteDialogOpen(true);
             }}
@@ -264,10 +223,10 @@ export default function ItemsPage() {
             editingItem={editingItem}
             onEditSubmit={handleEditItem}
             onDeleteConfirm={handleDeleteItem}
-            showTemporaryColumns={activeTab === "temporary"}
+            activeTab={activeTab}
+            onTabChange={handleTabChange}
           />
 
-          {/* Pagination */}
           <ItemTablePagination
             totalItems={totalItems}
             pageSize={pageSize}

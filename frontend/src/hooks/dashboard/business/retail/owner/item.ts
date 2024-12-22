@@ -1,4 +1,4 @@
-// src/hooks/dashboard/business/retail/admin/item.ts
+"use client";
 
 import { useState, useMemo } from "react";
 import {
@@ -10,12 +10,12 @@ import {
 
 const initialItems: Item[] = [
   {
-    id: "ITM-001",
-    name: "Regular Item 1",
+    id: "1",
+    name: "Samsung Galaxy S24",
     barcode: "890123456789",
     price: "999.99",
-    quantity: 1,
-    categoryId: 1,
+    quantity: 10,
+    categoryId: 1, // Electronics
     isActive: true,
     isHidden: false,
     isTemporary: false,
@@ -25,12 +25,12 @@ const initialItems: Item[] = [
     lastInventoryUpdate: new Date("2024-03-01"),
   },
   {
-    id: "ITM-002",
-    name: "Temporary Item 1",
+    id: "2",
+    name: "Flash Sale - Nike Air Max",
     barcode: "123456789012",
-    price: "1099.99",
+    price: "199.99",
     quantity: 30,
-    categoryId: 1,
+    categoryId: 2, // Clothing
     isActive: true,
     isHidden: false,
     isTemporary: true,
@@ -39,7 +39,51 @@ const initialItems: Item[] = [
     lastQuantityReset: new Date("2024-03-02"),
     lastInventoryUpdate: new Date("2024-03-02"),
   },
-  // Add more sample items as needed
+  {
+    id: "3",
+    name: "Coffee Maker Deluxe",
+    barcode: "345678901234",
+    price: "299.99",
+    quantity: 15,
+    categoryId: 3, // Home & Kitchen
+    isActive: true,
+    isHidden: false,
+    isTemporary: false,
+    expiryHours: null,
+    autoResetQuantity: false,
+    lastQuantityReset: null,
+    lastInventoryUpdate: new Date("2024-03-01"),
+  },
+  {
+    id: "4",
+    name: "Limited Edition Book Set",
+    barcode: "456789012345",
+    price: "149.99",
+    quantity: 5,
+    categoryId: 4, // Books
+    isActive: true,
+    isHidden: false,
+    isTemporary: true,
+    expiryHours: 48,
+    autoResetQuantity: false,
+    lastQuantityReset: new Date("2024-03-02"),
+    lastInventoryUpdate: new Date("2024-03-02"),
+  },
+  {
+    id: "5",
+    name: "Fresh Organic Juice",
+    barcode: "567890123456",
+    price: "5.99",
+    quantity: 50,
+    categoryId: 6, // Food & Beverages
+    isActive: true,
+    isHidden: false,
+    isTemporary: true,
+    expiryHours: 12,
+    autoResetQuantity: true,
+    lastQuantityReset: new Date("2024-03-03"),
+    lastInventoryUpdate: new Date("2024-03-03"),
+  },
 ];
 
 export function useItems(defaultItems: Item[] = initialItems) {
@@ -50,6 +94,7 @@ export function useItems(defaultItems: Item[] = initialItems) {
   const [activeTab, setActiveTab] = useState<"regular" | "temporary">(
     "regular"
   );
+  const [error] = useState<string | null>(null);
 
   // Dialog states
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
@@ -65,6 +110,7 @@ export function useItems(defaultItems: Item[] = initialItems) {
     quantity: true,
     categoryId: true,
     lastInventoryUpdate: true,
+    lastQuantityReset: true,
     isActive: true,
     isHidden: true,
     isTemporary: true,
@@ -79,27 +125,28 @@ export function useItems(defaultItems: Item[] = initialItems) {
 
   // Filtering and sorting
   const filteredItems = useMemo(() => {
-    let itemsToFilter = items || [];
+    let itemsToFilter = [...items];
 
     // First filter by type (regular/temporary)
     itemsToFilter = itemsToFilter.filter((item) =>
       activeTab === "regular" ? !item.isTemporary : item.isTemporary
     );
 
-    // Then filter by search value
-    const filtered = itemsToFilter.filter(
-      (item) =>
-        item.name.toLowerCase().includes(filterValue.toLowerCase()) ||
-        item.barcode.toLowerCase().includes(filterValue.toLowerCase()) ||
-        item.categoryId
-          .toString()
-          .toLowerCase()
-          .includes(filterValue.toLowerCase()) ||
-        item.price.toLowerCase().includes(filterValue.toLowerCase())
-    );
+    // Then apply search filter if there's a value
+    if (filterValue.trim()) {
+      const searchTerm = filterValue.toLowerCase();
+      itemsToFilter = itemsToFilter.filter(
+        (item) =>
+          item.name.toLowerCase().includes(searchTerm) ||
+          (item.barcode && item.barcode.toLowerCase().includes(searchTerm)) ||
+          item.categoryId.toString().includes(searchTerm) ||
+          (item.price && item.price.toString().includes(searchTerm))
+      );
+    }
 
+    // Apply sorting if there's a sort column
     if (sortColumn) {
-      filtered.sort((a, b) => {
+      itemsToFilter.sort((a, b) => {
         const aValue = a[sortColumn];
         const bValue = b[sortColumn];
 
@@ -133,8 +180,24 @@ export function useItems(defaultItems: Item[] = initialItems) {
       });
     }
 
-    return filtered;
+    return itemsToFilter;
   }, [items, filterValue, sortColumn, sortDirection, activeTab]);
+
+  // Get expired and active temporary items
+  const getTemporaryItemStatus = (item: Item): string => {
+    if (!item.isTemporary || !item.lastQuantityReset) return "New";
+
+    const expiryTime = new Date(item.lastQuantityReset);
+    expiryTime.setHours(expiryTime.getHours() + (item.expiryHours || 0));
+    const now = new Date();
+
+    if (now > expiryTime) return "Expired";
+
+    const hoursRemaining = Math.ceil(
+      (expiryTime.getTime() - now.getTime()) / (1000 * 60 * 60)
+    );
+    return `${hoursRemaining}h remaining`;
+  };
 
   // Pagination
   const paginatedItems = useMemo(() => {
@@ -225,6 +288,7 @@ export function useItems(defaultItems: Item[] = initialItems) {
     paginatedItems,
     filteredItems,
     editingItem,
+    error,
 
     // State setters
     setItems,
@@ -258,5 +322,6 @@ export function useItems(defaultItems: Item[] = initialItems) {
     handlePageChange,
     handlePageSizeChange,
     handleTabChange,
+    getTemporaryItemStatus,
   };
 }

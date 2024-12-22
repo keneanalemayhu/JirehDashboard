@@ -3,7 +3,10 @@
 import { TableCell, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Edit, Trash2, Clock, RotateCcw, AlertCircle } from "lucide-react";
-import { Item, ColumnVisibility } from "@/types/dashboard/business/retail/owner/item";
+import {
+  Item,
+  ColumnVisibility,
+} from "@/types/dashboard/business/retail/owner/item";
 import { Badge } from "@/components/ui/badge";
 import {
   Tooltip,
@@ -30,21 +33,23 @@ export function ItemTableRow({
   const { categories } = useCategories();
 
   const getCategoryName = (categoryId: number) => {
+    if (!categories?.length) return "No categories found";
     const category = categories.find((cat) => cat.id === categoryId);
-    return category?.name || "N/A";
+    return category?.name || "Category not found";
   };
 
   const formatPrice = (price: string) => {
     if (!price) return "N/A";
-    return `$${parseFloat(price)
-      .toFixed(2)
-      .replace(/\B(?=(\d{3})+(?!\d))/g, ",")}`;
+    return new Intl.NumberFormat("en-US", {
+      style: "currency",
+      currency: "ETB",
+    }).format(parseFloat(price));
   };
 
   const getStatusBadge = (isActive: boolean) => {
     return (
       <Badge
-        variant={isActive ? "success" : "secondary"}
+        variant={isActive ? "default" : "secondary"}
         className="w-20 justify-center"
       >
         {isActive ? "Active" : "Inactive"}
@@ -73,7 +78,7 @@ export function ItemTableRow({
 
     const isRemaining = status.includes("remaining");
     const variant = isRemaining
-      ? "warning"
+      ? "secondary"
       : config[status as keyof typeof config]?.variant || "default";
     const Icon = config[status as keyof typeof config]?.icon || AlertCircle;
 
@@ -111,7 +116,11 @@ export function ItemTableRow({
 
   return (
     <TableRow className={item.isHidden ? "opacity-50" : ""}>
-      {columnsVisible.id && <TableCell>{item.id}</TableCell>}
+      {columnsVisible.id && (
+        <TableCell className="font-mono text-sm">
+          {item.id.toString().padStart(3, "0")}
+        </TableCell>
+      )}
 
       {columnsVisible.name && (
         <TableCell className="font-medium">
@@ -157,7 +166,11 @@ export function ItemTableRow({
       )}
 
       {columnsVisible.categoryId && (
-        <TableCell>{getCategoryName(item.categoryId)}</TableCell>
+        <TableCell>
+          <div className="flex items-center gap-2">
+            {getCategoryName(item.categoryId)}
+          </div>
+        </TableCell>
       )}
 
       {columnsVisible.isActive && (

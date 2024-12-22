@@ -26,6 +26,4 @@ urlpatterns = [
     path('profile/update/', UserProfileUpdateView.as_view(), name='profile_update'),
     path('account/status/', UserAccountStatusView.as_view(), name='account_status'),
     path('token/refresh/', CustomTokenRefreshView.as_view(), name='token_refresh'),
-
-
 ]

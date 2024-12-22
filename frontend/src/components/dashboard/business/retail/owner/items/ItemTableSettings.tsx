@@ -22,7 +22,7 @@ type ColumnVisibility = {
   id: boolean;
   name: boolean;
   price: boolean;
-  categoryId: boolean;
+  categoryId: boolean; // Updated from category to categoryId
   barcode: boolean;
   quantity: boolean;
   isActive: boolean;
@@ -37,7 +37,7 @@ const DEFAULT_COLUMNS_VISIBLE: ColumnVisibility = {
   id: true,
   name: true,
   price: true,
-  categoryId: true,
+  categoryId: true, // Updated from category to categoryId
   barcode: true,
   quantity: true,
   isActive: true,
@@ -71,7 +71,7 @@ const COLUMN_GROUPS: ColumnGroup[] = [
       { key: "id", label: "ID" },
       { key: "name", label: "Name" },
       { key: "price", label: "Price" },
-      { key: "categoryId", label: "Category" },
+      { key: "categoryId", label: "Category" }, // Updated from category to categoryId
     ],
     showWhen: "always",
   },
