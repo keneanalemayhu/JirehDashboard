@@ -10,6 +10,8 @@ from .serializers import RegisterSerializer
 from rest_framework_simplejwt.tokens import RefreshToken
 from .serializers import PasswordResetRequestSerializer, PasswordResetConfirmSerializer
 from django.contrib.auth import authenticate, get_user_model
+from .models import CustomUser  # Ensure this import is present
+from rest_framework import status
 #import changePasswordView
 from .serializers import ChangePasswordSerializer
 from .serializers import (
@@ -24,6 +26,10 @@ from .serializers import (
     BusinessProfileSerializer
 )
 from django.core.exceptions import ValidationError
+from django.http import JsonResponse
+from django.core.mail import send_mail
+from django.conf import settings
+
 User = get_user_model()
 
 def format_error_response(message, errors=None, code=None):
@@ -229,22 +235,38 @@ class PasswordResetRequestView(APIView):
 
     def post(self, request):
         try:
+            print("Received password reset request:", request.data)  # Debug log
             serializer = PasswordResetRequestSerializer(data=request.data)
             if serializer.is_valid():
-                user = CustomUser.objects.get(email=serializer.validated_data['email'])
-                serializer.send_reset_email(user)
-                return Response(
-                    {
-                        'success': True,
-                        'message': 'Password reset email has been sent.'
-                    },
-                    status=status.HTTP_200_OK
-                )
+                try:
+                    user = CustomUser.objects.get(email=serializer.validated_data['email'])
+                    try:
+                        serializer.send_reset_email(user)
+                        return Response(
+                            {
+                                'success': True,
+                                'message': 'Password reset email has been sent.'
+                            },
+                            status=status.HTTP_200_OK
+                        )
+                    except Exception as email_error:
+                        print(f"Email sending error: {str(email_error)}")
+                        return Response(
+                            format_error_response('Failed to send password reset email', str(email_error)),
+                            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+                        )
+                except CustomUser.DoesNotExist:
+                    return Response(
+                        format_error_response('User with this email does not exist'),
+                        status=status.HTTP_404_NOT_FOUND
+                    )
+            print("Serializer errors:", serializer.errors)  # Debug log
             return Response(
                 format_error_response('Password reset failed', serializer.errors),
                 status=status.HTTP_400_BAD_REQUEST
             )
         except Exception as e:
+            print("Exception in password reset request:", str(e))  # Debug log
             return Response(
                 format_error_response('Password reset failed', str(e)),
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
@@ -255,8 +277,11 @@ class PasswordResetConfirmView(APIView):
 
     def post(self, request):
         try:
+            print("Received password reset confirm request:", request.data)  # Debug log
             serializer = PasswordResetConfirmSerializer(data=request.data)
+            
             if serializer.is_valid():
+                print("Serializer is valid")  # Debug log
                 serializer.save()
                 return Response(
                     {
@@ -265,13 +290,24 @@ class PasswordResetConfirmView(APIView):
                     },
                     status=status.HTTP_200_OK
                 )
+            
+            print("Serializer errors:", serializer.errors)  # Debug log
             return Response(
-                format_error_response('Password reset failed', serializer.errors),
+                {
+                    'success': False,
+                    'message': 'Password reset failed',
+                    'errors': serializer.errors
+                },
                 status=status.HTTP_400_BAD_REQUEST
             )
         except Exception as e:
+            print("Exception in password reset:", str(e))  # Debug log
             return Response(
-                format_error_response('Password reset failed', str(e)),
+                {
+                    'success': False,
+                    'message': 'Password reset failed',
+                    'error': str(e)
+                },
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
 
@@ -401,3 +437,102 @@ class CustomTokenRefreshView(TokenRefreshView):
                 format_error_response('Invalid token or token has expired', str(e)),
                 status=status.HTTP_401_UNAUTHORIZED
             )
+
+def test_smtp_connection(request):
+    import socket
+    
+    results = {}
+    
+    # Test socket connection to Gmail SMTP
+    ports_to_test = [587, 465, 25]
+    for port in ports_to_test:
+        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        sock.settimeout(10)
+        try:
+            print(f"Attempting to connect to smtp.gmail.com:{port}")
+            result = sock.connect_ex(('smtp.gmail.com', port))
+            if result == 0:
+                results[f'port_{port}'] = "Connection successful"
+            else:
+                results[f'port_{port}'] = f"Connection failed with error code: {result}"
+        except Exception as e:
+            results[f'port_{port}'] = f"Connection Error: {str(e)}"
+        finally:
+            sock.close()
+    
+    # Test local SMTP connection
+    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    sock.settimeout(5)
+    try:
+        print("Attempting to connect to localhost:1025")
+        result = sock.connect_ex(('localhost', 1025))
+        if result == 0:
+            results['local_smtp'] = "Local SMTP server is running"
+        else:
+            results['local_smtp'] = f"Local SMTP server is not running (error code: {result})"
+    except Exception as e:
+        results['local_smtp'] = f"Error checking local SMTP: {str(e)}"
+    finally:
+        sock.close()
+    
+    return JsonResponse(results)
+
+def test_email(request):
+    try:
+        print("Email settings:")
+        print(f"EMAIL_HOST: {settings.EMAIL_HOST}")
+        print(f"EMAIL_PORT: {settings.EMAIL_PORT}")
+        print(f"EMAIL_USE_SSL: {settings.EMAIL_USE_SSL}")
+        print(f"EMAIL_USE_TLS: {settings.EMAIL_USE_TLS}")
+        print(f"EMAIL_HOST_USER: {settings.EMAIL_HOST_USER}")
+        print(f"DEFAULT_FROM_EMAIL: {settings.DEFAULT_FROM_EMAIL}")
+        
+        # Try to establish SMTP connection first
+        from smtplib import SMTP_SSL, SMTPException
+        try:
+            with SMTP_SSL(settings.EMAIL_HOST, settings.EMAIL_PORT, timeout=30) as smtp:
+                smtp.set_debuglevel(1)
+                smtp.login(settings.EMAIL_HOST_USER, settings.EMAIL_HOST_PASSWORD)
+                print("SMTP SSL connection and login successful")
+                
+                # If connection successful, try sending email
+                send_mail(
+                    'Test Email',
+                    'This is a test email to verify the email configuration.',
+                    settings.DEFAULT_FROM_EMAIL,
+                    [settings.EMAIL_HOST_USER],
+                    fail_silently=False,
+                )
+                print("Test email sent successfully")
+                return JsonResponse({'message': 'Test email sent successfully'})
+                
+        except SMTPException as smtp_e:
+            print(f"SMTP Error: {str(smtp_e)}")
+            return JsonResponse({
+                'error': f"SMTP Error: {str(smtp_e)}",
+                'type': 'smtp_error'
+            }, status=500)
+        except Exception as conn_e:
+            print(f"Connection Error: {str(conn_e)}")
+            return JsonResponse({
+                'error': f"Connection Error: {str(conn_e)}",
+                'type': 'connection_error'
+            }, status=500)
+            
+    except Exception as e:
+        import traceback
+        error_traceback = traceback.format_exc()
+        print(f"Error sending test email: {str(e)}")
+        print(f"Traceback: {error_traceback}")
+        return JsonResponse({
+            'error': str(e),
+            'traceback': error_traceback,
+            'email_settings': {
+                'host': settings.EMAIL_HOST,
+                'port': settings.EMAIL_PORT,
+                'use_ssl': settings.EMAIL_USE_SSL,
+                'use_tls': settings.EMAIL_USE_TLS,
+                'user': settings.EMAIL_HOST_USER,
+                'from_email': settings.DEFAULT_FROM_EMAIL
+            }
+        }, status=500)

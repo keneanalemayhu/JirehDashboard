@@ -10,8 +10,9 @@ from .views import (
     ChangePasswordView,
     UserAccountStatusView,
     UserProfileUpdateView,
-    CustomTokenRefreshView
-
+    CustomTokenRefreshView,
+    test_email,
+    test_smtp_connection
 )
 
 urlpatterns = [
@@ -26,6 +27,6 @@ urlpatterns = [
     path('profile/update/', UserProfileUpdateView.as_view(), name='profile_update'),
     path('account/status/', UserAccountStatusView.as_view(), name='account_status'),
     path('token/refresh/', CustomTokenRefreshView.as_view(), name='token_refresh'),
-
-
+    path('test-email/', test_email, name='test-email'),  
+    path('test-smtp/', test_smtp_connection, name='test-smtp'),
 ]

@@ -10,27 +10,41 @@ import { translations } from "@/translations/auth";
 import { useState } from "react";
 import { Icons } from "@/components/common/auth/AuthIcons";
 import AuthHeader from "@/components/common/auth/AuthHeader";
-
-interface FormProps extends React.FormHTMLAttributes<HTMLFormElement> {}
+import { useAuth } from '@/hooks/use-auth';
 
 function LoginFormContent() {
   const { language } = useLanguage();
   const t = translations[language].login;
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const { login } = useAuth();
+  const [error, setError] = useState('');
+  const [identifier, setIdentifier] = useState('');
+  const [password, setPassword] = useState('');
 
-  async function onSubmit(event: React.SyntheticEvent) {
-    event.preventDefault();
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError('');
     setIsLoading(true);
-    setTimeout(() => {
+
+    try {
+      console.log('Attempting login with:', { identifier, password: '***' });
+      await login(identifier, password);
+    } catch (err: any) {
+      console.log('Login error response:', err.response?.data);
+      const errorMessage = err.response?.data?.detail || 
+                          err.response?.data?.error ||
+                          'Login failed. Please check your credentials and try again.';
+      setError(errorMessage);
+    } finally {
       setIsLoading(false);
-    }, 3000);
-  }
+    }
+  };
 
   return (
     <div className="h-screen w-screen flex">
-      {/* Theme and Language Toggles - Fixed position */}
-      <AuthHeader />;{/* Left side - Dark section */}
+      <AuthHeader />
+      {/* Left side - Dark section */}
       <div className="hidden lg:flex w-1/2 h-full bg-zinc-900 text-white flex-col justify-between p-10">
         <div className="relative z-20 flex items-center text-lg font-medium">
           <Icons.logo className="mr-2 h-6 w-6" /> Jireh-Group
@@ -51,20 +65,21 @@ function LoginFormContent() {
           </div>
 
           <div className="grid gap-6">
-            <form onSubmit={onSubmit}>
+            <form onSubmit={handleSubmit}>
               <div className="grid gap-2">
                 <div className="grid gap-1">
-                  <Label className="sr-only" htmlFor="email">
-                    {t.email}
+                  <Label className="sr-only" htmlFor="identifier">
+                    Email or Username
                   </Label>
                   <Input
-                    id="email"
-                    placeholder={t.loginPlaceholder}
-                    type="email"
+                    id="identifier"
+                    placeholder="Email or Username"
+                    type="text"
                     autoCapitalize="none"
-                    autoComplete="email"
                     autoCorrect="off"
                     disabled={isLoading}
+                    value={identifier}
+                    onChange={(e) => setIdentifier(e.target.value)}
                   />
                 </div>
                 <div className="grid gap-1">
@@ -78,28 +93,25 @@ function LoginFormContent() {
                       placeholder="********"
                       disabled={isLoading}
                       className="pr-10"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
                     />
                     <button
                       type="button"
                       onClick={() => setShowPassword(!showPassword)}
-                      className="absolute inset-y-0 right-2 flex items-center text-gray-500"
+                      className="absolute right-3 top-1/2 transform -translate-y-1/2"
                     >
                       {showPassword ? (
-                        <EyeOff className="w-5 h-5" />
+                        <EyeOff className="h-4 w-4 text-gray-500" />
                       ) : (
-                        <Eye className="w-5 h-5" />
+                        <Eye className="h-4 w-4 text-gray-500" />
                       )}
                     </button>
                   </div>
                 </div>
-                <p className="px-8 text-center text-sm text-muted-foreground">
-                  <Link
-                    href="/auth/forgot-password"
-                    className="underline underline-offset-4 hover:text-primary"
-                  >
-                    {t.forgotPassword}
-                  </Link>
-                </p>
+                {error && (
+                  <div className="text-sm text-red-500 mt-2">{error}</div>
+                )}
                 <Button disabled={isLoading}>
                   {isLoading && (
                     <Icons.spinner className="mr-2 h-4 w-4 animate-spin" />
@@ -108,16 +120,22 @@ function LoginFormContent() {
                 </Button>
               </div>
             </form>
-
-            <p className="px-8 text-center text-sm text-muted-foreground">
+            <div className="relative">
+              <div className="absolute inset-0 flex items-center">
+                <span className="w-full border-t" />
+              </div>
+              <div className="relative flex justify-center text-xs uppercase">
+                <span className="bg-background px-2 text-muted-foreground">
+                  {t.or}
+                </span>
+              </div>
+            </div>
+            <div className="text-sm text-center">
               {t.noAccount}{" "}
-              <Link
-                href="/auth/register"
-                className="underline underline-offset-4 hover:text-primary"
-              >
+              <Link href="/register" className="underline">
                 {t.register}
               </Link>
-            </p>
+            </div>
           </div>
         </div>
       </div>
