@@ -17,31 +17,14 @@ CREATE TABLE owner (
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
 
--- Create ADMIN table
-CREATE TABLE admin (
-    id INT PRIMARY KEY AUTO_INCREMENT,
-    owner_id INT NOT NULL,
-    store_id INT NOT NULL,
-    full_name VARCHAR(100) NOT NULL,
-    user_name VARCHAR(100) NOT NULL,
-    phone VARCHAR(20) UNIQUE NOT NULL,
-    email VARCHAR(100) UNIQUE NOT NULL,
-    password_hash VARCHAR(255) NOT NULL,
-    last_login DATETIME,
-    is_active BOOLEAN DEFAULT true,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    FOREIGN KEY (owner_id) REFERENCES owner(id)
-);
-
--- Create STORE table
-CREATE TABLE store (
+-- Create BUSINESS table
+CREATE TABLE business (
     id INT PRIMARY KEY AUTO_INCREMENT,
     owner_id INT NOT NULL,
     name VARCHAR(100) NOT NULL,
     address TEXT NOT NULL,
-    contact_number VARCHAR(20) NOT NULL,
-    registration_number VARCHAR(50) UNIQUE NOT NULL,
+    contact_number VARCHAR(15) NOT NULL,
+    registration_number VARCHAR(100) UNIQUE NOT NULL,
     is_active BOOLEAN DEFAULT true,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
@@ -52,7 +35,7 @@ CREATE TABLE store (
 -- Modified SUBSCRIPTION table
 CREATE TABLE subscription (
     id INT PRIMARY KEY AUTO_INCREMENT,
-    store_id INT NOT NULL,
+    business_id INT NOT NULL,
     start_date DATE NOT NULL,
     end_date DATE NOT NULL,
     amount DECIMAL(10,2) NOT NULL,
@@ -64,45 +47,45 @@ CREATE TABLE subscription (
     last_retry_date DATETIME,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    FOREIGN KEY (store_id) REFERENCES store(id)
+    FOREIGN KEY (business_id) REFERENCES business(id)
 );
 
 -- Create LOCATION table
 CREATE TABLE location (
     id INT PRIMARY KEY AUTO_INCREMENT,
-    store_id INT NOT NULL,
+    business_id INT NOT NULL,
     name VARCHAR(100) NOT NULL,
     address TEXT NOT NULL,
     contact_number VARCHAR(20) NOT NULL,
     is_active BOOLEAN DEFAULT true,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    FOREIGN KEY (store_id) REFERENCES store(id)
+    FOREIGN KEY (business_id) REFERENCES business(id)
 );
 
 -- Create USER table
 CREATE TABLE user (
     id INT PRIMARY KEY AUTO_INCREMENT,
-    store_id INT NOT NULL,
+    business_id INT NOT NULL,
     location_id INT NOT NULL,
     full_name VARCHAR(100) NOT NULL,
     user_name VARCHAR(100) NOT NULL,
     email VARCHAR(100) UNIQUE NOT NULL,
     phone VARCHAR(20) UNIQUE NOT NULL,
     password_hash VARCHAR(255) NOT NULL,
-    role VARCHAR(20) NOT NULL,
+    role ENUM('admin', 'sales', 'warehouse') NOT NULL,
     is_active BOOLEAN DEFAULT true,
     last_login DATETIME,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    FOREIGN KEY (store_id) REFERENCES store(id),
+    FOREIGN KEY (business_id) REFERENCES business(id),
     FOREIGN KEY (location_id) REFERENCES location(id)
 );
 
 -- Create EMPLOYEE table
 CREATE TABLE employee (
     id INT PRIMARY KEY AUTO_INCREMENT,
-    store_id INT NOT NULL,
+    business_id INT NOT NULL,
     location_id INT NOT NULL,
     full_name VARCHAR(100) NOT NULL,
     phone VARCHAR(20) UNIQUE NOT NULL,
@@ -114,13 +97,13 @@ CREATE TABLE employee (
     employment_status VARCHAR(20) NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    FOREIGN KEY (store_id) REFERENCES store(id),
+    FOREIGN KEY (business_id) REFERENCES business(id),
     FOREIGN KEY (location_id) REFERENCES location(id)
 );
 
 CREATE TABLE expense_category (
     id INT PRIMARY KEY AUTO_INCREMENT,
-    store_id INT NOT NULL,
+    business_id INT NOT NULL,
     name VARCHAR(50) NOT NULL,
     description TEXT,
     is_active BOOLEAN DEFAULT true,
@@ -129,13 +112,13 @@ CREATE TABLE expense_category (
     parent_category_id INT,                 -- Added: For hierarchical categories
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    FOREIGN KEY (store_id) REFERENCES store(id),
+    FOREIGN KEY (business_id) REFERENCES business(id),
     FOREIGN KEY (parent_category_id) REFERENCES expense_category(id)
 );
 
 CREATE TABLE expense (
     id INT PRIMARY KEY AUTO_INCREMENT,
-    store_id INT NOT NULL,
+    business_id INT NOT NULL,
     location_id INT NOT NULL,
     category_id INT NOT NULL,
     amount DECIMAL(10,2) NOT NULL,
@@ -153,7 +136,7 @@ CREATE TABLE expense (
     approval_date DATETIME,                 -- Added: When the expense was approved
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    FOREIGN KEY (store_id) REFERENCES store(id),
+    FOREIGN KEY (business_id) REFERENCES business(id),
     FOREIGN KEY (location_id) REFERENCES location(id),
     FOREIGN KEY (category_id) REFERENCES expense_category(id),
     FOREIGN KEY (created_by) REFERENCES user(id),
@@ -211,7 +194,7 @@ ALTER TABLE item COMMENT 'Items table with temporary item support. Temporary ite
 -- Modified ORDER table with enhanced features
 CREATE TABLE `order` (
     id INT PRIMARY KEY AUTO_INCREMENT,
-    store_id INT NOT NULL,
+    business_id INT NOT NULL,
     location_id INT NOT NULL,
     user_id INT NOT NULL,
     employee_id INT NOT NULL,
@@ -252,7 +235,7 @@ CREATE TABLE `order` (
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     
     -- Constraints
-    FOREIGN KEY (store_id) REFERENCES store(id),
+    FOREIGN KEY (business_id) REFERENCES business(id),
     FOREIGN KEY (location_id) REFERENCES location(id),
     FOREIGN KEY (user_id) REFERENCES user(id),
     FOREIGN KEY (employee_id) REFERENCES employee(id)
@@ -329,9 +312,9 @@ CREATE TABLE db_version (
 CREATE INDEX idx_expense_date_amount ON expense(expense_date, amount);
 CREATE INDEX idx_expense_approval ON expense(approval_status, approval_date);
 CREATE INDEX idx_expense_recurring ON expense(is_recurring, recurring_frequency);
-CREATE INDEX idx_expense_lookup ON expense(store_id, location_id, expense_date);
+CREATE INDEX idx_expense_lookup ON expense(business_id, location_id, expense_date);
 CREATE INDEX idx_expense_category ON expense(category_id);
-CREATE INDEX idx_expense_category_store ON expense_category(store_id, is_active);
+CREATE INDEX idx_expense_category_business ON expense_category(business_id, is_active);
 
 -- For recurring expense tracking
 CREATE INDEX idx_recurring_expense_dates ON recurring_expense(next_generation_date, last_generated_date);
@@ -340,18 +323,18 @@ CREATE INDEX idx_recurring_expense_status ON recurring_expense(is_active, freque
 -- Authentication & User Management Indices
 CREATE INDEX idx_user_auth ON user(email, password_hash);  -- For login queries
 CREATE INDEX idx_user_location_role ON user(location_id, role);  -- For role-based location access
-CREATE INDEX idx_user_store_status ON user(store_id, is_active);  -- For active users per store
+CREATE INDEX idx_user_business_status ON user(business_id, is_active);  -- For active users per business
 
--- Store Management Indices
-CREATE INDEX idx_store_owner ON store(owner_id, is_active);  -- For owner's store lookup
-CREATE INDEX idx_store_admin ON store(admin_id, is_active);  -- For admin's store management
+-- business Management Indices
+CREATE INDEX idx_business_owner ON business(owner_id, is_active);  -- For owner's business lookup
+CREATE INDEX idx_business_admin ON business(admin_id, is_active);  -- For admin's business management
 
 -- Location Management Indices
-CREATE INDEX idx_location_store ON location(store_id, is_active);  -- For store's locations
-CREATE INDEX idx_location_status ON location(is_active, store_id);  -- For active locations lookup
+CREATE INDEX idx_location_business ON location(business_id, is_active);  -- For business's locations
+CREATE INDEX idx_location_status ON location(is_active, business_id);  -- For active locations lookup
 
 -- Employee Management Indices
-CREATE INDEX idx_employee_lookup ON employee(store_id, location_id, is_active);  -- For employee filtering
+CREATE INDEX idx_employee_lookup ON employee(business_id, location_id, is_active);  -- For employee filtering
 CREATE INDEX idx_employee_contact ON employee(phone, email);  -- For contact lookups
 
 -- Category & Item Management Indices
@@ -370,7 +353,7 @@ CREATE INDEX idx_item_temporary ON item(
 
 -- Order Management Indices
 CREATE INDEX idx_order_lookup ON `order`(
-    store_id, 
+    business_id, 
     location_id, 
     status,
     order_date
@@ -410,7 +393,7 @@ CREATE INDEX idx_stock_transfer_lookup ON stock_transfer(
 
 -- Subscription Management Indices
 CREATE INDEX idx_subscription_tracking ON subscription(
-    store_id,
+    business_id,
     payment_status,
     end_date
 );  -- For subscription status tracking
@@ -459,7 +442,7 @@ BEGIN
 
     -- Create new subscription entries for the next period
     INSERT INTO subscription (
-        store_id, 
+        business_id, 
         start_date, 
         end_date, 
         amount, 
@@ -468,7 +451,7 @@ BEGIN
         next_billing_date
     )
     SELECT 
-        store_id,
+        business_id,
         CURDATE(),
         DATE_ADD(CURDATE(), INTERVAL 30 DAY),
         amount,

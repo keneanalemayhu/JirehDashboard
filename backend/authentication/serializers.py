@@ -55,7 +55,7 @@ class UserUpdateSerializer(serializers.ModelSerializer):
         return instance
 
 class LoginSerializer(serializers.Serializer):
-    email = serializers.EmailField(required=True)
+    email = serializers.CharField(required=True)  
     password = serializers.CharField(
         style={'input_type': 'password'},
         trim_whitespace=False,
@@ -64,20 +64,22 @@ class LoginSerializer(serializers.Serializer):
     )
 
     def validate(self, attrs):
-        email = attrs.get('email', '').lower()
+        identifier = attrs.get('email', '').lower()  
         password = attrs.get('password')
 
-        if not email or not password:
+        if not identifier or not password:
             raise serializers.ValidationError({
-                'detail': 'Both email and password are required.'
+                'detail': 'Both email/username and password are required.'
             })
 
-        # Find user by case-insensitive email
-        user = CustomUser.objects.filter(email__iexact=email).first()
+        # Try to find user by email or username
+        user = CustomUser.objects.filter(email__iexact=identifier).first()
+        if not user:
+            user = CustomUser.objects.filter(user_name__iexact=identifier).first()
         
         if not user:
             raise serializers.ValidationError({
-                'detail': 'No account found with this email.'
+                'detail': 'No account found with this email or username.'
             })
             
         if not user.check_password(password):
@@ -99,20 +101,45 @@ class PasswordResetRequestSerializer(serializers.Serializer):
         return value
 
     def send_reset_email(self, user):
-        # Generate a password reset token
-        token = default_token_generator.make_token(user)
-        
-        # Construct reset URL (adjust as needed for your frontend)
-        reset_url = f"{settings.FRONTEND_URL}/reset-password?token={token}&email={user.email}"
-        
-        # Send email
-        send_mail(
-            'Password Reset Request',
-            f'Click the following link to reset your password: {reset_url}',
-            settings.DEFAULT_FROM_EMAIL,
-            [user.email],
-            fail_silently=False,
-        )
+        try:
+            # Generate a password reset token
+            token = default_token_generator.make_token(user)
+            
+            # Construct reset URL
+            reset_url = f"{settings.FRONTEND_URL}/auth/reset-password?token={token}&email={user.email}"
+            
+            # Email content
+            subject = 'Password Reset Request'
+            message = f'''
+            Hello,
+            
+            You have requested to reset your password. Please click the link below to reset your password:
+            
+            {reset_url}
+            
+            If you did not request this password reset, please ignore this email.
+            
+            This link will expire in 24 hours.
+            '''
+            
+            # Send email with detailed error handling
+            try:
+                send_mail(
+                    subject,
+                    message,
+                    settings.DEFAULT_FROM_EMAIL,
+                    [user.email],
+                    fail_silently=False,
+                )
+                print(f"Password reset email sent successfully to {user.email}")
+            except Exception as e:
+                print(f"Error sending password reset email: {str(e)}")
+                raise serializers.ValidationError(f"Failed to send password reset email: {str(e)}")
+                
+        except Exception as e:
+            print(f"Error in send_reset_email: {str(e)}")
+            raise serializers.ValidationError(f"Password reset process failed: {str(e)}")
+
 
 class PasswordResetConfirmSerializer(serializers.Serializer):
     email = serializers.EmailField()
@@ -124,20 +151,28 @@ class PasswordResetConfirmSerializer(serializers.Serializer):
     )
 
     def validate(self, attrs):
+        print("Validating password reset data:", attrs)  # Debug log
+        
         # Validate email and token
         user = CustomUser.objects.filter(email=attrs['email']).first()
         if not user:
-            raise serializers.ValidationError("Invalid email")
+            raise serializers.ValidationError({"email": "Invalid email address"})
 
+        print("Found user:", user.email)  # Debug log
+
+        # Check if token is valid
         if not default_token_generator.check_token(user, attrs['token']):
-            raise serializers.ValidationError("Invalid or expired token")
+            raise serializers.ValidationError({"token": "Invalid or expired password reset token"})
 
+        print("Token is valid")  # Debug log
         return attrs
 
     def save(self):
+        print("Saving new password")  # Debug log
         user = CustomUser.objects.get(email=self.validated_data['email'])
         user.set_password(self.validated_data['new_password'])
         user.save()
+        print("Password updated successfully")  # Debug log
         return user
 
 
@@ -190,25 +225,6 @@ class ChangePasswordSerializer(serializers.Serializer):
 
 
 
-# class ChangePasswordView(APIView):
-#     permission_classes = [IsAuthenticated]
-
-#     def post(self, request):
-#         serializer = ChangePasswordSerializer(
-#             data=request.data, 
-#             context={'request': request}
-#         )
-        
-#         if serializer.is_valid():
-#             serializer.save()
-#             return Response(
-#                 {"detail": "Password changed successfully"},
-#                 status=status.HTTP_200_OK
-#             )
-        
-#         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-
 
 
 class UserProfileUpdateSerializer(serializers.ModelSerializer):
@@ -222,7 +238,6 @@ class UserProfileUpdateSerializer(serializers.ModelSerializer):
             setattr(instance, attr, value)
         instance.save()
         return instance
-
 
 
 
@@ -254,10 +269,11 @@ class RegisterSerializer(serializers.ModelSerializer):
     business_profile = BusinessProfileSerializer(required=False, allow_null=True)
     password1 = serializers.CharField(write_only=True, required=True)
     password2 = serializers.CharField(write_only=True, required=True)
+    name = serializers.CharField(write_only=True, required=False)  # Add this field to handle frontend's name field
 
     class Meta:
         model = CustomUser
-        fields = ['email', 'password1', 'password2', 'full_name', 'user_name', 
+        fields = ['email', 'password1', 'password2', 'name', 'full_name', 'user_name', 
                   'phone_number', 'business_profile', 'role']
         extra_kwargs = {
             'email': {
@@ -271,13 +287,58 @@ class RegisterSerializer(serializers.ModelSerializer):
             },
             'full_name': {'required': False},
             'user_name': {'required': False},
-            'phone_number': {'required': False, 'allow_blank': True, 'allow_null': True, 'validators': [validate_international_phonenumber]},
+            'phone_number': {'required': False, 'allow_blank': True, 'allow_null': True},
             'role': {'required': False}
         }
 
     def validate(self, attrs):
         if attrs['password1'] != attrs['password2']:
             raise serializers.ValidationError({"password2": "Password fields didn't match."})
+        
+        # Set full_name from name if provided
+        if 'name' in attrs:
+            attrs['full_name'] = attrs.pop('name')
+            
+        # Clean up phone numbers
+        if 'phone_number' in attrs and attrs['phone_number']:
+            try:
+                phone = attrs['phone_number']
+                # Remove any non-digit characters
+                phone = ''.join(c for c in phone if c.isdigit())
+                
+                # Handle Ethiopian numbers
+                if len(phone) == 9:  # Format: 911234567
+                    phone = '+251' + phone
+                elif len(phone) == 10 and phone.startswith('0'):  # Format: 0911234567
+                    phone = '+251' + phone[1:]
+                elif not phone.startswith('+'):
+                    phone = '+' + phone
+                    
+                attrs['phone_number'] = phone
+            except Exception as e:
+                print(f"Error formatting phone number: {str(e)}")
+                
+        # Clean up business profile phone
+        if 'business_profile' in attrs and attrs['business_profile']:
+            business_data = attrs['business_profile']
+            if 'business_phone' in business_data and business_data['business_phone']:
+                try:
+                    phone = business_data['business_phone']
+                    # Remove any non-digit characters
+                    phone = ''.join(c for c in phone if c.isdigit())
+                    
+                    # Handle Ethiopian numbers
+                    if len(phone) == 9:  # Format: 911234567
+                        phone = '+251' + phone
+                    elif len(phone) == 10 and phone.startswith('0'):  # Format: 0911234567
+                        phone = '+251' + phone[1:]
+                    elif not phone.startswith('+'):
+                        phone = '+' + phone
+                        
+                    business_data['business_phone'] = phone
+                except Exception as e:
+                    print(f"Error formatting business phone: {str(e)}")
+                    
         return attrs
 
     def create(self, validated_data):
@@ -285,17 +346,27 @@ class RegisterSerializer(serializers.ModelSerializer):
         validated_data.pop('password2', None)
         password = validated_data.pop('password1')
         
-        role = 'owner'
+        # Set default role to owner
+        role = validated_data.pop('role', 'owner')
+        
+        # Create user
         user = CustomUser.objects.create_user(
-            **validated_data, 
+            **validated_data,
             password=password,
             role=role
         )
         
+        # Create business profile if data provided
         if business_profile_data:
-            BusinessProfile.objects.create(
-                user=user, 
-                **business_profile_data
-            )
+            # Remove None or empty string values
+            business_profile_data = {
+                k: v for k, v in business_profile_data.items() 
+                if v is not None and v != ''
+            }
+            if business_profile_data:
+                BusinessProfile.objects.create(
+                    user=user,
+                    **business_profile_data
+                )
         
         return user
