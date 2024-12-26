@@ -19,23 +19,13 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { LocationForm } from "@/components/dashboard/business/retail/owner/locations/LocationForm";
-import { Location } from "@/types/dashboard/business/retail/owner/location";
-
-interface ColumnsVisibility {
-  id: boolean;
-  name: boolean;
-  address: boolean;
-  phoneNumber: boolean;
-  isActive: boolean;
-}
+import {
+  Location,
+  LocationFormData,
+} from "@/types/dashboard/business/retail/owner/location";
 
 export default function LocationsPage() {
-  // Pagination state
-  const [currentPage, setCurrentPage] = React.useState(1);
-  const [pageSize, setPageSize] = React.useState(10);
-
   const {
-    locations,
     filterValue,
     setFilterValue,
     handleAddLocation,
@@ -53,14 +43,11 @@ export default function LocationsPage() {
     setColumnsVisible,
     handleSort,
     filteredLocations,
+    pageSize,
+    setPageSize,
+    currentPage,
+    setCurrentPage,
   } = useLocations();
-
-  // Calculate pagination
-  const totalLocations = filteredLocations?.length || 0;
-  const startIndex = (currentPage - 1) * pageSize;
-  const endIndex = startIndex + pageSize;
-  const paginatedLocations =
-    filteredLocations?.slice(startIndex, endIndex) || [];
 
   // Handle page changes
   const handlePageChange = (page: number) => {
@@ -73,9 +60,21 @@ export default function LocationsPage() {
     setCurrentPage(1);
   };
 
+  // Handle edit submit
+  const handleEditSubmit = (data: LocationFormData) => {
+    handleEditLocation(data);
+  };
+
   // Export locations
   const handleExport = () => {
-    const headers = ["ID", "Name", "Address", "Phone Number", "Status"];
+    const headers = [
+      "ID",
+      "Name",
+      "Address",
+      "Contact Number",
+      "Status",
+      "Last Updated",
+    ];
 
     const csvContent = [
       headers.join(","),
@@ -84,8 +83,9 @@ export default function LocationsPage() {
           location.id,
           `"${location.name}"`,
           `"${location.address}"`,
-          `"${location.phoneNumber}"`,
+          `"${location.contactNumber}"`,
           location.isActive ? "Active" : "Inactive",
+          new Date(location.updatedAt).toLocaleString(),
         ].join(",")
       ),
     ].join("\n");
@@ -158,7 +158,7 @@ export default function LocationsPage() {
                 onChange={(e) => setFilterValue(e.target.value)}
               />
               <LocationTableSettings
-                columnsVisible={columnsVisible as ColumnsVisibility}
+                columnsVisible={columnsVisible}
                 onColumnVisibilityChange={(column, visible) =>
                   setColumnsVisible((prev) => ({ ...prev, [column]: visible }))
                 }
@@ -166,14 +166,14 @@ export default function LocationsPage() {
             </div>
             <div className="flex items-center gap-2">
               <div className="text-sm text-muted-foreground">
-                Total: {totalLocations} locations
+                Total: {filteredLocations.length} locations
               </div>
             </div>
           </div>
 
           {/* Table */}
           <LocationTable
-            locations={paginatedLocations}
+            locations={filteredLocations}
             columnsVisible={columnsVisible}
             onSort={handleSort}
             onEdit={(location: Location) => {
@@ -189,13 +189,13 @@ export default function LocationsPage() {
             isDeleteDialogOpen={isDeleteDialogOpen}
             setIsDeleteDialogOpen={setIsDeleteDialogOpen}
             editingLocation={editingLocation}
-            onEditSubmit={handleEditLocation}
+            onEditSubmit={handleEditSubmit}
             onDeleteConfirm={handleDeleteLocation}
           />
 
           {/* Pagination */}
           <LocationTablePagination
-            totalItems={totalLocations}
+            totalItems={filteredLocations.length}
             pageSize={pageSize}
             currentPage={currentPage}
             onPageChange={handlePageChange}

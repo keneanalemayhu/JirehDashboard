@@ -13,26 +13,31 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
   SidebarMenuSub,
-  SidebarMenuSubButton,
   SidebarMenuSubItem,
+  SidebarMenuSubButton,
 } from "@/components/ui/sidebar";
 
-export function NavMain({
-  items,
-}: {
-  items: {
-    title: string;
-    url: string;
-    icon?: LucideIcon;
-    isActive?: boolean;
-    defaultOpen?: boolean;
-    items?: {
-      title: string;
-      url: string;
-      isActive?: boolean;
-    }[];
-  }[];
-}) {
+interface SubItem {
+  title: string;
+  url: string;
+  isActive?: boolean;
+  disabled?: boolean;
+}
+
+interface NavItem {
+  title: string;
+  url: string;
+  icon?: LucideIcon;
+  isActive?: boolean;
+  defaultOpen?: boolean;
+  items?: SubItem[];
+}
+
+interface NavMainProps {
+  items: NavItem[];
+}
+
+export function NavMain({ items }: NavMainProps) {
   return (
     <SidebarGroup>
       <SidebarMenu>
@@ -66,18 +71,27 @@ export function NavMain({
                 <SidebarMenuSub>
                   {item.items?.map((subItem) => (
                     <SidebarMenuSubItem key={subItem.title}>
-                      <SidebarMenuSubButton
-                        asChild
-                        className={
-                          subItem.isActive
-                            ? "text-primary before:absolute before:left-0 before:top-1/2 before:-translate-y-1/2 before:h-8 before:w-1 before:bg-primary before:rounded-r-full"
-                            : ""
-                        }
-                      >
-                        <a href={subItem.url}>
+                      {subItem.disabled ? (
+                        <div className="flex items-center px-4 py-2 opacity-50 cursor-not-allowed">
                           <span>{subItem.title}</span>
-                        </a>
-                      </SidebarMenuSubButton>
+                          <span className="ml-2 text-xs text-muted-foreground">
+                            (Coming soon)
+                          </span>
+                        </div>
+                      ) : (
+                        <SidebarMenuSubButton
+                          asChild
+                          className={
+                            subItem.isActive
+                              ? "text-primary before:absolute before:left-0 before:top-1/2 before:-translate-y-1/2 before:h-8 before:w-1 before:bg-primary before:rounded-r-full"
+                              : ""
+                          }
+                        >
+                          <a href={subItem.url}>
+                            <span>{subItem.title}</span>
+                          </a>
+                        </SidebarMenuSubButton>
+                      )}
                     </SidebarMenuSubItem>
                   ))}
                 </SidebarMenuSub>

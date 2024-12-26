@@ -144,6 +144,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
             title: t.inventory.transfer,
             url: "/dashboard/business/retail/owner/transfer",
             isActive: pathname === "/dashboard/business/retail/owner/transfer",
+            disabled: true,
           },
         ],
       },

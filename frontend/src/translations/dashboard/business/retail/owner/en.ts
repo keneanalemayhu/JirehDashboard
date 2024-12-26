@@ -2,6 +2,72 @@
 export const en = {
   dashboard: {
     owner: {
+      page: {
+        overview: {
+          business_overview: "Business Overview",
+          performance_metrics: "performance metrics",
+          timeframe: {
+            today: "Today's",
+            week: "This Week's",
+            month: "This Month's",
+            quarter: "This Quarter's",
+            year: "This Year's",
+            all_time: "All Time",
+          },
+          dropdown_menu: {
+            download_report: "Download Report",
+            pdf: "Export as PDF",
+            csv: "Export as CSV",
+          },
+          tabs_trigger: {
+            today: "Today's",
+            week: "This Week's",
+            month: "This Month's",
+            quarter: "This Quarter's",
+            year: "This Year's",
+            all_time: "All Time",
+          },
+          card: {
+            card_title: {
+              total_revenue: "Total Revenue",
+              average_order_value: "Average Order Value",
+              growth_rate: "Growth Rate",
+              revenue_trend: "Revenue Trend",
+              payment_methods: "Payment Methods",
+              top_selling_item: "Top Selling Items",
+              category_performance: "Customer Retention",
+              customer_retention: "Customer Retention",
+              recent_performance: "Recent Performance",
+            },
+            card_description: {
+              revenue_trend_description: "Daily revenue overview",
+              payment_methods_description: "Distribution of payment types",
+              top_selling_item_description: "Best performing products",
+              category_performance_description: "Revenue by category",
+              customer_retention_description: "Customer loyalty analysis",
+              recent_performance_description: "Latest business metrics",
+            },
+            card_content: {
+              items_sold: "items sold",
+              avg: "Avg.",
+              etb: "Br",
+              orders: "orders",
+              per_transaction: "Per transaction",
+              vs_previous_total: "VS. previous total",
+              units: "units",
+              returning_customers: "Returning Customers",
+              average_orders: "Average Orders",
+              top_customers: "Top Customers",
+              order_completion_rate: "Order Completion Rate",
+              payment_success_rate: "Payment Success Rate",
+              Performance_indicators: "Performance Indicators",
+              average_daily_orders: "Average Daily Orders",
+              average_order_processing_time: "Average Order Processing Time",
+              customer_satisfaction_rate: "Customer Satisfaction Rate",
+            },
+          },
+        },
+      },
       nav: {
         toggleTheme: "Toggle theme",
         toggleLanguage: "Toggle language",

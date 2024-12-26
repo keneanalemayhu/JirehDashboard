@@ -13,6 +13,43 @@ import {
   UseOrdersReturn,
 } from "@/types/dashboard/business/retail/owner/order";
 
+export const getDateRangeForTimeframe = (timeframe: string) => {
+  const now = new Date();
+  const startDate = new Date(now);
+
+  switch (timeframe) {
+    case "today":
+      startDate.setHours(0, 0, 0, 0);
+      return { start: startDate, end: now };
+
+    case "week":
+      const day = startDate.getDay();
+      startDate.setDate(startDate.getDate() - day);
+      startDate.setHours(0, 0, 0, 0);
+      return { start: startDate, end: now };
+
+    case "month":
+      startDate.setDate(1);
+      startDate.setHours(0, 0, 0, 0);
+      return { start: startDate, end: now };
+
+    case "quarter":
+      const currentMonth = startDate.getMonth();
+      const quarterStartMonth = Math.floor(currentMonth / 3) * 3;
+      startDate.setMonth(quarterStartMonth, 1);
+      startDate.setHours(0, 0, 0, 0);
+      return { start: startDate, end: now };
+
+    case "year":
+      startDate.setMonth(0, 1);
+      startDate.setHours(0, 0, 0, 0);
+      return { start: startDate, end: now };
+
+    default:
+      return null;
+  }
+};
+
 export const initialOrders: Order[] = [
   {
     order_id: "ORD-001",
@@ -344,6 +381,180 @@ export const initialOrders: Order[] = [
     created_at: "2024-08-04T18:45:00.000Z",
     updated_at: "2024-08-04T18:45:00.000Z",
   },
+  // Today's orders (December 25, 2024)
+  {
+    order_id: "ORD-011",
+    store_id: 11,
+    location_id: 11,
+    user_id: 11,
+    employee_id: 11,
+    order_number: "ORD/2024/011",
+    status: OrderStatus.COMPLETED,
+    payment_status: PaymentStatus.PAID,
+    payment_method: PaymentMethod.CASH,
+    customer: {
+      name: "Tigist Haile",
+      phone: "+251911111111",
+      email: "tigist.haile@example.com",
+    },
+    items: [
+      {
+        item_id: 11,
+        category_id: 1,
+        item_name: "Item 11",
+        category_name: "Category 1",
+        quantity: 3,
+        unit_price: 800,
+        subtotal: 2400,
+      },
+    ],
+    total_amount: 2400,
+    employee_name: "Yonas Tadesse",
+    user_name: "yonas.tadesse",
+    order_date: "2024-12-25T09:30:00.000Z",
+    created_at: "2024-12-25T09:30:00.000Z",
+    updated_at: "2024-12-25T09:30:00.000Z",
+  },
+
+  // This week (December 23, 2024)
+  {
+    order_id: "ORD-012",
+    store_id: 12,
+    location_id: 12,
+    user_id: 12,
+    employee_id: 12,
+    order_number: "ORD/2024/012",
+    status: OrderStatus.COMPLETED,
+    payment_status: PaymentStatus.PAID,
+    payment_method: PaymentMethod.TELEBIRR,
+    customer: {
+      name: "Dawit Mekonnen",
+      phone: "+251922222222",
+      email: "dawit.mekonnen@example.com",
+    },
+    items: [
+      {
+        item_id: 12,
+        category_id: 2,
+        item_name: "Item 12",
+        category_name: "Category 2",
+        quantity: 2,
+        unit_price: 1200,
+        subtotal: 2400,
+      },
+    ],
+    total_amount: 2400,
+    employee_name: "Helen Abebe",
+    user_name: "helen.abebe",
+    order_date: "2024-12-23T14:15:00.000Z",
+    created_at: "2024-12-23T14:15:00.000Z",
+    updated_at: "2024-12-23T14:15:00.000Z",
+  },
+
+  // This month (December 15, 2024)
+  {
+    order_id: "ORD-013",
+    store_id: 13,
+    location_id: 13,
+    user_id: 13,
+    employee_id: 13,
+    order_number: "ORD/2024/013",
+    status: OrderStatus.COMPLETED,
+    payment_status: PaymentStatus.PAID,
+    payment_method: PaymentMethod.BANK_TRANSFER,
+    customer: {
+      name: "Sara Tekle",
+      phone: "+251933333333",
+      email: "sara.tekle@example.com",
+    },
+    items: [
+      {
+        item_id: 13,
+        category_id: 3,
+        item_name: "Item 13",
+        category_name: "Category 3",
+        quantity: 4,
+        unit_price: 1500,
+        subtotal: 6000,
+      },
+    ],
+    total_amount: 6000,
+    employee_name: "Daniel Girma",
+    user_name: "daniel.girma",
+    order_date: "2024-12-15T11:20:00.000Z",
+    created_at: "2024-12-15T11:20:00.000Z",
+    updated_at: "2024-12-15T11:20:00.000Z",
+  },
+
+  // This quarter (November 5, 2024)
+  {
+    order_id: "ORD-014",
+    store_id: 14,
+    location_id: 14,
+    user_id: 14,
+    employee_id: 14,
+    order_number: "ORD/2024/014",
+    status: OrderStatus.COMPLETED,
+    payment_status: PaymentStatus.PAID,
+    payment_method: PaymentMethod.CREDIT,
+    customer: {
+      name: "Henok Mulugeta",
+      phone: "+251955555555",
+      email: "henok.mulugeta@example.com",
+    },
+    items: [
+      {
+        item_id: 14,
+        category_id: 4,
+        item_name: "Item 14",
+        category_name: "Category 4",
+        quantity: 1,
+        unit_price: 3000,
+        subtotal: 3000,
+      },
+    ],
+    total_amount: 3000,
+    employee_name: "Bereket Solomon",
+    user_name: "bereket.solomon",
+    order_date: "2024-11-05T16:45:00.000Z",
+    created_at: "2024-11-05T16:45:00.000Z",
+    updated_at: "2024-11-05T16:45:00.000Z",
+  },
+
+  // This quarter (October 20, 2024)
+  {
+    order_id: "ORD-015",
+    store_id: 15,
+    location_id: 15,
+    user_id: 15,
+    employee_id: 15,
+    order_number: "ORD/2024/015",
+    status: OrderStatus.PENDING,
+    payment_status: PaymentStatus.PENDING,
+    payment_method: PaymentMethod.CASH,
+    customer: {
+      name: "Henok Mulugeta",
+      phone: "+251955555555",
+      email: "henok.mulugeta@example.com",
+    },
+    items: [
+      {
+        item_id: 15,
+        category_id: 5,
+        item_name: "Item 15",
+        category_name: "Category 5",
+        quantity: 5,
+        unit_price: 1000,
+        subtotal: 5000,
+      },
+    ],
+    total_amount: 5000,
+    employee_name: "Martha Teshome",
+    user_name: "martha.teshome",
+    order_date: "2024-10-20T13:30:00.000Z",
+    created_at: "2024-10-20T13:30:00.000Z",
+    updated_at: "2024-10-20T13:30:00.000Z",
+  },
 ];
 
 const DEFAULT_PAGE_SIZE = 10;
@@ -420,7 +631,10 @@ export function useOrders(defaultOrders: Order[] = []): UseOrdersReturn {
     // Apply date range filters
     if (filters.startDate && filters.endDate) {
       const start = new Date(filters.startDate);
+      start.setHours(0, 0, 0, 0);
       const end = new Date(filters.endDate);
+      end.setHours(23, 59, 59, 999);
+
       result = result.filter((order) => {
         const orderDate = new Date(order.order_date);
         return orderDate >= start && orderDate <= end;

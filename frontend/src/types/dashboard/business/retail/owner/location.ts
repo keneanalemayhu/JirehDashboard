@@ -1,20 +1,26 @@
-// src/types/dashboard/owner/location.ts
+// src/types/dashboard/business/retail/owner/location.ts
 
 /**
  * Core entity interfaces
  */
 export interface Location {
-  id: string;
+  id: number;
+  businessId: number;
   name: string;
   address: string;
-  phoneNumber: string;
-  isHidden: boolean;
+  contactNumber: string;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
 }
 
 /**
  * Form-related types
  */
-export type LocationFormData = Omit<Location, "id">;
+export type LocationFormData = Omit<
+  Location,
+  "id" | "businessId" | "createdAt" | "updatedAt"
+>;
 
 export interface LocationFormProps {
   initialData?: Partial<Location>;
@@ -30,7 +36,9 @@ export interface ColumnVisibility {
   id: boolean;
   name: boolean;
   address: boolean;
-  phoneNumber: boolean;
+  contactNumber: boolean;
+  isActive: boolean;
+  updatedAt: boolean;
 }
 
 export interface LocationTableProps {
@@ -44,13 +52,15 @@ export interface LocationTableProps {
   isDeleteDialogOpen: boolean;
   setIsDeleteDialogOpen: (open: boolean) => void;
   editingLocation: Location | null;
-  onEditSubmit: () => void;
+  onEditSubmit: (data: LocationFormData) => void;
   onDeleteConfirm: () => void;
 }
 
 export interface LocationTableHeaderProps {
   columnsVisible: ColumnVisibility;
   onSort: (column: keyof Location) => void;
+  sortColumn?: keyof Location | null;
+  sortDirection?: SortDirection;
 }
 
 export interface LocationTableRowProps {
@@ -82,13 +92,22 @@ export interface ColumnConfig {
   key: ColumnKey;
   label: string;
   width?: string;
+  sortable?: boolean;
+  align?: string;
 }
 
 export const COLUMNS: ColumnConfig[] = [
-  { key: "id", label: "ID", width: "w-[100px]" },
-  { key: "name", label: "Name" },
-  { key: "address", label: "Address" },
-  { key: "phoneNumber", label: "Phone Number" },
+  { key: "id", label: "ID", width: "w-[100px]", sortable: true },
+  { key: "name", label: "Name", sortable: true },
+  { key: "address", label: "Address", sortable: true },
+  { key: "contactNumber", label: "Contact Number", sortable: true },
+  { key: "isActive", label: "Status", width: "w-[100px]", sortable: false },
+  {
+    key: "updatedAt",
+    label: "Last Updated",
+    width: "w-[150px]",
+    sortable: true,
+  },
 ];
 
 export const PAGE_SIZE_OPTIONS = [10, 20, 30, 40, 50] as const;
@@ -102,29 +121,58 @@ export const DEFAULT_COLUMN_VISIBILITY: ColumnVisibility = {
   id: true,
   name: true,
   address: true,
-  phoneNumber: true,
+  contactNumber: true,
+  isActive: true,
+  updatedAt: true,
 };
 
 export const INITIAL_FORM_DATA: LocationFormData = {
   name: "",
   address: "",
-  phoneNumber: "",
-  isHidden: false,
+  contactNumber: "",
+  isActive: true,
 };
 
-export const initialLocations: Location[] = [
-  {
-    id: "LOC-001",
-    name: "Main Branch",
-    address: "123 Main St, City",
-    phoneNumber: "+251-93-560-9939",
-    isHidden: false,
-  },
-  {
-    id: "LOC-002",
-    name: "Downtown Branch",
-    address: "456 Downtown Ave, City",
-    phoneNumber: "+251-91-234-5678",
-    isHidden: false,
-  },
-];
+/**
+ * Hook return type
+ */
+export interface UseLocationsReturn {
+  // Data
+  locations: Location[];
+  paginatedLocations: Location[];
+  filteredLocations: Location[];
+  editingLocation: Location | null;
+
+  // State setters
+  setLocations: (locations: Location[]) => void;
+  setEditingLocation: (location: Location | null) => void;
+
+  // UI state
+  filterValue: string;
+  setFilterValue: (value: string) => void;
+  isAddDialogOpen: boolean;
+  setIsAddDialogOpen: (open: boolean) => void;
+  isEditDialogOpen: boolean;
+  setIsEditDialogOpen: (open: boolean) => void;
+  isDeleteDialogOpen: boolean;
+  setIsDeleteDialogOpen: (open: boolean) => void;
+
+  // Table state
+  columnsVisible: ColumnVisibility;
+  setColumnsVisible: (visibility: ColumnVisibility) => void;
+  pageSize: number;
+  currentPage: number;
+  sortColumn: keyof Location | null;
+  sortDirection: SortDirection;
+
+  // Utility functions
+  getLocationName: (locationId: number) => string;
+
+  // Handlers
+  handleSort: (column: keyof Location) => void;
+  handleAddLocation: (data: LocationFormData) => void;
+  handleEditLocation: (data: LocationFormData) => void;
+  handleDeleteLocation: () => void;
+  handlePageChange: (page: number) => void;
+  handlePageSizeChange: (size: number) => void;
+}

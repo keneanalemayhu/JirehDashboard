@@ -46,7 +46,11 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   useOrders,
   initialOrders,
+  getDateRangeForTimeframe,
 } from "@/hooks/dashboard/business/retail/owner/order";
+import { useLanguage } from "@/components/context/LanguageContext";
+import { translations } from "@/translations/dashboard/business/retail/owner";
+
 
 declare module "jspdf" {
   interface jsPDF {
@@ -56,6 +60,8 @@ declare module "jspdf" {
 
 export default function OverviewPage() {
   // State and hooks
+  const { language } = useLanguage();
+  const t = translations[language].dashboard.owner.page;
   const [timeframe, setTimeframe] = useState("total");
   const {
     orders: allOrders,
@@ -66,31 +72,14 @@ export default function OverviewPage() {
 
   // Memoized filtered orders with added quarterly and yearly filters
   const filteredOrders = useMemo(() => {
-    const now = new Date();
+    if (timeframe === "total") return allOrders;
+
+    const dateRange = getDateRangeForTimeframe(timeframe);
+    if (!dateRange) return allOrders;
+
     return allOrders.filter((order) => {
       const orderDate = new Date(order.order_date);
-      switch (timeframe) {
-        case "today":
-          return orderDate.toDateString() === now.toDateString();
-        case "week":
-          const lastWeek = new Date(now);
-          lastWeek.setDate(now.getDate() - 7);
-          return orderDate >= lastWeek;
-        case "month":
-          return (
-            orderDate.getMonth() === now.getMonth() &&
-            orderDate.getFullYear() === now.getFullYear()
-          );
-        case "quarter":
-          const quarterStart = new Date(now);
-          quarterStart.setMonth(Math.floor(now.getMonth() / 3) * 3);
-          quarterStart.setDate(1);
-          return orderDate >= quarterStart;
-        case "year":
-          return orderDate.getFullYear() === now.getFullYear();
-        default:
-          return true;
-      }
+      return orderDate >= dateRange.start && orderDate <= dateRange.end;
     });
   }, [allOrders, timeframe]);
 
@@ -114,47 +103,49 @@ export default function OverviewPage() {
 
   // Calculate growth rate
   const growth = useMemo(() => {
-    const currentTotal = filteredOrders.reduce(
+    if (timeframe === "total") return 0;
+
+    const dateRange = getDateRangeForTimeframe(timeframe);
+    if (!dateRange) return 0;
+
+    const currentPeriodOrders = filteredOrders;
+    const currentTotal = currentPeriodOrders.reduce(
       (sum, order) => sum + order.total_amount,
       0
     );
 
     // Get previous period's orders based on timeframe
-    const now = new Date();
-    const getPreviousPeriodStart = () => {
-      switch (timeframe) {
-        case "today":
-          const yesterday = new Date(now);
-          yesterday.setDate(now.getDate() - 1);
-          return yesterday;
-        case "week":
-          const lastWeekStart = new Date(now);
-          lastWeekStart.setDate(now.getDate() - 14);
-          return lastWeekStart;
-        case "month":
-          const lastMonthStart = new Date(now);
-          lastMonthStart.setMonth(now.getMonth() - 2);
-          return lastMonthStart;
-        case "quarter":
-          const lastQuarterStart = new Date(now);
-          lastQuarterStart.setMonth(now.getMonth() - 6);
-          return lastQuarterStart;
-        case "year":
-          const lastYearStart = new Date(now);
-          lastYearStart.setFullYear(now.getFullYear() - 2);
-          return lastYearStart;
-        default:
-          return new Date(0); // Beginning of time for "all"
-      }
-    };
+    const previousStart = new Date(dateRange.start);
+    const previousEnd = new Date(dateRange.start);
 
-    const previousPeriodStart = getPreviousPeriodStart();
+    switch (timeframe) {
+      case "today":
+        previousStart.setDate(previousStart.getDate() - 1);
+        previousEnd.setDate(previousEnd.getDate() - 1);
+        previousEnd.setHours(23, 59, 59, 999);
+        break;
+      case "week":
+        previousStart.setDate(previousStart.getDate() - 7);
+        previousEnd.setDate(previousEnd.getDate() - 1);
+        break;
+      case "month":
+        previousStart.setMonth(previousStart.getMonth() - 1);
+        previousEnd.setDate(0);
+        break;
+      case "quarter":
+        previousStart.setMonth(previousStart.getMonth() - 3);
+        previousEnd.setTime(dateRange.start.getTime() - 1);
+        break;
+      case "year":
+        previousStart.setFullYear(previousStart.getFullYear() - 1);
+        previousEnd.setFullYear(previousEnd.getFullYear() - 1);
+        previousEnd.setMonth(11, 31);
+        break;
+    }
+
     const previousPeriodOrders = allOrders.filter((order) => {
       const orderDate = new Date(order.order_date);
-      return (
-        orderDate >= previousPeriodStart &&
-        orderDate < new Date(filteredOrders[0]?.order_date)
-      );
+      return orderDate >= previousStart && orderDate <= previousEnd;
     });
 
     const previousTotal = previousPeriodOrders.reduce(
@@ -175,9 +166,8 @@ export default function OverviewPage() {
   // Prepare chart data
   const chartData = useMemo(() => {
     // Revenue chart data
-    // In the chartData useMemo:
-    const revenueChartData = filteredOrders.reduce(
-      (acc: RevenueDataPoint[], order) => {
+    const revenueChartData = filteredOrders
+      .reduce((acc: RevenueDataPoint[], order) => {
         const date = new Date(order.order_date).toLocaleDateString();
         const existingDay = acc.find((item) => item.date === date);
 
@@ -188,29 +178,9 @@ export default function OverviewPage() {
         }
 
         return acc;
-      },
-      []
-    );
+      }, [])
+      .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
 
-    const getPreviousPeriodStart = () => {
-      const now = new Date();
-      switch (timeframe) {
-        case "today":
-          return new Date(now.setDate(now.getDate() - 1));
-        case "week":
-          return new Date(now.setDate(now.getDate() - 7));
-        case "month":
-          return new Date(now.setMonth(now.getMonth() - 1));
-        case "quarter":
-          return new Date(now.setMonth(now.getMonth() - 3));
-        case "year":
-          return new Date(now.setFullYear(now.getFullYear() - 1));
-        default:
-          return new Date(0);
-      }
-    };
-
-    // Payment methods chart data
     const paymentMethods = filteredOrders.reduce(
       (acc: { [key: string]: number }, order) => {
         acc[order.payment_method] = (acc[order.payment_method] || 0) + 1;
@@ -386,33 +356,30 @@ export default function OverviewPage() {
           {/* Header with Export */}
           <div className="flex justify-between items-center">
             <div>
-              <h2 className="text-3xl font-bold">Business Overview</h2>
+              <h2 className="text-3xl font-bold">
+                {t.overview.business_overview}
+              </h2>
               <p className="text-sm text-muted-foreground">
-                {timeframe === "today"
-                  ? "Today's"
-                  : timeframe === "week"
-                  ? "This Week's"
-                  : timeframe === "month"
-                  ? "This Month's"
-                  : "Overall"}{" "}
-                performance metrics
+                {t.overview.timeframe[timeframe] ||
+                  t.overview.timeframe.all_time}{" "}
+                {t.overview.performance_metrics}
               </p>
             </div>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button>
                   <Download className="h-4 w-4 mr-2" />
-                  Download Report
+                  {t.overview.dropdown_menu.download_report}
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent>
                 <DropdownMenuItem onClick={() => handleExport("pdf")}>
                   <FileText className="h-4 w-4 mr-2" />
-                  Export as PDF
+                  {t.overview.dropdown_menu.pdf}
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => handleExport("csv")}>
                   <FileText className="h-4 w-4 mr-2" />
-                  Export as CSV
+                  {t.overview.dropdown_menu.csv}
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
@@ -424,12 +391,24 @@ export default function OverviewPage() {
               <ScrollArea className="w-full whitespace-nowrap">
                 <Tabs value={timeframe} onValueChange={setTimeframe}>
                   <TabsList>
-                    <TabsTrigger value="today">Today</TabsTrigger>
-                    <TabsTrigger value="week">This Week</TabsTrigger>
-                    <TabsTrigger value="month">This Month</TabsTrigger>
-                    <TabsTrigger value="quarter">This Quarter</TabsTrigger>
-                    <TabsTrigger value="year">This Year</TabsTrigger>
-                    <TabsTrigger value="total">All Time</TabsTrigger>
+                    <TabsTrigger value="today">
+                      {t.overview.tabs_trigger.today}
+                    </TabsTrigger>
+                    <TabsTrigger value="week">
+                      {t.overview.tabs_trigger.week}
+                    </TabsTrigger>
+                    <TabsTrigger value="month">
+                      {t.overview.tabs_trigger.month}
+                    </TabsTrigger>
+                    <TabsTrigger value="quarter">
+                      {t.overview.tabs_trigger.quarter}
+                    </TabsTrigger>
+                    <TabsTrigger value="year">
+                      {t.overview.tabs_trigger.year}
+                    </TabsTrigger>
+                    <TabsTrigger value="total">
+                      {t.overview.tabs_trigger.all_time}
+                    </TabsTrigger>
                   </TabsList>
                 </Tabs>
               </ScrollArea>
@@ -441,16 +420,17 @@ export default function OverviewPage() {
             <Card>
               <CardHeader className="flex flex-row items-center justify-between pb-2">
                 <CardTitle className="text-sm font-medium">
-                  Total Revenue
+                  {t.overview.card.card_title.total_revenue}
                 </CardTitle>
                 <DollarSign className="h-4 w-4 text-green-600" />
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">
-                  ETB {metrics.totalRevenue.toLocaleString()}
+                  {metrics.totalRevenue.toLocaleString()}{" "}
+                  {t.overview.card.card_content.etb}
                 </div>
                 <p className="text-xs text-muted-foreground">
-                  {filteredOrders.length} orders
+                  {filteredOrders.length} {t.overview.card.card_content.orders}
                 </p>
               </CardContent>
             </Card>
@@ -458,25 +438,27 @@ export default function OverviewPage() {
             <Card>
               <CardHeader className="flex flex-row items-center justify-between pb-2">
                 <CardTitle className="text-sm font-medium">
-                  Average Order Value
+                  {t.overview.card.card_title.average_order_value}
                 </CardTitle>
                 <TrendingUp className="h-4 w-4 text-blue-600" />
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">
-                  ETB{" "}
                   {metrics.averageOrderValue.toLocaleString(undefined, {
                     maximumFractionDigits: 2,
-                  })}
+                  })}{" "}
+                  {t.overview.card.card_content.etb}
                 </div>
-                <p className="text-xs text-muted-foreground">Per transaction</p>
+                <p className="text-xs text-muted-foreground">
+                  {t.overview.card.card_content.per_transaction}
+                </p>
               </CardContent>
             </Card>
 
             <Card>
               <CardHeader className="flex flex-row items-center justify-between pb-2">
                 <CardTitle className="text-sm font-medium">
-                  Growth Rate
+                  {t.overview.card.card_title.growth_rate}
                 </CardTitle>
                 {growth >= 0 ? (
                   <ArrowUpRight className="h-4 w-4 text-green-600" />
@@ -489,7 +471,7 @@ export default function OverviewPage() {
                   {Math.abs(growth).toFixed(1)}%
                 </div>
                 <p className="text-xs text-muted-foreground">
-                  vs previous {timeframe}
+                  {t.overview.card.card_content.vs_previous_total}
                 </p>
               </CardContent>
             </Card>
@@ -500,8 +482,13 @@ export default function OverviewPage() {
             {/* Revenue Trend */}
             <Card>
               <CardHeader>
-                <CardTitle>Revenue Trend</CardTitle>
-                <CardDescription>Daily revenue overview</CardDescription>
+                <CardTitle>
+                  {t.overview.card.card_title.revenue_trend}
+                </CardTitle>
+                <CardDescription>
+                  {" "}
+                  {t.overview.card.card_description.revenue_trend_description}
+                </CardDescription>
               </CardHeader>
               <CardContent className="h-[300px]">
                 <ResponsiveContainer width="100%" height="100%">
@@ -524,8 +511,13 @@ export default function OverviewPage() {
             {/* Payment Methods */}
             <Card>
               <CardHeader>
-                <CardTitle>Payment Methods</CardTitle>
-                <CardDescription>Distribution of payment types</CardDescription>
+                <CardTitle>
+                  {t.overview.card.card_title.payment_methods}
+                </CardTitle>
+                <CardDescription>
+                  {" "}
+                  {t.overview.card.card_description.payment_methods_description}
+                </CardDescription>
               </CardHeader>
               <CardContent className="h-[300px]">
                 <ResponsiveContainer width="100%" height="100%">
@@ -558,8 +550,16 @@ export default function OverviewPage() {
             {/* Top Selling Items */}
             <Card>
               <CardHeader>
-                <CardTitle>Top Selling Items</CardTitle>
-                <CardDescription>Best performing products</CardDescription>
+                <CardTitle>
+                  {t.overview.card.card_title.top_selling_item}
+                </CardTitle>
+                <CardDescription>
+                  {" "}
+                  {
+                    t.overview.card.card_description
+                      .top_selling_item_description
+                  }
+                </CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
@@ -583,10 +583,12 @@ export default function OverviewPage() {
                       </div>
                       <div className="text-right">
                         <p className="text-sm font-medium">
-                          ETB {item.total_revenue.toLocaleString()}
+                          {item.total_revenue.toLocaleString()}{" "}
+                          {t.overview.card.card_content.etb}
                         </p>
                         <p className="text-xs text-muted-foreground">
-                          {item.total_quantity} units
+                          {item.total_quantity}{" "}
+                          {t.overview.card.card_content.units}
                         </p>
                       </div>
                     </div>
@@ -598,8 +600,16 @@ export default function OverviewPage() {
             {/* Category Performance */}
             <Card>
               <CardHeader>
-                <CardTitle>Category Performance</CardTitle>
-                <CardDescription>Revenue by category</CardDescription>
+                <CardTitle>
+                  {t.overview.card.card_title.category_performance}
+                </CardTitle>
+                <CardDescription>
+                  {" "}
+                  {
+                    t.overview.card.card_description
+                      .category_performance_description
+                  }
+                </CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
@@ -613,15 +623,19 @@ export default function OverviewPage() {
                           {category.category_name}
                         </p>
                         <p className="text-xs text-muted-foreground">
-                          {category.total_items} items sold
+                          {category.total_items}{" "}
+                          {t.overview.card.card_content.items_sold}
                         </p>
                       </div>
                       <div className="text-right">
                         <p className="text-sm font-medium">
-                          ETB {category.total_revenue.toLocaleString()}
+                          {category.total_revenue.toLocaleString()}{" "}
+                          {t.overview.card.card_content.etb}
                         </p>
                         <p className="text-xs text-muted-foreground">
-                          Avg. ETB {category.average_order_value.toFixed(2)}
+                          {t.overview.card.card_content.avg}{" "}
+                          {category.average_order_value.toFixed(2)}{" "}
+                          {t.overview.card.card_content.etb}
                         </p>
                       </div>
                     </div>
@@ -636,14 +650,25 @@ export default function OverviewPage() {
             {/* Customer Retention */}
             <Card>
               <CardHeader>
-                <CardTitle>Customer Retention</CardTitle>
-                <CardDescription>Customer loyalty analysis</CardDescription>
+                <CardTitle>
+                  {" "}
+                  {t.overview.card.card_title.customer_retention}
+                </CardTitle>
+                <CardDescription>
+                  {" "}
+                  {
+                    t.overview.card.card_description
+                      .customer_retention_description
+                  }
+                </CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <p className="text-sm font-medium">Returning Customers</p>
+                      <p className="text-sm font-medium">
+                        {t.overview.card.card_content.returning_customers}
+                      </p>
                       <p className="text-2xl font-bold">
                         {(
                           (customerAnalytics.length
@@ -656,7 +681,9 @@ export default function OverviewPage() {
                       </p>
                     </div>
                     <div>
-                      <p className="text-sm font-medium">Average Orders</p>
+                      <p className="text-sm font-medium">
+                        {t.overview.card.card_content.average_orders}
+                      </p>
                       <p className="text-2xl font-bold">
                         {(
                           customerAnalytics.reduce(
@@ -668,7 +695,9 @@ export default function OverviewPage() {
                     </div>
                   </div>
                   <div className="pt-4">
-                    <p className="text-sm font-medium mb-2">Top Customers</p>
+                    <p className="text-sm font-medium mb-2">
+                      {t.overview.card.card_content.top_customers}
+                    </p>
                     {customerAnalytics
                       .sort((a, b) => b.total_amount - a.total_amount)
                       .slice(0, 3)
@@ -682,15 +711,19 @@ export default function OverviewPage() {
                               {customer.customer_name}
                             </p>
                             <p className="text-xs text-muted-foreground">
-                              {customer.total_orders} orders
+                              {customer.total_orders}{" "}
+                              {t.overview.card.card_content.orders}
                             </p>
                           </div>
                           <div className="text-right">
                             <p className="text-sm font-medium">
-                              ETB {customer.total_amount.toLocaleString()}
+                              {customer.total_amount.toLocaleString()}{" "}
+                              {t.overview.card.card_content.etb}
                             </p>
                             <p className="text-xs text-muted-foreground">
-                              Avg. ETB {customer.average_order_value.toFixed(2)}
+                              {t.overview.card.card_content.avg}{" "}
+                              {customer.average_order_value.toFixed(2)}{" "}
+                              {t.overview.card.card_content.etb}
                             </p>
                           </div>
                         </div>
@@ -703,15 +736,23 @@ export default function OverviewPage() {
             {/* Recent Performance */}
             <Card>
               <CardHeader>
-                <CardTitle>Recent Performance</CardTitle>
-                <CardDescription>Latest business metrics</CardDescription>
+                <CardTitle>
+                  {t.overview.card.card_title.recent_performance}
+                </CardTitle>
+                <CardDescription>
+                  {" "}
+                  {
+                    t.overview.card.card_description
+                      .recent_performance_description
+                  }
+                </CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
                   <div className="grid grid-cols-2 gap-4">
                     <div>
                       <p className="text-sm font-medium">
-                        Order Completion Rate
+                        {t.overview.card.card_content.order_completion_rate}
                       </p>
                       <p className="text-2xl font-bold">
                         {(
@@ -726,7 +767,7 @@ export default function OverviewPage() {
                     </div>
                     <div>
                       <p className="text-sm font-medium">
-                        Payment Success Rate
+                        {t.overview.card.card_content.payment_success_rate}
                       </p>
                       <p className="text-2xl font-bold">
                         {(
@@ -742,11 +783,13 @@ export default function OverviewPage() {
                   </div>
                   <div className="pt-4">
                     <p className="text-sm font-medium mb-2">
-                      Performance Indicators
+                      {t.overview.card.card_content.Performance_indicators}
                     </p>
                     <div className="space-y-2">
                       <div className="flex items-center justify-between">
-                        <p className="text-sm">Average Daily Orders</p>
+                        <p className="text-sm">
+                          {t.overview.card.card_content.average_orders}
+                        </p>
                         <p className="text-sm font-medium">
                           {(
                             filteredOrders.length /
@@ -765,11 +808,21 @@ export default function OverviewPage() {
                         </p>
                       </div>
                       <div className="flex items-center justify-between">
-                        <p className="text-sm">Average Order Processing Time</p>
-                        <p className="text-sm font-medium">24 min</p>
+                        <p className="text-sm">
+                          {
+                            t.overview.card.card_content
+                              .average_order_processing_time
+                          }
+                        </p>
+                        <p className="text-sm font-medium">1.6 min</p>
                       </div>
                       <div className="flex items-center justify-between">
-                        <p className="text-sm">Customer Satisfaction Rate</p>
+                        <p className="text-sm">
+                          {
+                            t.overview.card.card_content
+                              .customer_satisfaction_rate
+                          }
+                        </p>
                         <p className="text-sm font-medium">95%</p>
                       </div>
                     </div>

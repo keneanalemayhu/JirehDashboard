@@ -2,6 +2,71 @@
 export const am = {
   dashboard: {
     owner: {
+      page: {
+        overview: {
+          business_overview: "የንግድ አጠቃላይ እይታ",
+          performance_metrics: "የአፈፃፀም መጠንቆች",
+          timeframe: {
+            today: "ዛሬ",
+            week: "የዚህ ሳምንት",
+            month: "የዚህ ወር",
+            year: "የዚህ አመት",
+            quarter: "የዚህ እሩብ አመት",
+            all_time: "የሁሉም ጊዜ",
+          },
+          dropdown_menu: {
+            download_report: "ሪፖርት አውርድ",
+            pdf: "በ PDF አስመጣ",
+            csv: "በ CSV አስመጣ",
+          },
+          tabs_trigger: {
+            today: "ዛሬ",
+            week: "የዚህ ሳምንት",
+            month: "የዚህ ወር",
+            year: "የዚህ አመት",
+            quarter: "የዚህ እሩብ አመት",
+            all_time: "የሁሉም ጊዜ",
+          },
+          card: {
+            card_title: {
+              total_revenue: "ጠቅላላ ገቢ",
+              average_order_value: "የአማካይ ትዕዛዝ ዋጋ",
+              growth_rate: "የእድገት መጠን",
+              revenue_trend: "የገቢ አዝማሚያ",
+              payment_methods: "የክፍያ ዘዴዎች",
+              top_selling_item: "በጣም የሚሸጡ ዕቃዎች",
+              category_performance: "የምድብ አፈጻጸም / የደንበኛ ቆይታ",
+              customer_retention: "የደንበኛ ቆይታ",
+              recent_performance: "የቅርብ ጊዜ አፈጻጸም",
+            },
+            card_description: {
+              revenue_trend_description: "የዕለታዊ ገቢ አጠቃላይ እይታ",
+              payment_methods_description: "የክፍያ ዓይነቶች ስርጭት",
+              top_selling_item_description: "ምርጥ አፈጻጸም ያላቸው ምርቶች",
+              category_performance_description: "በምድብ የተገኘ ገቢ",
+              customer_retention_description: "የደንበኛ ታማኝነት ትንተና",
+              recent_performance_description: "የቅርብ ጊዜ የንግድ መለኪያዎች",
+            },
+            card_content: {
+              items_sold: "እቃዎች ተሽጠዋል",
+              avg: "በአማካኝ",
+              etb: "ብር",
+              orders: "ትዕዛዞች",
+              per_transaction: "በእያንዳንዱ ግብይት",
+              vs_previous_total: "ካለፈው ጠቅላላ ጋር ሲነጻጸር",
+              units: "እቃዎች",
+              returning_customers: "ተመላሽ ደንበኞች",
+              average_orders: "አማካኝ ትእዛዞች",
+              top_customers: "ከፍተኛ ደንበኞች",
+              order_completion_rate: "የትዕዛዝ ማጠናቀቂያ መጠን",
+              payment_success_rate: "የክፍያ ስኬት መጠን",
+              Performance_indicators: "የአፈጻጸም አመልካቾች",
+              average_order_processing_time: "የአማካይ ትዕዛዝ ማካሄጃ ጊዜ",
+              customer_satisfaction_rate: "የደንበኛ እርካታ መጠን",
+            },
+          },
+        },
+      },
       nav: {
         toggleTheme: "ገጽታ ቀይር",
         toggleLanguage: "ቋንቋ ቀይር",

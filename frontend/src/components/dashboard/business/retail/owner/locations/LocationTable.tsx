@@ -31,7 +31,9 @@ interface LocationTableProps {
   setIsDeleteDialogOpen: (open: boolean) => void;
   editingLocation: Location | null;
   onEditSubmit: (data: LocationFormData) => void;
-  onDeleteConfirm: (location: Location) => void;
+  onDeleteConfirm: () => void;
+  sortColumn?: keyof Location | null;
+  sortDirection?: "asc" | "desc" | null;
 }
 
 export function LocationTable({
@@ -47,11 +49,13 @@ export function LocationTable({
   editingLocation,
   onEditSubmit,
   onDeleteConfirm,
+  sortColumn,
+  sortDirection,
 }: LocationTableProps) {
   if (!locations) {
     return (
       <div className="border rounded-lg p-4 text-center text-gray-500">
-        Loading items...
+        Loading locations...
       </div>
     );
   }
@@ -63,6 +67,7 @@ export function LocationTable({
       </div>
     );
   }
+
   return (
     <div className="border rounded-lg overflow-hidden">
       <div className="overflow-x-auto">
@@ -70,6 +75,8 @@ export function LocationTable({
           <LocationTableHeader
             columnsVisible={columnsVisible}
             onSort={onSort}
+            sortColumn={sortColumn}
+            sortDirection={sortDirection}
           />
           <TableBody>
             {locations.map((location) => (
@@ -109,8 +116,8 @@ export function LocationTable({
           <DialogHeader>
             <DialogTitle>Delete Location</DialogTitle>
             <DialogDescription>
-              Are you sure you want to delete this location? This action cannot
-              be undone.
+              Are you sure you want to delete &quot;{editingLocation?.name}
+              &quot;? This action cannot be undone.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
@@ -120,12 +127,7 @@ export function LocationTable({
             >
               Cancel
             </Button>
-            <Button
-              variant="destructive"
-              onClick={() =>
-                editingLocation && onDeleteConfirm(editingLocation)
-              }
-            >
+            <Button variant="destructive" onClick={onDeleteConfirm}>
               Delete
             </Button>
           </DialogFooter>

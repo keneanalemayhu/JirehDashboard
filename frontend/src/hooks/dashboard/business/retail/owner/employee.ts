@@ -9,7 +9,7 @@ import {
 
 const initialEmployees: Employee[] = [
   {
-    id: "EMP-001",
+    id: "1",
     name: "John Doe",
     phone: "+251-91-112-1314",
     salary: 75000,
@@ -18,7 +18,7 @@ const initialEmployees: Employee[] = [
     isActive: true,
   },
   {
-    id: "EMP-002",
+    id: "2",
     name: "Jane Smith",
     phone: "+251-92-223-2425",
     salary: 60000,
@@ -27,7 +27,7 @@ const initialEmployees: Employee[] = [
     isActive: false,
   },
   {
-    id: "EMP-003",
+    id: "3",
     name: "Michael Johnson",
     phone: "+251-93-334-3536",
     salary: 80000,
@@ -36,7 +36,7 @@ const initialEmployees: Employee[] = [
     isActive: true,
   },
   {
-    id: "EMP-004",
+    id: "4",
     name: "Emily Brown",
     phone: "+251-94-445-4647",
     salary: 55000,
@@ -45,7 +45,7 @@ const initialEmployees: Employee[] = [
     isActive: false,
   },
   {
-    id: "EMP-005",
+    id: "5",
     name: "David Lee",
     phone: "+251-95-556-5758",
     salary: 70000,
@@ -54,7 +54,7 @@ const initialEmployees: Employee[] = [
     isActive: true,
   },
   {
-    id: "EMP-006",
+    id: "6",
     name: "Sarah Kim",
     phone: "+251-96-667-6869",
     salary: 90000,
@@ -63,7 +63,7 @@ const initialEmployees: Employee[] = [
     isActive: false,
   },
   {
-    id: "EMP-007",
+    id: "7",
     name: "Thomas Wilson",
     phone: "+251-97-778-7980",
     salary: 65000,
@@ -72,7 +72,7 @@ const initialEmployees: Employee[] = [
     isActive: true,
   },
   {
-    id: "EMP-008",
+    id: "8",
     name: "Olivia Taylor",
     phone: "+251-98-889-9091",
     salary: 50000,
@@ -81,7 +81,7 @@ const initialEmployees: Employee[] = [
     isActive: false,
   },
   {
-    id: "EMP-009",
+    id: "9",
     name: "Benjamin Clark",
     phone: "+251-91-123-4567",
     salary: 85000,

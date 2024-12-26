@@ -18,27 +18,22 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import { useLocations } from "@/hooks/dashboard/business/retail/owner/location";
 import { ExpenseForm } from "@/components/dashboard/business/retail/owner/expenses/ExpenseForm";
-
-interface Expense {
-  id: number;
-  name: string;
-  amount: number;
-  location: string;
-  expenseDate: string;
-}
-
-type ExpenseFormData = Omit<Expense, "id">;
 
 export default function ExpensesPage() {
   // Pagination state
   const [currentPage, setCurrentPage] = React.useState(1);
   const [pageSize, setPageSize] = React.useState(10);
+  const [activeTab, setActiveTab] = React.useState<"regular" | "recurring">(
+    "regular"
+  );
+
+  const { locations, getLocationName } = useLocations();
 
   const {
     expenses,
-    filterValue,
-    setFilterValue,
+    filteredExpenses,
     handleAddExpense,
     handleEditExpense,
     handleDeleteExpense,
@@ -53,7 +48,9 @@ export default function ExpensesPage() {
     columnsVisible,
     setColumnsVisible,
     handleSort,
-    filteredExpenses,
+    handleFilterChange,
+    handlePageChange,
+    handlePageSizeChange,
   } = useExpenses();
 
   // Calculate pagination
@@ -62,31 +59,33 @@ export default function ExpensesPage() {
   const endIndex = startIndex + pageSize;
   const paginatedExpenses = filteredExpenses?.slice(startIndex, endIndex) || [];
 
-  // Handle page changes
-  const handlePageChange = (page: number) => {
-    setCurrentPage(page);
-  };
-
-  // Handle page size changes
-  const handlePageSizeChange = (size: number) => {
-    setPageSize(size);
-    setCurrentPage(1);
-  };
-
-  // Handle edit submit
-  const handleEditSubmit = (data: ExpenseFormData) => {
-    if (editingExpense) {
-      handleEditExpense({
-        ...data,
-        id: editingExpense.id,
-      });
-    }
-  };
+  // Calculate regular and recurring expense totals
+  const regularExpenses = filteredExpenses.filter(
+    (expense) => !expense.isRecurring
+  );
+  const recurringExpenses = filteredExpenses.filter(
+    (expense) => expense.isRecurring
+  );
+  const totalRegularAmount = regularExpenses.reduce(
+    (sum, expense) => sum + expense.amount,
+    0
+  );
+  const totalRecurringAmount = recurringExpenses.reduce(
+    (sum, expense) => sum + expense.amount,
+    0
+  );
 
   // Export expenses
   const handleExport = () => {
-    const headers = ["ID", "Name", "Amount", "Location", "Date"];
-
+    const headers = [
+      "ID",
+      "Name",
+      "Amount",
+      "Location",
+      "Date",
+      "Payment Method",
+      "Status",
+    ];
     const csvContent = [
       headers.join(","),
       ...filteredExpenses.map((expense) =>
@@ -94,8 +93,10 @@ export default function ExpensesPage() {
           expense.id,
           `"${expense.name}"`,
           expense.amount,
-          `"${expense.location}"`,
-          expense.expenseDate,
+          `"${getLocationName(expense.locationId)}"`,
+          new Date(expense.expenseDate).toISOString().split("T")[0],
+          `"${expense.paymentMethod}"`,
+          `"${expense.approvalStatus}"`,
         ].join(",")
       ),
     ].join("\n");
@@ -103,7 +104,6 @@ export default function ExpensesPage() {
     const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
     const link = document.createElement("a");
     const url = URL.createObjectURL(blob);
-
     link.setAttribute("href", url);
     link.setAttribute(
       "download",
@@ -112,6 +112,7 @@ export default function ExpensesPage() {
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
+    URL.revokeObjectURL(url);
   };
 
   return (
@@ -152,7 +153,10 @@ export default function ExpensesPage() {
                       Enter the details for the new expense.
                     </DialogDescription>
                   </DialogHeader>
-                  <ExpenseForm onSubmit={handleAddExpense} />
+                  <ExpenseForm
+                    onSubmit={handleAddExpense}
+                    locations={locations} // Now locations is defined
+                  />
                 </DialogContent>
               </Dialog>
             </div>
@@ -164,20 +168,15 @@ export default function ExpensesPage() {
               <Input
                 placeholder="Filter expenses..."
                 className="max-w-sm"
-                value={filterValue}
-                onChange={(e) => setFilterValue(e.target.value)}
+                onChange={(e) => handleFilterChange({ search: e.target.value })}
               />
               <ExpenseTableSettings
                 columnsVisible={columnsVisible}
                 onColumnVisibilityChange={(column, visible) =>
                   setColumnsVisible((prev) => ({ ...prev, [column]: visible }))
                 }
+                showRecurringColumns={activeTab === "recurring"}
               />
-            </div>
-            <div className="flex items-center gap-2">
-              <div className="text-sm text-muted-foreground">
-                Total: {totalExpenses} expenses
-              </div>
             </div>
           </div>
 
@@ -186,30 +185,30 @@ export default function ExpensesPage() {
             expenses={paginatedExpenses}
             columnsVisible={columnsVisible}
             onSort={handleSort}
-            onEdit={(expense: Expense) => {
-              setEditingExpense(expense);
-              setIsEditDialogOpen(true);
-            }}
-            onDelete={(expense: Expense) => {
-              setEditingExpense(expense);
-              setIsDeleteDialogOpen(true);
-            }}
+            onEdit={handleEditExpense}
+            onDelete={handleDeleteExpense}
             isEditDialogOpen={isEditDialogOpen}
             setIsEditDialogOpen={setIsEditDialogOpen}
             isDeleteDialogOpen={isDeleteDialogOpen}
             setIsDeleteDialogOpen={setIsDeleteDialogOpen}
             editingExpense={editingExpense}
-            onEditSubmit={handleEditSubmit}
+            onEditSubmit={handleEditExpense}
             onDeleteConfirm={handleDeleteExpense}
+            getLocationName={getLocationName}
           />
 
           {/* Pagination */}
           <ExpenseTablePagination
-            totalItems={totalExpenses}
+            totalExpenses={filteredExpenses.length}
             pageSize={pageSize}
             currentPage={currentPage}
             onPageChange={handlePageChange}
             onPageSizeChange={handlePageSizeChange}
+            expenseType={activeTab}
+            totalRegularExpenses={regularExpenses.length}
+            totalRecurringExpenses={recurringExpenses.length}
+            totalRegularAmount={totalRegularAmount}
+            totalRecurringAmount={totalRecurringAmount}
           />
         </div>
       </div>

@@ -1,184 +1,253 @@
 "use client";
 
 import { useState, useMemo } from "react";
+import { startOfMonth, endOfMonth } from "date-fns";
+import {
+  Expense,
+  ExpenseFormData,
+  ExpenseFilters,
+  ColumnVisibility,
+  DEFAULT_COLUMN_VISIBILITY,
+  SortDirection,
+} from "@/types/dashboard/business/retail/owner/expense";
+import { useLocations } from "@/hooks/dashboard/business/retail/owner/location";
 
-interface Expense {
-  id: number;
-  name: string;
-  amount: number;
-  location: string;
-  expenseDate: string;
-  frequency:
-    | "One-time"
-    | "Daily"
-    | "Weekly"
-    | "Monthly"
-    | "Quarterly"
-    | "Yearly";
-}
-
-type ExpenseFormData = Omit<Expense, "id">;
-type SortDirection = "asc" | "desc" | null;
-
-// Sample initial data
+// Enhanced initial expenses with sample data matching new interface
 const initialExpenses: Expense[] = [
   {
     id: 1,
+    businessId: 1,
+    locationId: 1,
     name: "Office Supplies",
     amount: 150.75,
-    location: "Location 1",
-    expenseDate: "2024-03-15",
-    frequency: "Monthly",
+    description: "Office Supplies - Q1",
+    expenseDate: new Date("2024-03-15"),
+    paymentMethod: "Credit Card",
+    receiptNumber: "REC-001",
+    receiptImageUrl: null,
+    isRecurring: false,
+    recurringFrequency: "monthly",
+    recurringEndDate: new Date("2024-12-31"),
+    createdBy: 1,
+    approvedBy: 2,
+    approvalStatus: "approved",
+    approvalDate: new Date("2024-03-16"),
+    createdAt: new Date("2024-03-15"),
+    updatedAt: new Date("2024-03-16"),
   },
   {
     id: 2,
-    name: "Equipment Maintenance",
-    amount: 450.0,
-    location: "Location 2",
-    expenseDate: "2024-03-14",
-    frequency: "Quarterly",
+    businessId: 1,
+    locationId: 2,
+    name: "Monthly Rent",
+    amount: 2500.0,
+    description: "Office space rental payment - April",
+    expenseDate: new Date("2024-04-01"),
+    paymentMethod: "Bank Transfer",
+    receiptNumber: "REC-002",
+    receiptImageUrl: null,
+    isRecurring: true,
+    recurringFrequency: "monthly",
+    recurringEndDate: new Date("2025-03-31"),
+    createdBy: 1,
+    approvedBy: 2,
+    approvalStatus: "approved",
+    approvalDate: new Date("2024-03-30"),
+    createdAt: new Date("2024-03-30"),
+    updatedAt: new Date("2024-03-30"),
   },
   {
     id: 3,
-    name: "Software Licenses",
-    amount: 299.99,
-    location: "Remote",
-    expenseDate: "2024-04-01",
-    frequency: "Yearly",
+    businessId: 1,
+    locationId: 1,
+    name: "Internet Service",
+    amount: 89.99,
+    description: "Monthly internet subscription",
+    expenseDate: new Date("2024-04-05"),
+    paymentMethod: "Credit Card",
+    receiptNumber: "REC-003",
+    receiptImageUrl: null,
+    isRecurring: true,
+    recurringFrequency: "monthly",
+    recurringEndDate: null,
+    createdBy: 1,
+    approvedBy: null,
+    approvalStatus: "pending",
+    approvalDate: null,
+    createdAt: new Date("2024-04-05"),
+    updatedAt: new Date("2024-04-05"),
   },
   {
     id: 4,
-    name: "Marketing Campaign",
-    amount: 1500.0,
-    location: "Location 1",
-    expenseDate: "2024-05-10",
-    frequency: "One-time",
+    businessId: 1,
+    locationId: 2,
+    name: "Equipment Repair",
+    amount: 450.0,
+    description: "Printer maintenance and repair",
+    expenseDate: new Date("2024-04-10"),
+    paymentMethod: "Cash",
+    receiptNumber: "REC-004",
+    receiptImageUrl: null,
+    isRecurring: false,
+    recurringFrequency: null,
+    recurringEndDate: null,
+    createdBy: 2,
+    approvedBy: 1,
+    approvalStatus: "approved",
+    approvalDate: new Date("2024-04-10"),
+    createdAt: new Date("2024-04-10"),
+    updatedAt: new Date("2024-04-10"),
   },
   {
     id: 5,
-    name: "Travel Expenses",
-    amount: 350.25,
-    location: "Various",
-    expenseDate: "2024-06-12",
-    frequency: "Monthly",
+    businessId: 1,
+    locationId: 1,
+    name: "Software License",
+    amount: 299.99,
+    description: "Annual accounting software subscription",
+    expenseDate: new Date("2024-04-15"),
+    paymentMethod: "Credit Card",
+    receiptNumber: "REC-005",
+    receiptImageUrl: null,
+    isRecurring: true,
+    recurringFrequency: "yearly",
+    recurringEndDate: new Date("2027-04-15"),
+    createdBy: 1,
+    approvedBy: 2,
+    approvalStatus: "approved",
+    approvalDate: new Date("2024-04-15"),
+    createdAt: new Date("2024-04-15"),
+    updatedAt: new Date("2024-04-15"),
   },
   {
     id: 6,
-    name: "Utilities",
-    amount: 120.5,
-    location: "Location 1",
-    expenseDate: "2024-07-15",
-    frequency: "Monthly",
-  },
-  {
-    id: 7,
-    name: "Insurance Premiums",
-    amount: 500.0,
-    location: "Remote",
-    expenseDate: "2024-08-01",
-    frequency: "Yearly",
-  },
-  {
-    id: 8,
-    name: "Office Rent",
-    amount: 2500.0,
-    location: "Location 1",
-    expenseDate: "2024-09-01",
-    frequency: "Monthly",
-  },
-  {
-    id: 9,
-    name: "IT Support Contract",
-    amount: 1000.0,
-    location: "Remote",
-    expenseDate: "2024-10-15",
-    frequency: "Quarterly",
-  },
-  {
-    id: 10,
-    name: "Training and Development",
-    amount: 800.0,
-    location: "Various",
-    expenseDate: "2024-11-20",
-    frequency: "Yearly",
+    businessId: 1,
+    locationId: 2,
+    name: "Office Furniture",
+    amount: 1299.99,
+    description: "New ergonomic chairs for meeting room",
+    expenseDate: new Date("2024-04-18"),
+    paymentMethod: "Debit Card",
+    receiptNumber: "REC-006",
+    receiptImageUrl: null,
+    isRecurring: false,
+    recurringFrequency: null,
+    recurringEndDate: null,
+    createdBy: 2,
+    approvedBy: null,
+    approvalStatus: "rejected",
+    approvalDate: new Date("2024-04-19"),
+    createdAt: new Date("2024-04-18"),
+    updatedAt: new Date("2024-04-19"),
   },
 ];
 
 export function useExpenses(defaultExpenses: Expense[] = initialExpenses) {
-  // States
+  const { locations, getLocationName } = useLocations();
+
+  const [filters, setFilters] = useState<ExpenseFilters>({
+    search: "",
+    locationId: null,
+    isRecurring: null,
+    approvalStatus: "",
+    dateRange: {
+      start: startOfMonth(new Date()),
+      end: endOfMonth(new Date()),
+    },
+    paymentMethod: "",
+    minAmount: null,
+    maxAmount: null,
+  });
+
   const [expenses, setExpenses] = useState<Expense[]>(defaultExpenses);
-  const [filterValue, setFilterValue] = useState("");
-  const [filterFrequency, setFilterFrequency] = useState<
-    Expense["frequency"] | ""
-  >("");
   const [editingExpense, setEditingExpense] = useState<Expense | null>(null);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-  const [columnsVisible, setColumnsVisible] = useState({
-    id: true,
-    name: true,
-    amount: true,
-    location: true,
-    expenseDate: true,
-    frequency: true,
-  });
+  const [columnsVisible, setColumnsVisible] = useState<ColumnVisibility>(
+    DEFAULT_COLUMN_VISIBILITY
+  );
   const [sortColumn, setSortColumn] = useState<keyof Expense | null>(null);
   const [sortDirection, setSortDirection] = useState<SortDirection>(null);
   const [pageSize, setPageSize] = useState(10);
   const [currentPage, setCurrentPage] = useState(1);
 
-  // Filtering and sorting
+  // Enhanced filtering
   const filteredExpenses = useMemo(() => {
-    const expensesToFilter = expenses || [];
+    let result = [...expenses];
 
-    const result = expensesToFilter.filter((expense) => {
-      const matchesSearch =
-        expense.name.toLowerCase().includes(filterValue.toLowerCase()) ||
-        expense.location.toLowerCase().includes(filterValue.toLowerCase()) ||
-        expense.amount.toString().includes(filterValue) ||
-        expense.frequency.toLowerCase().includes(filterValue.toLowerCase()) ||
-        expense.expenseDate.includes(filterValue);
+    if (filters.search) {
+      const searchTerm = filters.search.toLowerCase();
+      result = result.filter(
+        (expense) =>
+          expense.name.toLowerCase().includes(searchTerm) ||
+          expense.description?.toLowerCase().includes(searchTerm) ||
+          expense.receiptNumber?.toLowerCase().includes(searchTerm) ||
+          expense.amount.toString().includes(searchTerm) ||
+          getLocationName(expense.locationId).toLowerCase().includes(searchTerm)
+      );
+    }
 
-      const matchesFrequency =
-        !filterFrequency || expense.frequency === filterFrequency;
+    // Apply other filters...
+    if (filters.locationId !== null) {
+      result = result.filter(
+        (expense) => expense.locationId === filters.locationId
+      );
+    }
 
-      return matchesSearch && matchesFrequency;
-    });
+    if (filters.isRecurring !== null) {
+      result = result.filter(
+        (expense) => expense.isRecurring === filters.isRecurring
+      );
+    }
 
+    if (filters.approvalStatus) {
+      result = result.filter(
+        (expense) => expense.approvalStatus === filters.approvalStatus
+      );
+    }
+
+    if (filters.dateRange.start && filters.dateRange.end) {
+      result = result.filter((expense) => {
+        const expenseDate = new Date(expense.expenseDate);
+        return (
+          expenseDate >= filters.dateRange.start! &&
+          expenseDate <= filters.dateRange.end!
+        );
+      });
+    }
+
+    // Apply sorting
     if (sortColumn) {
       result.sort((a, b) => {
-        const aValue = a[sortColumn];
-        const bValue = b[sortColumn];
+        let aValue = a[sortColumn];
+        let bValue = b[sortColumn];
 
         if (sortDirection === "asc") {
-          return aValue < bValue ? -1 : aValue > bValue ? 1 : 0;
+          return String(aValue).localeCompare(String(bValue));
         } else if (sortDirection === "desc") {
-          return aValue > bValue ? -1 : aValue < bValue ? 1 : 0;
+          return String(bValue).localeCompare(String(aValue));
         }
         return 0;
       });
     }
 
     return result;
-  }, [expenses, filterValue, filterFrequency, sortColumn, sortDirection]);
+  }, [expenses, filters, sortColumn, sortDirection, getLocationName]);
 
-  // Pagination
+  // Calculate paginated expenses
   const paginatedExpenses = useMemo(() => {
     const startIndex = (currentPage - 1) * pageSize;
-    return filteredExpenses.slice(startIndex, startIndex + pageSize);
+    const endIndex = startIndex + pageSize;
+    return filteredExpenses.slice(startIndex, endIndex);
   }, [filteredExpenses, currentPage, pageSize]);
 
-  // Get expense total by frequency
-  const expenseTotalsByFrequency = useMemo(() => {
-    return filteredExpenses.reduce((acc, expense) => {
-      const frequency = expense.frequency;
-      acc[frequency] = (acc[frequency] || 0) + expense.amount;
-      return acc;
-    }, {} as Record<Expense["frequency"], number>);
-  }, [filteredExpenses]);
-
   // Handlers
+  const handleFilterChange = (newFilters: Partial<ExpenseFilters>) => {
+    setFilters((prev) => ({ ...prev, ...newFilters }));
+    setCurrentPage(1);
+  };
+
   const handleSort = (column: keyof Expense) => {
     if (sortColumn === column) {
       setSortDirection((prev) => {
@@ -186,9 +255,6 @@ export function useExpenses(defaultExpenses: Expense[] = initialExpenses) {
         if (prev === "desc") return null;
         return "asc";
       });
-      if (sortDirection === null) {
-        setSortColumn(null);
-      }
     } else {
       setSortColumn(column);
       setSortDirection("asc");
@@ -196,20 +262,26 @@ export function useExpenses(defaultExpenses: Expense[] = initialExpenses) {
   };
 
   const handleAddExpense = (data: ExpenseFormData) => {
-    const newId = Math.max(...expenses.map((e) => e.id), 0) + 1;
-
     const newExpense: Expense = {
-      id: newId,
+      id: Math.max(...expenses.map((e) => e.id), 0) + 1,
       ...data,
+      createdAt: new Date(),
+      updatedAt: new Date(),
     };
 
     setExpenses((prev) => [...prev, newExpense]);
     setIsAddDialogOpen(false);
   };
 
-  const handleEditExpense = (data: Expense) => {
+  const handleEditExpense = (data: ExpenseFormData) => {
+    if (!editingExpense) return;
+
     setExpenses((prev) =>
-      prev.map((expense) => (expense.id === data.id ? data : expense))
+      prev.map((expense) =>
+        expense.id === editingExpense.id
+          ? { ...expense, ...data, updatedAt: new Date() }
+          : expense
+      )
     );
 
     setIsEditDialogOpen(false);
@@ -227,53 +299,38 @@ export function useExpenses(defaultExpenses: Expense[] = initialExpenses) {
     setEditingExpense(null);
   };
 
-  const handlePageChange = (page: number) => {
-    setCurrentPage(page);
-  };
-
-  const handlePageSizeChange = (size: number) => {
-    setPageSize(size);
-    setCurrentPage(1);
-  };
-
   return {
     // Data
     expenses,
-    paginatedExpenses,
     filteredExpenses,
+    paginatedExpenses,
     editingExpense,
-    expenseTotalsByFrequency,
+    locations,
+    getLocationName,
 
-    // State setters
-    setExpenses,
-    setEditingExpense,
-
-    // UI state
-    filterValue,
-    setFilterValue,
-    filterFrequency,
-    setFilterFrequency,
+    // State
     isAddDialogOpen,
     setIsAddDialogOpen,
     isEditDialogOpen,
     setIsEditDialogOpen,
     isDeleteDialogOpen,
     setIsDeleteDialogOpen,
-
-    // Table state
     columnsVisible,
     setColumnsVisible,
     pageSize,
     currentPage,
-    sortColumn,
-    sortDirection,
 
     // Handlers
+    handleFilterChange,
     handleSort,
     handleAddExpense,
     handleEditExpense,
     handleDeleteExpense,
-    handlePageChange,
-    handlePageSizeChange,
+    handlePageChange: (page: number) => setCurrentPage(page),
+    handlePageSizeChange: (size: number) => {
+      setPageSize(size);
+      setCurrentPage(1);
+    },
+    setEditingExpense,
   };
 }

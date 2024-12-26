@@ -1,86 +1,49 @@
-// src/hooks/dashboard/business/retail/admin/location.ts
+// src/hooks/dashboard/business/retail/owner/location.ts
+
+"use client";
 
 import { useState, useMemo } from "react";
 import {
   Location,
   LocationFormData,
   SortDirection,
-} from "@/types/dashboard/business/retail/admin/location";
+} from "@/types/dashboard/business/retail/owner/location";
 
 const initialLocations: Location[] = [
   {
-    id: "LOC-001",
+    id: 1,
+    businessId: 1,
     name: "Main Branch",
-    address: "123 Main St, City",
-    phoneNumber: "+251-93-560-9939",
-    isHidden: true,
+    address: "123 Main St, Bole, Addis Ababa",
+    contactNumber: "+251-93-560-9939",
+    isActive: true,
+    createdAt: new Date("2024-03-01").toISOString(),
+    updatedAt: new Date("2024-03-01").toISOString(),
   },
   {
-    id: "LOC-002",
-    name: "Bole Branch",
-    address: "123 Main St, City",
-    phoneNumber: "+251-91-234-5678",
-    isHidden: false,
-  },
-  {
-    id: "LOC-003",
+    id: 2,
+    businessId: 1,
     name: "Airport Branch",
-    address: "456 Airport Rd, City",
-    phoneNumber: "+251-98-765-4321",
-    isHidden: false,
+    address: "456 Airport Rd, Bole, Addis Ababa",
+    contactNumber: "+251-91-234-5678",
+    isActive: true,
+    createdAt: new Date("2024-03-01").toISOString(),
+    updatedAt: new Date("2024-03-01").toISOString(),
   },
   {
-    id: "LOC-004",
-    name: "Downtown Branch",
-    address: "789 Elm St, City",
-    phoneNumber: "+251-92-109-8765",
-    isHidden: true,
-  },
-  {
-    id: "LOC-005",
-    name: "Subcity Branch",
-    address: "321 Oak St, City",
-    phoneNumber: "+251-95-432-1098",
-    isHidden: false,
-  },
-  {
-    id: "LOC-006",
-    name: "Kirkos Branch",
-    address: "654 Pine St, City",
-    phoneNumber: "+251-91-876-5432",
-    isHidden: true,
-  },
-  {
-    id: "LOC-007",
-    name: "Yeka Branch",
-    address: "987 Cedar St, City",
-    phoneNumber: "+251-96-543-2109",
-    isHidden: false,
-  },
-  {
-    id: "LOC-008",
-    name: "Arada Branch",
-    address: "210 Maple St, City",
-    phoneNumber: "+251-93-210-9876",
-    isHidden: true,
-  },
-  {
-    id: "LOC-009",
-    name: "Nifas Silk Lafto Branch",
-    address: "543 Birch St, City",
-    phoneNumber: "+251-97-876-5432",
-    isHidden: false,
-  },
-  {
-    id: "LOC-010",
-    name: "Kolfe Keranio Branch",
-    address: "109 Fir St, City",
-    phoneNumber: "+251-92-109-8765",
-    isHidden: true,
+    id: 3,
+    businessId: 1,
+    name: "Warehouse",
+    address: "789 Industrial Zone, Addis Ababa",
+    contactNumber: "+251-98-765-4321",
+    isActive: true,
+    createdAt: new Date("2024-03-01").toISOString(),
+    updatedAt: new Date("2024-03-01").toISOString(),
   },
 ];
 
 export function useLocations(defaultLocations: Location[] = initialLocations) {
+  // States
   const [locations, setLocations] = useState<Location[]>(defaultLocations);
   const [filterValue, setFilterValue] = useState("");
   const [editingLocation, setEditingLocation] = useState<Location | null>(null);
@@ -91,7 +54,9 @@ export function useLocations(defaultLocations: Location[] = initialLocations) {
     id: true,
     name: true,
     address: true,
-    phoneNumber: true,
+    contactNumber: true,
+    isActive: true,
+    updatedAt: true,
   });
   const [sortColumn, setSortColumn] = useState<keyof Location | null>(null);
   const [sortDirection, setSortDirection] = useState<SortDirection>(null);
@@ -106,7 +71,7 @@ export function useLocations(defaultLocations: Location[] = initialLocations) {
       (location) =>
         location.name.toLowerCase().includes(filterValue.toLowerCase()) ||
         location.address.toLowerCase().includes(filterValue.toLowerCase()) ||
-        location.phoneNumber.toLowerCase().includes(filterValue.toLowerCase())
+        location.contactNumber.toLowerCase().includes(filterValue.toLowerCase())
     );
 
     if (sortColumn) {
@@ -115,9 +80,9 @@ export function useLocations(defaultLocations: Location[] = initialLocations) {
         const bValue = b[sortColumn];
 
         if (sortDirection === "asc") {
-          return aValue < bValue ? -1 : aValue > bValue ? 1 : 0;
+          return String(aValue).localeCompare(String(bValue));
         } else if (sortDirection === "desc") {
-          return aValue > bValue ? -1 : aValue < bValue ? 1 : 0;
+          return String(bValue).localeCompare(String(aValue));
         }
         return 0;
       });
@@ -132,6 +97,13 @@ export function useLocations(defaultLocations: Location[] = initialLocations) {
     return filteredLocations.slice(startIndex, startIndex + pageSize);
   }, [filteredLocations, currentPage, pageSize]);
 
+  // Get location name by ID - helper function
+  const getLocationName = (locationId: number) => {
+    const location = locations.find((loc) => loc.id === locationId);
+    return location?.name || "Unknown Location";
+  };
+
+  // Handlers
   const handleSort = (column: keyof Location) => {
     if (sortColumn === column) {
       setSortDirection((prev) => {
@@ -149,14 +121,16 @@ export function useLocations(defaultLocations: Location[] = initialLocations) {
   };
 
   const handleAddLocation = (data: LocationFormData) => {
-    const newId = `LOC-${String(locations.length + 1).padStart(3, "0")}`;
+    const maxId = Math.max(...locations.map((l) => l.id), 0);
+    const newId = maxId + 1;
 
     const newLocation: Location = {
       id: newId,
-      name: data.name,
-      address: data.address,
-      phoneNumber: data.phoneNumber,
-      isHidden: data.isHidden,
+      businessId: 1, // This should come from context or props
+      ...data,
+      isActive: true,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
     };
 
     setLocations((prev) => [...prev, newLocation]);
@@ -172,6 +146,7 @@ export function useLocations(defaultLocations: Location[] = initialLocations) {
           ? {
               ...location,
               ...data,
+              updatedAt: new Date().toISOString(),
             }
           : location
       )
@@ -202,12 +177,17 @@ export function useLocations(defaultLocations: Location[] = initialLocations) {
   };
 
   return {
+    // Data
     locations,
     paginatedLocations,
     filteredLocations,
     editingLocation,
+
+    // State setters
     setLocations,
     setEditingLocation,
+
+    // UI state
     filterValue,
     setFilterValue,
     isAddDialogOpen,
@@ -216,12 +196,19 @@ export function useLocations(defaultLocations: Location[] = initialLocations) {
     setIsEditDialogOpen,
     isDeleteDialogOpen,
     setIsDeleteDialogOpen,
+
+    // Table state
     columnsVisible,
     setColumnsVisible,
     pageSize,
     currentPage,
     sortColumn,
     sortDirection,
+
+    // Utility functions
+    getLocationName,
+
+    // Handlers
     handleSort,
     handleAddLocation,
     handleEditLocation,

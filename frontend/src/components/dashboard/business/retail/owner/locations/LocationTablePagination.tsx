@@ -14,6 +14,7 @@ import {
   ChevronLeft,
   ChevronRight,
 } from "lucide-react";
+import { PAGE_SIZE_OPTIONS } from "@/types/dashboard/business/retail/owner/location";
 
 interface LocationTablePaginationProps {
   totalItems: number;
@@ -22,8 +23,6 @@ interface LocationTablePaginationProps {
   onPageChange: (page: number) => void;
   onPageSizeChange: (pageSize: number) => void;
 }
-
-const PAGE_SIZE_OPTIONS = [10, 20, 30, 40, 50];
 
 export function LocationTablePagination({
   totalItems,
@@ -36,18 +35,44 @@ export function LocationTablePagination({
   const isFirstPage = currentPage === 1;
   const isLastPage = currentPage === totalPages;
 
+  // Calculate the range of items being displayed
+  const startItem = totalItems > 0 ? (currentPage - 1) * pageSize + 1 : 0;
+  const endItem = Math.min(currentPage * pageSize, totalItems);
+
+  // Ensure current page is valid when total items changes
+  if (currentPage > totalPages && totalPages > 0) {
+    onPageChange(totalPages);
+  }
+
+  const handlePageSizeChange = (value: string) => {
+    const newSize = parseInt(value, 10);
+    onPageSizeChange(newSize);
+    // Calculate new current page to maintain approximate scroll position
+    const currentItem = (currentPage - 1) * pageSize + 1;
+    const newPage = Math.max(1, Math.ceil(currentItem / newSize));
+    onPageChange(newPage);
+  };
+
   return (
-    <div className="flex items-center justify-between">
-      <div className="text-sm text-muted-foreground">
-        {totalItems} row(s) found
+    <div className="flex flex-col gap-2 px-2 py-4 sm:flex-row sm:items-center sm:justify-between">
+      <div className="flex flex-col gap-1 text-sm text-muted-foreground">
+        <div className="flex items-center gap-2">
+          <span>
+            Showing {startItem} to {endItem} of {totalItems} locations
+          </span>
+        </div>
+        <div className="text-xs sm:hidden">
+          Page {currentPage} of {totalPages}
+        </div>
       </div>
-      <div className="flex items-center gap-6">
+
+      <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 sm:gap-6">
         {/* Page Size Selector */}
         <div className="flex items-center space-x-2">
           <p className="text-sm font-medium">Rows per page</p>
           <Select
             value={pageSize.toString()}
-            onValueChange={(value) => onPageSizeChange(Number(value))}
+            onValueChange={handlePageSizeChange}
           >
             <SelectTrigger className="w-16">
               <SelectValue placeholder={pageSize.toString()} />
@@ -62,11 +87,6 @@ export function LocationTablePagination({
           </Select>
         </div>
 
-        {/* Page Information */}
-        <div className="flex w-[100px] items-center justify-center text-sm font-medium">
-          Page {currentPage} of {totalPages}
-        </div>
-
         {/* Navigation Controls */}
         <div className="flex items-center space-x-2">
           {/* First Page */}
@@ -75,8 +95,10 @@ export function LocationTablePagination({
             size="icon"
             onClick={() => onPageChange(1)}
             disabled={isFirstPage}
+            className="hidden sm:flex"
+            title="First Page"
           >
-            <ChevronFirst className="w-4 h-4" />
+            <ChevronFirst className="h-4 w-4" />
           </Button>
 
           {/* Previous Page */}
@@ -85,9 +107,15 @@ export function LocationTablePagination({
             size="icon"
             onClick={() => onPageChange(currentPage - 1)}
             disabled={isFirstPage}
+            title="Previous Page"
           >
-            <ChevronLeft className="w-4 h-4" />
+            <ChevronLeft className="h-4 w-4" />
           </Button>
+
+          {/* Page Number Display */}
+          <div className="hidden sm:flex min-w-[100px] items-center justify-center text-sm font-medium">
+            Page {currentPage} of {totalPages}
+          </div>
 
           {/* Next Page */}
           <Button
@@ -95,8 +123,9 @@ export function LocationTablePagination({
             size="icon"
             onClick={() => onPageChange(currentPage + 1)}
             disabled={isLastPage}
+            title="Next Page"
           >
-            <ChevronRight className="w-4 h-4" />
+            <ChevronRight className="h-4 w-4" />
           </Button>
 
           {/* Last Page */}
@@ -105,8 +134,10 @@ export function LocationTablePagination({
             size="icon"
             onClick={() => onPageChange(totalPages)}
             disabled={isLastPage}
+            className="hidden sm:flex"
+            title="Last Page"
           >
-            <ChevronLast className="w-4 h-4" />
+            <ChevronLast className="h-4 w-4" />
           </Button>
         </div>
       </div>
