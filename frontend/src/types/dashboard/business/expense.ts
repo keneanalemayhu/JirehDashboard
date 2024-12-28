@@ -1,4 +1,4 @@
-// src/types/dashboard/business/retail/owner/expense.ts
+// src/types/dashboard/business/owner/expense.ts
 
 /**
  * Constants

@@ -48,7 +48,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         name: t.teams.admin,
         logo: GalleryVerticalEnd,
         plan: t.teams.adminPlan,
-        url: "/dashboard/business//admin",
+        url: "/dashboard/business/admin",
       },
       {
         name: t.teams.sales,
@@ -125,25 +125,25 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         isActive:
           pathname.includes("/dashboard/business/owner/items") ||
           pathname.includes("/dashboard/business/owner/categories") ||
-          pathname.includes("/dashboard/business/retail/owner/stock-alerts") ||
-          pathname.includes("/dashboard/business/retail/owner/transfer"),
+          pathname.includes("/dashboard/business/owner/stock-alerts") ||
+          pathname.includes("/dashboard/business/owner/transfer"),
         defaultOpen: true,
         items: [
           {
             title: t.inventory.items,
-            url: "/dashboard/business/retail/owner/items",
-            isActive: pathname === "/dashboard/business/retail/owner/items",
+            url: "/dashboard/business/owner/items",
+            isActive: pathname === "/dashboard/business/owner/items",
           },
           {
             title: t.inventory.categories,
-            url: "/dashboard/business/retail/owner/categories",
+            url: "/dashboard/business/owner/categories",
             isActive:
-              pathname === "/dashboard/business/retail/owner/categories",
+              pathname === "/dashboard/business/owner/categories",
           },
           {
             title: t.inventory.transfer,
-            url: "/dashboard/business/retail/owner/transfer",
-            isActive: pathname === "/dashboard/business/retail/owner/transfer",
+            url: "/dashboard/business/owner/transfer",
+            isActive: pathname === "/dashboard/business/owner/transfer",
             disabled: true,
           },
         ],
@@ -153,25 +153,25 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         url: "#",
         icon: Users,
         isActive:
-          pathname.includes("/dashboard/business/retail/owner/locations") ||
-          pathname.includes("/dashboard/business/retail/owner/employees") ||
-          pathname.includes("/dashboard/business/retail/owner/users"),
+          pathname.includes("/dashboard/business/owner/locations") ||
+          pathname.includes("/dashboard/business/owner/employees") ||
+          pathname.includes("/dashboard/business/owner/users"),
         defaultOpen: true,
         items: [
           {
             title: t.management.locations,
-            url: "/dashboard/business/retail/owner/locations",
-            isActive: pathname === "/dashboard/business/retail/owner/locations",
+            url: "/dashboard/business/owner/locations",
+            isActive: pathname === "/dashboard/business/owner/locations",
           },
           {
             title: t.management.employees,
-            url: "/dashboard/business/retail/owner/employees",
-            isActive: pathname === "/dashboard/business/retail/owner/employees",
+            url: "/dashboard/business/owner/employees",
+            isActive: pathname === "/dashboard/business/owner/employees",
           },
           {
             title: t.management.users,
-            url: "/dashboard/business/retail/owner/users",
-            isActive: pathname === "/dashboard/business/retail/owner/users",
+            url: "/dashboard/business/owner/users",
+            isActive: pathname === "/dashboard/business/owner/users",
           },
         ],
       },

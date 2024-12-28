@@ -31,23 +31,23 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         name: t.teams.sales,
         logo: Command,
         plan: t.teams.salesPlan,
-        url: "/dashboard/business/retail/sales",
+        url: "/dashboard/business/sales",
       },
     ],
     projects: [
       {
         name: t.projects.overview,
-        url: "/dashboard/business/retail/sales/",
+        url: "/dashboard/business/sales/",
         icon: Gauge,
       },
       {
         name: t.projects.newOrder,
-        url: "/dashboard/business/retail/sales/new-order",
+        url: "/dashboard/business/sales/new-order",
         icon: CirclePlus,
       },
       {
         name: t.projects.orders,
-        url: "/dashboard/business/retail/sales/orders",
+        url: "/dashboard/business/sales/orders",
         icon: ListOrdered,
       },
     ],

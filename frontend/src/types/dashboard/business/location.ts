@@ -1,4 +1,4 @@
-// src/types/dashboard/business/retail/owner/location.ts
+// src/types/dashboard/business/owner/location.ts
 
 /**
  * Core entity interfaces

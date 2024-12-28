@@ -31,23 +31,23 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         name: t.teams.warehouse,
         logo: Command,
         plan: t.teams.warehousePlan,
-        url: "/dashboard/business/retail/warehouse",
+        url: "/dashboard/business4/warehouse",
       },
     ],
     projects: [
       {
         name: t.projects.overview,
-        url: "/dashboard/business/retail/warehouse/",
+        url: "/dashboard/business4/warehouse/",
         icon: Gauge,
       },
       {
         name: t.projects.items,
-        url: "/dashboard/business/retail/warehouse/items",
+        url: "/dashboard/business4/warehouse/items",
         icon: CirclePlus,
       },
       {
         name: t.projects.orders,
-        url: "/dashboard/business/retail/warehouse/orders",
+        url: "/dashboard/business4/warehouse/orders",
         icon: ListOrdered,
       },
     ],

@@ -9,6 +9,8 @@ Jireh-dashboard/
     │   │   │   │   └── page.tsx
     │   │   │   ├── login/
     │   │   │   │   └── page.tsx
+    │   │   │   ├── payment-success/
+    │   │   │   │   └── page.tsx
     │   │   │   ├── register/
     │   │   │   │   └── page.tsx
     │   │   │   ├── reset-password/
@@ -18,87 +20,86 @@ Jireh-dashboard/
     │   │   │   └── layout.tsx
     │   │   ├── dashboard/
     │   │   │   ├── business/
-    │   │   │   │   ├── retail/
-    │   │   │   │   │   ├── admin/
-    │   │   │   │   │   │   ├── categories/
-    │   │   │   │   │   │   │   └── page.tsx
-    │   │   │   │   │   │   ├── employees/
-    │   │   │   │   │   │   │   └── page.tsx
-    │   │   │   │   │   │   ├── items/
-    │   │   │   │   │   │   │   └── page.tsx
-    │   │   │   │   │   │   ├── locations/
-    │   │   │   │   │   │   │   └── page.tsx
-    │   │   │   │   │   │   ├── orders/
-    │   │   │   │   │   │   │   └── page.tsx
-    │   │   │   │   │   │   ├── settings/
-    │   │   │   │   │   │   │   ├── account/
-    │   │   │   │   │   │   │   │   └── page.tsx
-    │   │   │   │   │   │   │   ├── profile/
-    │   │   │   │   │   │   │   │   └── page.tsx
-    │   │   │   │   │   │   │   ├── layout.tsx
-    │   │   │   │   │   │   │   └── page.tsx
-    │   │   │   │   │   │   ├── page.tsx
-    │   │   │   │   │   │   └── layout.tsx
-    │   │   │   │   │   ├── owner/
-    │   │   │   │   │   │   ├── analysis/
-    │   │   │   │   │   │   │   └── page.tsx
-    │   │   │   │   │   │   ├── categories/
-    │   │   │   │   │   │   │   └── page.tsx
-    │   │   │   │   │   │   ├── employees/
-    │   │   │   │   │   │   │   └── page.tsx
-    │   │   │   │   │   │   ├── expenses/
-    │   │   │   │   │   │   │   └── page.tsx
-    │   │   │   │   │   │   ├── items/
-    │   │   │   │   │   │   │   └── page.tsx
-    │   │   │   │   │   │   ├── locations/
-    │   │   │   │   │   │   │   └── page.tsx
-    │   │   │   │   │   │   ├── orders/
-    │   │   │   │   │   │   │   └── page.tsx
-    │   │   │   │   │   │   ├── overview/
-    │   │   │   │   │   │   │   └── page.tsx
-    │   │   │   │   │   │   ├── profit-loss/
-    │   │   │   │   │   │   │   └── page.tsx
-    │   │   │   │   │   │   ├── sales-report/
-    │   │   │   │   │   │   │   └── page.tsx
-    │   │   │   │   │   │   ├── settings/
-    │   │   │   │   │   │   │   ├── account/
-    │   │   │   │   │   │   │   │   └── page.tsx
-    │   │   │   │   │   │   │   ├── profile/
-    │   │   │   │   │   │   │   │   └── page.tsx
-    │   │   │   │   │   │   │   ├── layout.tsx
-    │   │   │   │   │   │   │   └── page.tsx
-    │   │   │   │   │   │   ├── users/
-    │   │   │   │   │   │   │   └── page.tsx
-    │   │   │   │   │   │   ├── page.tsx
-    │   │   │   │   │   │   └── layout.tsx
-    │   │   │   │   │   ├── sales/
-    │   │   │   │   │   │   ├── order/
-    │   │   │   │   │   │   │   └── page.tsx
-    │   │   │   │   │   │   ├── orders/
-    │   │   │   │   │   │   │   └── page.tsx
-    │   │   │   │   │   │   ├── settings/
-    │   │   │   │   │   │   │   ├── account/
-    │   │   │   │   │   │   │   │   └── page.tsx
-    │   │   │   │   │   │   │   ├── profile/
-    │   │   │   │   │   │   │   │   └── page.tsx
-    │   │   │   │   │   │   │   ├── layout.tsx
-    │   │   │   │   │   │   │   └── page.tsx
-    │   │   │   │   │   │   ├── layout.tsx
-    │   │   │   │   │   │   └── page.tsx
-    │   │   │   │   │   ├── warehouse/
-    │   │   │   │   │   │   ├── items/
-    │   │   │   │   │   │   │   └── page.tsx
-    │   │   │   │   │   │   ├── orders/
-    │   │   │   │   │   │   │   └── page.tsx
-    │   │   │   │   │   │   ├── settings/
-    │   │   │   │   │   │   │   ├── account/
-    │   │   │   │   │   │   │   │   └── page.tsx
-    │   │   │   │   │   │   │   ├── profile/
-    │   │   │   │   │   │   │   │   └── page.tsx
-    │   │   │   │   │   │   │   ├── layout.tsx
-    │   │   │   │   │   │   │   └── page.tsx
-    │   │   │   │   │   │   ├── layout.tsx
-    │   │   │   │   └── └── └── page.tsx
+│   │   │   │   │   ├── admin/
+│   │   │   │   │   │   ├── categories/
+│   │   │   │   │   │   │   └── page.tsx
+│   │   │   │   │   │   ├── employees/
+│   │   │   │   │   │   │   └── page.tsx
+│   │   │   │   │   │   ├── items/
+│   │   │   │   │   │   │   └── page.tsx
+│   │   │   │   │   │   ├── locations/
+│   │   │   │   │   │   │   └── page.tsx
+│   │   │   │   │   │   ├── orders/
+│   │   │   │   │   │   │   └── page.tsx
+│   │   │   │   │   │   ├── settings/
+│   │   │   │   │   │   │   ├── account/
+│   │   │   │   │   │   │   │   └── page.tsx
+│   │   │   │   │   │   │   ├── profile/
+│   │   │   │   │   │   │   │   └── page.tsx
+│   │   │   │   │   │   │   ├── layout.tsx
+│   │   │   │   │   │   │   └── page.tsx
+│   │   │   │   │   │   ├── page.tsx
+│   │   │   │   │   │   └── layout.tsx
+│   │   │   │   │   ├── owner/
+│   │   │   │   │   │   ├── analysis/
+│   │   │   │   │   │   │   └── page.tsx
+│   │   │   │   │   │   ├── categories/
+│   │   │   │   │   │   │   └── page.tsx
+│   │   │   │   │   │   ├── employees/
+│   │   │   │   │   │   │   └── page.tsx
+│   │   │   │   │   │   ├── expenses/
+│   │   │   │   │   │   │   └── page.tsx
+│   │   │   │   │   │   ├── items/
+│   │   │   │   │   │   │   └── page.tsx
+│   │   │   │   │   │   ├── locations/
+│   │   │   │   │   │   │   └── page.tsx
+│   │   │   │   │   │   ├── orders/
+│   │   │   │   │   │   │   └── page.tsx
+│   │   │   │   │   │   ├── overview/
+│   │   │   │   │   │   │   └── page.tsx
+│   │   │   │   │   │   ├── profit-loss/
+│   │   │   │   │   │   │   └── page.tsx
+│   │   │   │   │   │   ├── sales-report/
+│   │   │   │   │   │   │   └── page.tsx
+│   │   │   │   │   │   ├── settings/
+│   │   │   │   │   │   │   ├── account/
+│   │   │   │   │   │   │   │   └── page.tsx
+│   │   │   │   │   │   │   ├── profile/
+│   │   │   │   │   │   │   │   └── page.tsx
+│   │   │   │   │   │   │   ├── layout.tsx
+│   │   │   │   │   │   │   └── page.tsx
+│   │   │   │   │   │   ├── users/
+│   │   │   │   │   │   │   └── page.tsx
+│   │   │   │   │   │   ├── page.tsx
+│   │   │   │   │   │   └── layout.tsx
+│   │   │   │   │   ├── sales/
+│   │   │   │   │   │   ├── order/
+│   │   │   │   │   │   │   └── page.tsx
+│   │   │   │   │   │   ├── orders/
+│   │   │   │   │   │   │   └── page.tsx
+│   │   │   │   │   │   ├── settings/
+│   │   │   │   │   │   │   ├── account/
+│   │   │   │   │   │   │   │   └── page.tsx
+│   │   │   │   │   │   │   ├── profile/
+│   │   │   │   │   │   │   │   └── page.tsx
+│   │   │   │   │   │   │   ├── layout.tsx
+│   │   │   │   │   │   │   └── page.tsx
+│   │   │   │   │   │   ├── layout.tsx
+│   │   │   │   │   │   └── page.tsx
+│   │   │   │   │   ├── warehouse/
+│   │   │   │   │   │   ├── items/
+│   │   │   │   │   │   │   └── page.tsx
+│   │   │   │   │   │   ├── orders/
+│   │   │   │   │   │   │   └── page.tsx
+│   │   │   │   │   │   ├── settings/
+│   │   │   │   │   │   │   ├── account/
+│   │   │   │   │   │   │   │   └── page.tsx
+│   │   │   │   │   │   │   ├── profile/
+│   │   │   │   │   │   │   │   └── page.tsx
+│   │   │   │   │   │   │   ├── layout.tsx
+│   │   │   │   │   │   │   └── page.tsx
+│   │   │   │   │   │   ├── layout.tsx
+│   │   │   │   └── └── └── page.tsx
     │   │   │   ├── sadmin/
     │   │   │   │   ├── stores/
     │   │   │   │   │   ├── activity-log/
@@ -164,149 +165,148 @@ Jireh-dashboard/
     │   │   │   └── ThemeContext.tsx
     │   │   ├── dashboard/
     │   │   │   ├── business/
-    │   │   │   │   ├── retail/
-    │   │   │   │   │   ├── Admin/
-    │   │   │   │   │   │   ├── categories/
-    │   │   │   │   │   │   │   ├── CategoryForm.tsx
-    │   │   │   │   │   │   │   ├── CategoryTable.tsx
-    │   │   │   │   │   │   │   ├── CategoryTableHeader.tsx
-    │   │   │   │   │   │   │   ├── CategoryTablePagination.tsx
-    │   │   │   │   │   │   │   ├── CategoryTableRow.tsx
-    │   │   │   │   │   │   │   └── CategoryTableSettings.tsx
-    │   │   │   │   │   │   ├── employees/
-    │   │   │   │   │   │   │   ├── EmployeesForm.tsx
-    │   │   │   │   │   │   │   ├── EmployeesTable.tsx
-    │   │   │   │   │   │   │   ├── EmployeesTableHeader.tsx
-    │   │   │   │   │   │   │   ├── EmployeesTablePagination.tsx
-    │   │   │   │   │   │   │   ├── EmployeesTableRow.tsx
-    │   │   │   │   │   │   │   └── EmployeesTableSettings.tsx
-    │   │   │   │   │   │   ├── expenses/
-    │   │   │   │   │   │   │   ├── ExpenseForm.tsx
-    │   │   │   │   │   │   │   ├── ExpenseTable.tsx
-    │   │   │   │   │   │   │   ├── ExpenseTableHeader.tsx
-    │   │   │   │   │   │   │   ├── ExpenseTablePagination.tsx
-    │   │   │   │   │   │   │   ├── ExpenseTableRow.tsx
-    │   │   │   │   │   │   │   └── ExpenseTableSettings.tsx
-    │   │   │   │   │   │   ├── items/
-    │   │   │   │   │   │   │   ├── ItemForm.tsx
-    │   │   │   │   │   │   │   ├── ItemTable.tsx
-    │   │   │   │   │   │   │   ├── ItemTableHeader.tsx
-    │   │   │   │   │   │   │   ├── ItemTablePagination.tsx
-    │   │   │   │   │   │   │   ├── ItemTableRow.tsx
-    │   │   │   │   │   │   │   └── ItemTableSettings.tsx
-    │   │   │   │   │   │   ├── locations/
-    │   │   │   │   │   │   │   ├── LocationForm.tsx
-    │   │   │   │   │   │   │   ├── LocationTable.tsx
-    │   │   │   │   │   │   │   ├── LocationTableHeader.tsx
-    │   │   │   │   │   │   │   ├── LocationTablePagination.tsx
-    │   │   │   │   │   │   │   ├── LocationTableRow.tsx
-    │   │   │   │   │   │   │   └── LocationTableSettings.tsx
-    │   │   │   │   │   │   ├── orders/
-    │   │   │   │   │   │   │   └── OrderTable.tsx
-    │   │   │   │   │   │   ├── overview/
-    │   │   │   │   │   │   │   └── DateRangePicker.tsx
-    │   │   │   │   │   │   ├── settings/
-    │   │   │   │   │   │   │   ├── AccountForm.tsx
-    │   │   │   │   │   │   │   └── ProfileForm.tsx
-    │   │   │   │   │   │   ├── users/
-    │   │   │   │   │   │   │   ├── UsersForm.tsx
-    │   │   │   │   │   │   │   ├── UsersTable.tsx
-    │   │   │   │   │   │   │   ├── UsersTableHeader.tsx
-    │   │   │   │   │   │   │   ├── UsersTablePagination.tsx
-    │   │   │   │   │   │   │   ├── UsersTableRow.tsx
-    │   │   │   │   │   │   │   └── UsersTableSettings.tsx
-    │   │   │   │   │   │   ├── AdminNavAction.tsx
-    │   │   │   │   │   │   ├── AdminNavMain.tsx
-    │   │   │   │   │   │   ├── AdminNavProjects.tsx
-    │   │   │   │   │   │   ├── AdminNavUser.tsx
-    │   │   │   │   │   │   ├── AdminSidebar.tsx
-    │   │   │   │   │   │   └── AdminTeamSwitcher.tsx
-    │   │   │   │   │   ├── owner/
-    │   │   │   │   │   │   ├── categories/
-    │   │   │   │   │   │   │   ├── CategoryForm.tsx
-    │   │   │   │   │   │   │   ├── CategoryTable.tsx
-    │   │   │   │   │   │   │   ├── CategoryTableHeader.tsx
-    │   │   │   │   │   │   │   ├── CategoryTablePagination.tsx
-    │   │   │   │   │   │   │   ├── CategoryTableRow.tsx
-    │   │   │   │   │   │   │   └── CategoryTableSettings.tsx
-    │   │   │   │   │   │   ├── employees/
-    │   │   │   │   │   │   │   ├── EmployeesForm.tsx
-    │   │   │   │   │   │   │   ├── EmployeesTable.tsx
-    │   │   │   │   │   │   │   ├── EmployeesTableHeader.tsx
-    │   │   │   │   │   │   │   ├── EmployeesTablePagination.tsx
-    │   │   │   │   │   │   │   ├── EmployeesTableRow.tsx
-    │   │   │   │   │   │   │   └── EmployeesTableSettings.tsx
-    │   │   │   │   │   │   ├── items/
-    │   │   │   │   │   │   │   ├── ItemForm.tsx
-    │   │   │   │   │   │   │   ├── ItemTable.tsx
-    │   │   │   │   │   │   │   ├── ItemTableHeader.tsx
-    │   │   │   │   │   │   │   ├── ItemTablePagination.tsx
-    │   │   │   │   │   │   │   ├── ItemTableRow.tsx
-    │   │   │   │   │   │   │   └── ItemTableSettings.tsx
-    │   │   │   │   │   │   ├── locations/
-    │   │   │   │   │   │   │   ├── LocationForm.tsx
-    │   │   │   │   │   │   │   ├── LocationTable.tsx
-    │   │   │   │   │   │   │   ├── LocationTableHeader.tsx
-    │   │   │   │   │   │   │   ├── LocationTablePagination.tsx
-    │   │   │   │   │   │   │   ├── LocationTableRow.tsx
-    │   │   │   │   │   │   │   └── LocationTableSettings.tsx
-    │   │   │   │   │   │   ├── orders/
-    │   │   │   │   │   │   │   └── OrderTable.tsx
-    │   │   │   │   │   │   ├── overview/
-    │   │   │   │   │   │   │   ├── DateRangePicker.tsx
-    │   │   │   │   │   │   ├── settings/
-    │   │   │   │   │   │   │   ├── AccountForm.tsx
-    │   │   │   │   │   │   │   └── ProfileForm.tsx
-    │   │   │   │   │   │   ├── users/
-    │   │   │   │   │   │   │   ├── UsersForm.tsx
-    │   │   │   │   │   │   │   ├── UsersTable.tsx
-    │   │   │   │   │   │   │   ├── UsersTableHeader.tsx
-    │   │   │   │   │   │   │   ├── UsersTablePagination.tsx
-    │   │   │   │   │   │   │   ├── UsersTableRow.tsx
-    │   │   │   │   │   │   │   └── UsersTableSettings.tsx
-    │   │   │   │   │   │   ├── OwnerNavAction.tsx
-    │   │   │   │   │   │   ├── OwnerNavMain.tsx
-    │   │   │   │   │   │   ├── OwnerNavProjects.tsx
-    │   │   │   │   │   │   ├── OwnerNavUser.tsx
-    │   │   │   │   │   │   ├── OwnerSidebar.tsx
-    │   │   │   │   │   │   └── OwnerTeamSwitcher.tsx
-    │   │   │   │   │   ├── sales/
-    │   │   │   │   │   │   ├── order/
-    │   │   │   │   │   │   │   └── OrderForm.tsx
-    │   │   │   │   │   │   ├── orders/
-    │   │   │   │   │   │   │   └── orderTable.tsx
-    │   │   │   │   │   │   ├── overview/
-    │   │   │   │   │   │   │   ├── DateRangePicker.tsx
-    │   │   │   │   │   │   ├── settings/
-    │   │   │   │   │   │   │   ├── AccountForm.tsx
-    │   │   │   │   │   │   │   └── ProfileForm.tsx
-    │   │   │   │   │   │   ├── SalesNavAction.tsx
-    │   │   │   │   │   │   ├── SalesNavMain.tsx
-    │   │   │   │   │   │   ├── SalesNavProjects.tsx
-    │   │   │   │   │   │   ├── SalesNavUser.tsx
-    │   │   │   │   │   │   ├── SalesSidebar.tsx
-    │   │   │   │   │   │   └── SalesTeamSwitcher.tsx
-    │   │   │   │   │   ├── warehouse/
-    │   │   │   │   │   │   ├── items/
-    │   │   │   │   │   │   │   ├── ItemForm.tsx
-    │   │   │   │   │   │   │   ├── ItemTable.tsx
-    │   │   │   │   │   │   │   ├── ItemTableHeader.tsx
-    │   │   │   │   │   │   │   ├── ItemTablePagination.tsx
-    │   │   │   │   │   │   │   ├── ItemTableRow.tsx
-    │   │   │   │   │   │   │   └── ItemTableSettings.tsx
-    │   │   │   │   │   │   ├── orders/
-    │   │   │   │   │   │   │   └── OrdersTable.tsx
-    │   │   │   │   │   │   ├── overview/
-    │   │   │   │   │   │   │   └── DateRangePicker.tsx
-    │   │   │   │   │   │   ├── settings/
-    │   │   │   │   │   │   │   ├── AccountForm.tsx
-    │   │   │   │   │   │   │   └── ProfileForm.tsx
-    │   │   │   │   │   │   ├── warehouseNavAction.tsx
-    │   │   │   │   │   │   ├── warehouseNavMain.tsx
-    │   │   │   │   │   │   ├── warehouseNavProjects.tsx
-    │   │   │   │   │   │   ├── warehouseNavUser.tsx
-    │   │   │   │   │   │   ├── warehouseSidebar.tsx
-    │   │   │   │   └── └── └── warehouseTeamSwitcher.tsx
+│   │   │   │   │   ├── Admin/
+│   │   │   │   │   │   ├── categories/
+│   │   │   │   │   │   │   ├── CategoryForm.tsx
+│   │   │   │   │   │   │   ├── CategoryTable.tsx
+│   │   │   │   │   │   │   ├── CategoryTableHeader.tsx
+│   │   │   │   │   │   │   ├── CategoryTablePagination.tsx
+│   │   │   │   │   │   │   ├── CategoryTableRow.tsx
+│   │   │   │   │   │   │   └── CategoryTableSettings.tsx
+│   │   │   │   │   │   ├── employees/
+│   │   │   │   │   │   │   ├── EmployeesForm.tsx
+│   │   │   │   │   │   │   ├── EmployeesTable.tsx
+│   │   │   │   │   │   │   ├── EmployeesTableHeader.tsx
+│   │   │   │   │   │   │   ├── EmployeesTablePagination.tsx
+│   │   │   │   │   │   │   ├── EmployeesTableRow.tsx
+│   │   │   │   │   │   │   └── EmployeesTableSettings.tsx
+│   │   │   │   │   │   ├── expenses/
+│   │   │   │   │   │   │   ├── ExpenseForm.tsx
+│   │   │   │   │   │   │   ├── ExpenseTable.tsx
+│   │   │   │   │   │   │   ├── ExpenseTableHeader.tsx
+│   │   │   │   │   │   │   ├── ExpenseTablePagination.tsx
+│   │   │   │   │   │   │   ├── ExpenseTableRow.tsx
+│   │   │   │   │   │   │   └── ExpenseTableSettings.tsx
+│   │   │   │   │   │   ├── items/
+│   │   │   │   │   │   │   ├── ItemForm.tsx
+│   │   │   │   │   │   │   ├── ItemTable.tsx
+│   │   │   │   │   │   │   ├── ItemTableHeader.tsx
+│   │   │   │   │   │   │   ├── ItemTablePagination.tsx
+│   │   │   │   │   │   │   ├── ItemTableRow.tsx
+│   │   │   │   │   │   │   └── ItemTableSettings.tsx
+│   │   │   │   │   │   ├── locations/
+│   │   │   │   │   │   │   ├── LocationForm.tsx
+│   │   │   │   │   │   │   ├── LocationTable.tsx
+│   │   │   │   │   │   │   ├── LocationTableHeader.tsx
+│   │   │   │   │   │   │   ├── LocationTablePagination.tsx
+│   │   │   │   │   │   │   ├── LocationTableRow.tsx
+│   │   │   │   │   │   │   └── LocationTableSettings.tsx
+│   │   │   │   │   │   ├── orders/
+│   │   │   │   │   │   │   └── OrderTable.tsx
+│   │   │   │   │   │   ├── overview/
+│   │   │   │   │   │   │   └── DateRangePicker.tsx
+│   │   │   │   │   │   ├── settings/
+│   │   │   │   │   │   │   ├── AccountForm.tsx
+│   │   │   │   │   │   │   └── ProfileForm.tsx
+│   │   │   │   │   │   ├── users/
+│   │   │   │   │   │   │   ├── UsersForm.tsx
+│   │   │   │   │   │   │   ├── UsersTable.tsx
+│   │   │   │   │   │   │   ├── UsersTableHeader.tsx
+│   │   │   │   │   │   │   ├── UsersTablePagination.tsx
+│   │   │   │   │   │   │   ├── UsersTableRow.tsx
+│   │   │   │   │   │   │   └── UsersTableSettings.tsx
+│   │   │   │   │   │   ├── AdminNavAction.tsx
+│   │   │   │   │   │   ├── AdminNavMain.tsx
+│   │   │   │   │   │   ├── AdminNavProjects.tsx
+│   │   │   │   │   │   ├── AdminNavUser.tsx
+│   │   │   │   │   │   ├── AdminSidebar.tsx
+│   │   │   │   │   │   └── AdminTeamSwitcher.tsx
+│   │   │   │   │   ├── owner/
+│   │   │   │   │   │   ├── categories/
+│   │   │   │   │   │   │   ├── CategoryForm.tsx
+│   │   │   │   │   │   │   ├── CategoryTable.tsx
+│   │   │   │   │   │   │   ├── CategoryTableHeader.tsx
+│   │   │   │   │   │   │   ├── CategoryTablePagination.tsx
+│   │   │   │   │   │   │   ├── CategoryTableRow.tsx
+│   │   │   │   │   │   │   └── CategoryTableSettings.tsx
+│   │   │   │   │   │   ├── employees/
+│   │   │   │   │   │   │   ├── EmployeesForm.tsx
+│   │   │   │   │   │   │   ├── EmployeesTable.tsx
+│   │   │   │   │   │   │   ├── EmployeesTableHeader.tsx
+│   │   │   │   │   │   │   ├── EmployeesTablePagination.tsx
+│   │   │   │   │   │   │   ├── EmployeesTableRow.tsx
+│   │   │   │   │   │   │   └── EmployeesTableSettings.tsx
+│   │   │   │   │   │   ├── items/
+│   │   │   │   │   │   │   ├── ItemForm.tsx
+│   │   │   │   │   │   │   ├── ItemTable.tsx
+│   │   │   │   │   │   │   ├── ItemTableHeader.tsx
+│   │   │   │   │   │   │   ├── ItemTablePagination.tsx
+│   │   │   │   │   │   │   ├── ItemTableRow.tsx
+│   │   │   │   │   │   │   └── ItemTableSettings.tsx
+│   │   │   │   │   │   ├── locations/
+│   │   │   │   │   │   │   ├── LocationForm.tsx
+│   │   │   │   │   │   │   ├── LocationTable.tsx
+│   │   │   │   │   │   │   ├── LocationTableHeader.tsx
+│   │   │   │   │   │   │   ├── LocationTablePagination.tsx
+│   │   │   │   │   │   │   ├── LocationTableRow.tsx
+│   │   │   │   │   │   │   └── LocationTableSettings.tsx
+│   │   │   │   │   │   ├── orders/
+│   │   │   │   │   │   │   └── OrderTable.tsx
+│   │   │   │   │   │   ├── overview/
+│   │   │   │   │   │   │   ├── DateRangePicker.tsx
+│   │   │   │   │   │   ├── settings/
+│   │   │   │   │   │   │   ├── AccountForm.tsx
+│   │   │   │   │   │   │   └── ProfileForm.tsx
+│   │   │   │   │   │   ├── users/
+│   │   │   │   │   │   │   ├── UsersForm.tsx
+│   │   │   │   │   │   │   ├── UsersTable.tsx
+│   │   │   │   │   │   │   ├── UsersTableHeader.tsx
+│   │   │   │   │   │   │   ├── UsersTablePagination.tsx
+│   │   │   │   │   │   │   ├── UsersTableRow.tsx
+│   │   │   │   │   │   │   └── UsersTableSettings.tsx
+│   │   │   │   │   │   ├── OwnerNavAction.tsx
+│   │   │   │   │   │   ├── OwnerNavMain.tsx
+│   │   │   │   │   │   ├── OwnerNavProjects.tsx
+│   │   │   │   │   │   ├── OwnerNavUser.tsx
+│   │   │   │   │   │   ├── OwnerSidebar.tsx
+│   │   │   │   │   │   └── OwnerTeamSwitcher.tsx
+│   │   │   │   │   ├── sales/
+│   │   │   │   │   │   ├── order/
+│   │   │   │   │   │   │   └── OrderForm.tsx
+│   │   │   │   │   │   ├── orders/
+│   │   │   │   │   │   │   └── orderTable.tsx
+│   │   │   │   │   │   ├── overview/
+│   │   │   │   │   │   │   ├── DateRangePicker.tsx
+│   │   │   │   │   │   ├── settings/
+│   │   │   │   │   │   │   ├── AccountForm.tsx
+│   │   │   │   │   │   │   └── ProfileForm.tsx
+│   │   │   │   │   │   ├── SalesNavAction.tsx
+│   │   │   │   │   │   ├── SalesNavMain.tsx
+│   │   │   │   │   │   ├── SalesNavProjects.tsx
+│   │   │   │   │   │   ├── SalesNavUser.tsx
+│   │   │   │   │   │   ├── SalesSidebar.tsx
+│   │   │   │   │   │   └── SalesTeamSwitcher.tsx
+│   │   │   │   │   ├── warehouse/
+│   │   │   │   │   │   ├── items/
+│   │   │   │   │   │   │   ├── ItemForm.tsx
+│   │   │   │   │   │   │   ├── ItemTable.tsx
+│   │   │   │   │   │   │   ├── ItemTableHeader.tsx
+│   │   │   │   │   │   │   ├── ItemTablePagination.tsx
+│   │   │   │   │   │   │   ├── ItemTableRow.tsx
+│   │   │   │   │   │   │   └── ItemTableSettings.tsx
+│   │   │   │   │   │   ├── orders/
+│   │   │   │   │   │   │   └── OrdersTable.tsx
+│   │   │   │   │   │   ├── overview/
+│   │   │   │   │   │   │   └── DateRangePicker.tsx
+│   │   │   │   │   │   ├── settings/
+│   │   │   │   │   │   │   ├── AccountForm.tsx
+│   │   │   │   │   │   │   └── ProfileForm.tsx
+│   │   │   │   │   │   ├── warehouseNavAction.tsx
+│   │   │   │   │   │   ├── warehouseNavMain.tsx
+│   │   │   │   │   │   ├── warehouseNavProjects.tsx
+│   │   │   │   │   │   ├── warehouseNavUser.tsx
+│   │   │   │   │   │   ├── warehouseSidebar.tsx
+│   │   │   │   └── └── └── warehouseTeamSwitcher.tsx
     │   │   │   ├── sadmin/
     │   │   │   │   ├── activity-log/
     │   │   │   │   ├── billings-payments/
@@ -333,29 +333,13 @@ Jireh-dashboard/
     │   ├── hooks/
     │   │   ├── dashboard/
     │   │   │   ├── business/
-    │   │   │   │   ├── garage/
-    │   │   │   │   ├── retail/
-    │   │   │   │   │   ├── admin/
-    │   │   │   │   │   │   ├── category.ts
-    │   │   │   │   │   │   ├── employee.ts
-    │   │   │   │   │   │   ├── item.ts
-    │   │   │   │   │   │   ├── location.ts
-    │   │   │   │   │   │   ├── order.ts
-    │   │   │   │   │   │   └── users.ts
-    │   │   │   │   │   ├── owner/
-    │   │   │   │   │   │   ├── category.ts
-    │   │   │   │   │   │   ├── employee.ts
-    │   │   │   │   │   │   ├── expense.ts
-    │   │   │   │   │   │   ├── item.ts
-    │   │   │   │   │   │   ├── location.ts
-    │   │   │   │   │   │   ├── order.ts
-    │   │   │   │   │   │   └── users.ts
-    │   │   │   │   │   ├── sales/
-    │   │   │   │   │   │   └── order.ts
-    │   │   │   │   │   ├── warehouse/
-    │   │   │   │   │   │   ├── item.ts
-    │   │   │   │   │   │   ├── location.ts
-    │   │   │   │   │   │   └── order.ts
+│   │   │   │   │   │   ├── category.ts
+│   │   │   │   │   │   ├── employee.ts
+│   │   │   │   │   │   ├── expense.ts
+│   │   │   │   │   │   ├── item.ts
+│   │   │   │   │   │   ├── location.ts
+│   │   │   │   │   │   ├── order.ts
+│   │   │   │   │   │   └── users.ts
     │   │   │   └── sadmin/
     │   │   ├── use-auth.ts
     │   │   ├── use-mobile.tsx
@@ -374,24 +358,22 @@ Jireh-dashboard/
     │   │   │   └── index.ts
     │   │   ├── dashboard/
     │   │   │   ├── business/
-    │   │   │   │   ├── garage/
-    │   │   │   │   ├── retail/
-    │   │   │   │   │   ├── admin/
-    │   │   │   │   │   │   ├── am.ts
-    │   │   │   │   │   │   ├── en.ts
-    │   │   │   │   │   │   └── index.ts
-    │   │   │   │   │   ├── owner/
-    │   │   │   │   │   │   ├── am.ts
-    │   │   │   │   │   │   ├── en.ts
-    │   │   │   │   │   │   └── index.ts
-    │   │   │   │   │   ├── sales/
-    │   │   │   │   │   │   ├── am.ts
-    │   │   │   │   │   │   ├── en.ts
-    │   │   │   │   │   │   └── index.ts
-    │   │   │   │   │   ├── warehouse/
-    │   │   │   │   │   │   ├── am.ts
-    │   │   │   │   │   │   ├── en.ts
-    │   │   │   │   │   │   └── index.ts
+│   │   │   │   │   ├── admin/
+│   │   │   │   │   │   ├── am.ts
+│   │   │   │   │   │   ├── en.ts
+│   │   │   │   │   │   └── index.ts
+│   │   │   │   │   ├── owner/
+│   │   │   │   │   │   ├── am.ts
+│   │   │   │   │   │   ├── en.ts
+│   │   │   │   │   │   └── index.ts
+│   │   │   │   │   ├── sales/
+│   │   │   │   │   │   ├── am.ts
+│   │   │   │   │   │   ├── en.ts
+│   │   │   │   │   │   └── index.ts
+│   │   │   │   │   ├── warehouse/
+│   │   │   │   │   │   ├── am.ts
+│   │   │   │   │   │   ├── en.ts
+│   │   │   │   │   │   └── index.ts
     │   │   │   ├── sadmin/
     │   │   │   │   ├── am.ts
     │   │   │   │   ├── en.ts
@@ -399,29 +381,14 @@ Jireh-dashboard/
     │   ├── types/
     │   │   ├── dashboard/
     │   │   │   ├── business/
-    │   │   │   │   ├── garage/
-    │   │   │   │   ├── retail/
-    │   │   │   │   │   ├── admin/
-    │   │   │   │   │   │   ├── category.ts
-    │   │   │   │   │   │   ├── employee.ts
-    │   │   │   │   │   │   ├── item.ts
-    │   │   │   │   │   │   ├── location.ts
-    │   │   │   │   │   │   ├── order.ts
-    │   │   │   │   │   │   └── users.ts
-    │   │   │   │   │   ├── owner/
-    │   │   │   │   │   │   ├── category.ts
-    │   │   │   │   │   │   ├── item.ts
-    │   │   │   │   │   │   ├── employee.ts
-    │   │   │   │   │   │   ├── expense.ts
-    │   │   │   │   │   │   ├── location.ts
-    │   │   │   │   │   │   ├── order.ts
-    │   │   │   │   │   │   └── users.ts
-    │   │   │   │   │   ├── sales/
-    │   │   │   │   │   │   ├── new-order.ts
-    │   │   │   │   │   │   └── order.ts
-    │   │   │   │   │   ├── warehouse/
-    │   │   │   │   │   │   ├── item.ts
-    │   │   │   │   │   │   └── order.ts
+│   │   │   │   │   │   ├── category.ts
+│   │   │   │   │   │   ├── employee.ts
+│   │   │   │   │   │   ├── expense.ts
+│   │   │   │   │   │   ├── item.ts
+│   │   │   │   │   │   ├── location.ts
+│   │   │   │   │   │   ├── new-order.ts
+│   │   │   │   │   │   ├── order.ts
+│   │   │   │   │   │   └── users.ts
     │   │   │   └── sadmin/
     │   │   ├── auth.ts
     │   │   ├── global.d.ts

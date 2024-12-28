@@ -94,7 +94,7 @@ export function NavUser({
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuGroup>
-              <Link href="/dashboard/business/retail/admin/settings" passHref>
+              <Link href="/dashboard/business/admin/settings" passHref>
                 <DropdownMenuItem asChild>
                   <span>
                     <User className="mr-2 h-4 w-4" />

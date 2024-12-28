@@ -13,39 +13,57 @@ import {
 } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { DialogFooter } from "@/components/ui/dialog";
-import { Category, locations } from "@/types/dashboard/business/category";
+import {
+  Category,
+  CategoryFormData,
+} from "@/types/dashboard/business/category";
 
 interface CategoryFormProps {
-  initialData?: Category;
-  onSubmit: (data: Omit<Category, "id">) => void;
+  initialData?: Partial<Category>;
+  onSubmit: (data: CategoryFormData) => void;
+  locations: Array<{ id: number; name: string }>;
+  businessId: number;
+  userId: number;
 }
 
-export function CategoryForm({ initialData, onSubmit }: CategoryFormProps) {
-  const [formData, setFormData] = useState<Omit<Category, "id">>({
+export function CategoryForm({
+  initialData,
+  onSubmit,
+  locations,
+  businessId,
+  userId,
+}: CategoryFormProps) {
+  const [formData, setFormData] = useState<CategoryFormData>({
+    businessId: initialData?.businessId || businessId,
+    locationId: initialData?.locationId || locations[0]?.id || 0, // Default to first location
     name: initialData?.name || "",
     description: initialData?.description || "",
-    location: initialData?.location || "",
-    isHidden: initialData?.isHidden || false,
+    isActive: initialData?.isActive ?? true,
+    isHidden: initialData?.isHidden ?? false,
+    createdBy: initialData?.createdBy || userId,
   });
-
+  
   // Add error states
   const [errors, setErrors] = useState({
     name: false,
-    location: false,
+    locationId: false,
   });
 
   useEffect(() => {
     if (initialData) {
       setFormData({
-        name: initialData.name,
-        description: initialData.description,
-        location: initialData.location,
-        isHidden: initialData.isHidden,
+        businessId: initialData.businessId || businessId,
+        locationId: initialData.locationId || 0,
+        name: initialData.name || "",
+        description: initialData.description || "",
+        isActive: initialData.isActive ?? true,
+        isHidden: initialData.isHidden ?? false,
+        createdBy: initialData.createdBy || userId,
       });
       // Clear errors when initialData changes
-      setErrors({ name: false, location: false });
+      setErrors({ name: false, locationId: false });
     }
-  }, [initialData]);
+  }, [initialData, businessId, userId]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -53,7 +71,7 @@ export function CategoryForm({ initialData, onSubmit }: CategoryFormProps) {
     // Validate required fields
     const newErrors = {
       name: !formData.name.trim(),
-      location: !formData.location,
+      locationId: !formData.locationId,
     };
 
     setErrors(newErrors);
@@ -67,8 +85,8 @@ export function CategoryForm({ initialData, onSubmit }: CategoryFormProps) {
   };
 
   return (
-    <form onSubmit={handleSubmit}>
-      <div className="grid gap-4 py-4">
+    <form onSubmit={handleSubmit} className="space-y-6">
+      <div className="grid gap-4">
         <div className="grid grid-cols-4 items-center gap-4">
           <Label htmlFor="name" className="text-right">
             Name <span className="text-red-500">*</span>
@@ -105,48 +123,65 @@ export function CategoryForm({ initialData, onSubmit }: CategoryFormProps) {
         </div>
 
         <div className="grid grid-cols-4 items-center gap-4">
-          <Label htmlFor="location" className="text-right">
+          <Label htmlFor="locationId" className="text-right">
             Location <span className="text-red-500">*</span>
           </Label>
           <div className="col-span-3">
             <Select
-              value={formData.location}
+              value={formData.locationId.toString()}
               onValueChange={(value) => {
-                setFormData({ ...formData, location: value });
-                setErrors({ ...errors, location: false });
+                setFormData({ ...formData, locationId: parseInt(value) });
+                setErrors({ ...errors, locationId: false });
               }}
               required
             >
               <SelectTrigger
-                className={errors.location ? "border-red-500" : ""}
+                className={errors.locationId ? "border-red-500" : ""}
               >
                 <SelectValue placeholder="Select a location" />
               </SelectTrigger>
               <SelectContent>
                 {locations.map((location) => (
-                  <SelectItem key={location} value={location}>
-                    {location}
+                  <SelectItem key={location.id} value={location.id.toString()}>
+                    {location.name}
                   </SelectItem>
                 ))}
               </SelectContent>
             </Select>
-            {errors.location && (
+            {errors.locationId && (
               <p className="text-sm text-red-500 mt-1">Location is required</p>
             )}
           </div>
         </div>
 
         <div className="grid grid-cols-4 items-center gap-4">
-          <Label htmlFor="isHidden" className="text-right">
-            Hidden
-          </Label>
-          <Checkbox
-            id="isHidden"
-            checked={formData.isHidden}
-            onCheckedChange={(checked) =>
-              setFormData({ ...formData, isHidden: checked as boolean })
-            }
-          />
+          <Label className="text-right">Status</Label>
+          <div className="col-span-3 flex items-center space-x-4">
+            <div className="flex items-center space-x-2">
+              <Checkbox
+                id="isActive"
+                checked={formData.isActive}
+                onCheckedChange={(checked) =>
+                  setFormData({ ...formData, isActive: checked as boolean })
+                }
+              />
+              <Label htmlFor="isActive" className="text-sm font-normal">
+                Active
+              </Label>
+            </div>
+            <div className="flex items-center space-x-2">
+              <Checkbox
+                id="isHidden"
+                checked={formData.isHidden}
+                onCheckedChange={(checked) =>
+                  setFormData({ ...formData, isHidden: checked as boolean })
+                }
+              />
+              <Label htmlFor="isHidden" className="text-sm font-normal">
+                Hidden
+              </Label>
+            </div>
+          </div>
         </div>
       </div>
 

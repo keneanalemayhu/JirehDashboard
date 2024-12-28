@@ -9,7 +9,7 @@ import { CategoryTablePagination } from "@/components/dashboard/business/owner/c
 import { useCategories } from "@/hooks/dashboard/business/category";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { CirclePlus, Download } from "lucide-react";
+import { CirclePlus, Download, Search } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -22,72 +22,48 @@ import { CategoryForm } from "@/components/dashboard/business/owner/categories/C
 import {
   Category,
   CategoryFormData,
-  ColumnVisibility,
 } from "@/types/dashboard/business/category";
 
 export default function CategoriesPage() {
-  // Pagination state
-  const [currentPage, setCurrentPage] = React.useState(1);
-  const [pageSize, setPageSize] = React.useState(10);
-
   const {
     categories,
-    filterValue,
-    setFilterValue,
-    handleAddCategory,
-    handleEditCategory,
-    handleDeleteCategory,
+    filteredCategories,
+    paginatedCategories,
+    editingCategory,
+    locations,
+    getLocationName,
     isAddDialogOpen,
     setIsAddDialogOpen,
     isEditDialogOpen,
     setIsEditDialogOpen,
     isDeleteDialogOpen,
     setIsDeleteDialogOpen,
-    editingCategory,
-    setEditingCategory,
     columnsVisible,
     setColumnsVisible,
+    pageSize,
+    currentPage,
+    filters,
+    handleFilterChange,
     handleSort,
-    filteredCategories,
+    handleAddCategory,
+    handleEditCategory,
+    handleDeleteCategory,
+    handlePageChange,
+    handlePageSizeChange,
+    setEditingCategory,
   } = useCategories();
-
-  // Calculate pagination
-  const totalCategories = filteredCategories?.length || 0;
-  const startIndex = (currentPage - 1) * pageSize;
-  const endIndex = startIndex + pageSize;
-  const paginatedCategories =
-    filteredCategories?.slice(startIndex, endIndex) || [];
-
-  // Handle page changes
-  const handlePageChange = (page: number) => {
-    setCurrentPage(page);
-  };
-
-  // Handle page size changes
-  const handlePageSizeChange = (size: number) => {
-    setPageSize(size);
-    setCurrentPage(1);
-  };
-
-  // Handle edit submit
-  const handleEditSubmit = (data: CategoryFormData) => {
-    if (editingCategory) {
-      handleEditCategory({
-        ...data,
-        id: editingCategory.id,
-      });
-    }
-  };
 
   // Export categories
   const handleExport = () => {
     const headers = [
       "ID",
+      "Location",
       "Name",
       "Description",
-      "Items Count",
       "Status",
       "Visibility",
+      "Created At",
+      "Updated At",
     ];
 
     const csvContent = [
@@ -95,11 +71,13 @@ export default function CategoriesPage() {
       ...filteredCategories.map((category) =>
         [
           category.id,
+          `"${getLocationName(category.locationId)}"`,
           `"${category.name}"`,
           `"${category.description || ""}"`,
-          category.itemsCount || 0,
           category.isActive ? "Active" : "Inactive",
           category.isHidden ? "Hidden" : "Visible",
+          new Date(category.createdAt).toLocaleDateString(),
+          new Date(category.updatedAt).toLocaleDateString(),
         ].join(",")
       ),
     ].join("\n");
@@ -145,7 +123,7 @@ export default function CategoriesPage() {
               <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
                 <DialogTrigger asChild>
                   <Button>
-                    <CirclePlus className="w-4 h-4 mr-2" />
+                    <CirclePlus className="h-4 w-4 mr-2" />
                     Add Category
                   </Button>
                 </DialogTrigger>
@@ -156,7 +134,10 @@ export default function CategoriesPage() {
                       Enter the details for the new category.
                     </DialogDescription>
                   </DialogHeader>
-                  <CategoryForm onSubmit={handleAddCategory} />
+                  <CategoryForm
+                    onSubmit={handleAddCategory}
+                    locations={locations}
+                  />
                 </DialogContent>
               </Dialog>
             </div>
@@ -165,22 +146,27 @@ export default function CategoriesPage() {
           {/* Filter and Settings */}
           <div className="flex items-center justify-between gap-4">
             <div className="flex flex-1 items-center gap-2">
-              <Input
-                placeholder="Filter categories..."
-                className="max-w-sm"
-                value={filterValue}
-                onChange={(e) => setFilterValue(e.target.value)}
-              />
+              <div className="relative max-w-sm">
+                <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Search categories..."
+                  value={filters.search}
+                  onChange={(e) =>
+                    handleFilterChange({ search: e.target.value })
+                  }
+                  className="pl-8"
+                />
+              </div>
               <CategoryTableSettings
-                columnsVisible={columnsVisible as ColumnVisibility}
+                columnsVisible={columnsVisible}
                 onColumnVisibilityChange={(column, visible) =>
-                  setColumnsVisible((prev) => ({ ...prev, [column]: visible }))
+                  setColumnsVisible({ ...columnsVisible, [column]: visible })
                 }
               />
             </div>
             <div className="flex items-center gap-2">
               <div className="text-sm text-muted-foreground">
-                Total: {totalCategories} categories
+                Total: {filteredCategories.length} categories
               </div>
             </div>
           </div>
@@ -191,17 +177,11 @@ export default function CategoriesPage() {
             columnsVisible={columnsVisible}
             onSort={handleSort}
             onEdit={(category: Category) => {
-              setEditingCategory({
-                ...category,
-                isHidden: category.isHidden ?? false,
-              });
+              setEditingCategory(category);
               setIsEditDialogOpen(true);
             }}
             onDelete={(category: Category) => {
-              setEditingCategory({
-                ...category,
-                isHidden: category.isHidden ?? false,
-              });
+              setEditingCategory(category);
               setIsDeleteDialogOpen(true);
             }}
             isEditDialogOpen={isEditDialogOpen}
@@ -209,13 +189,15 @@ export default function CategoriesPage() {
             isDeleteDialogOpen={isDeleteDialogOpen}
             setIsDeleteDialogOpen={setIsDeleteDialogOpen}
             editingCategory={editingCategory}
-            onEditSubmit={handleEditSubmit}
+            onEditSubmit={handleEditCategory}
             onDeleteConfirm={handleDeleteCategory}
+            getLocationName={getLocationName}
+            locations={locations}
           />
 
           {/* Pagination */}
           <CategoryTablePagination
-            totalItems={totalCategories}
+            totalItems={filteredCategories.length}
             pageSize={pageSize}
             currentPage={currentPage}
             onPageChange={handlePageChange}

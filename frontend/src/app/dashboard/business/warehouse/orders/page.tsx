@@ -6,12 +6,12 @@ import { SidebarLayout } from "@/components/common/dashboard/business/warehouse/
 import { OrderTable } from "@/components/dashboard/business/warehouse/orders/OrderTable";
 import { OrderTableSettings } from "@/components/dashboard/business/warehouse/orders/OrderTableSettings";
 import { OrderTablePagination } from "@/components/dashboard/business/warehouse/orders/OrderTablePagination";
-import { useOrders } from "@/hooks/dashboard/business/retail/warehouse/order";
+import { useOrders } from "@/hooks/dashboard/business/warehouse/order";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Download } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
-import { Order } from "@/types/dashboard/business/retail/warehouse/order";
+import { Order } from "@/types/dashboard/business/warehouse/order";
 
 export default function OrdersPage() {
   const {

@@ -1,4 +1,4 @@
-import { ProfileForm } from "@/components/dashboard/business/owner/settings/ProfileForm";
+import { ProfileForm } from "@/components/common/settings/ProfileForm";
 
 export default function SettingsProfilePage() {
   return <ProfileForm />;

@@ -1,4 +1,4 @@
-// src/types/dashboard/business/retail/owner/order.ts
+// src/types/dashboard/business/owner/order.ts
 
 /**
  * Core enums

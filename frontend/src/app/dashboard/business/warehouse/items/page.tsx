@@ -6,11 +6,11 @@ import { SidebarLayout } from "@/components/common/dashboard/business/warehouse/
 import { ItemTable } from "@/components/dashboard/business/warehouse/items/ItemTable";
 import { ItemTableSettings } from "@/components/dashboard/business/warehouse/items/ItemTableSettings";
 import { ItemTablePagination } from "@/components/dashboard/business/warehouse/items/ItemTablePagination";
-import { useItems } from "@/hooks/dashboard/business/retail/warehouse/item";
+import { useItems } from "@/hooks/dashboard/business/warehouse/item";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Download } from "lucide-react";
-import { Item } from "@/types/dashboard/business/retail/warehouse/item";
+import { Item } from "@/types/dashboard/business/warehouse/item";
 
 interface ColumnVisibility {
   id: boolean;

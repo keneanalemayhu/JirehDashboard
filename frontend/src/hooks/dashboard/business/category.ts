@@ -1,83 +1,150 @@
 "use client";
 
 import { useState, useMemo } from "react";
+import { startOfMonth, endOfMonth } from "date-fns";
 import {
   Category,
   CategoryFormData,
+  CategoryFilters,
+  ColumnVisibility,
+  DEFAULT_COLUMN_VISIBILITY,
   SortDirection,
 } from "@/types/dashboard/business/category";
+import { useLocations } from "@/hooks/dashboard/business/location";
 
+// Sample initial data matching new interface
 const initialCategories: Category[] = [
   {
     id: 1,
-    name: "Category-1",
-    description: "Electronic devices and gadgets",
-    location: "Main Store",
+    businessId: 1,
+    locationId: 1, // Main Branch
+    name: "Electronics",
+    description: "Electronic devices and accessories",
     isActive: true,
     isHidden: false,
-    lastUpdated: new Date("2024-03-01").toISOString(),
+    createdBy: 1,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
   },
   {
     id: 2,
-    name: "Category-2",
-    description: "Fashion and apparel",
-    location: "Main Store",
+    businessId: 1,
+    locationId: 1, // Main Branch
+    name: "Clothing",
+    description: "Fashion and apparel items",
     isActive: true,
     isHidden: false,
-    lastUpdated: new Date("2024-03-01").toISOString(),
+    createdBy: 1,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
   },
   {
     id: 3,
-    name: "Category-3",
-    description: "Household items and appliances",
-    location: "Main Store",
+    businessId: 1,
+    locationId: 2, // Airport Branch
+    name: "Food & Beverages",
+    description: "Food items and drinks",
     isActive: true,
     isHidden: false,
-    lastUpdated: new Date("2024-03-01").toISOString(),
+    createdBy: 1,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  },
+  {
+    id: 4,
+    businessId: 1,
+    locationId: 3, // Warehouse
+    name: "Home & Living",
+    description: "Household items and furniture",
+    isActive: true,
+    isHidden: false,
+    createdBy: 1,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
   },
 ];
+
 
 export function useCategories(
   defaultCategories: Category[] = initialCategories
 ) {
+  const { locations, getLocationName } = useLocations();
+
   // States
   const [categories, setCategories] = useState<Category[]>(defaultCategories);
-  const [filterValue, setFilterValue] = useState("");
+  const [filters, setFilters] = useState<CategoryFilters>({
+    search: "",
+    locationId: null,
+    isActive: null,
+    isHidden: null,
+    dateRange: {
+      start: startOfMonth(new Date()),
+      end: endOfMonth(new Date()),
+    },
+  });
+
   const [editingCategory, setEditingCategory] = useState<Category | null>(null);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-  const [columnsVisible, setColumnsVisible] = useState({
-    id: true,
-    name: true,
-    description: true,
-    location: true,
-    isActive: true,
-    isHidden: true,
-    lastUpdated: true,
-  });
+  const [columnsVisible, setColumnsVisible] = useState<ColumnVisibility>(
+    DEFAULT_COLUMN_VISIBILITY
+  );
   const [sortColumn, setSortColumn] = useState<keyof Category | null>(null);
   const [sortDirection, setSortDirection] = useState<SortDirection>(null);
   const [pageSize, setPageSize] = useState(10);
   const [currentPage, setCurrentPage] = useState(1);
 
-  // Filtering and sorting
+  // Enhanced filtering with memo
   const filteredCategories = useMemo(() => {
-    const categoriesToFilter = categories || [];
+    let result = [...categories];
 
-    const result = categoriesToFilter.filter(
-      (category) =>
-        category.name.toLowerCase().includes(filterValue.toLowerCase()) ||
-        category.description
-          .toLowerCase()
-          .includes(filterValue.toLowerCase()) ||
-        category.location.toLowerCase().includes(filterValue.toLowerCase())
-    );
+    if (filters.search) {
+      const searchTerm = filters.search.toLowerCase();
+      result = result.filter(
+        (category) =>
+          category.name.toLowerCase().includes(searchTerm) ||
+          category.description.toLowerCase().includes(searchTerm) ||
+          getLocationName(category.locationId)
+            .toLowerCase()
+            .includes(searchTerm)
+      );
+    }
 
+    // Apply other filters
+    if (filters.locationId !== null) {
+      result = result.filter(
+        (category) => category.locationId === filters.locationId
+      );
+    }
+
+    if (filters.isActive !== null) {
+      result = result.filter(
+        (category) => category.isActive === filters.isActive
+      );
+    }
+
+    if (filters.isHidden !== null) {
+      result = result.filter(
+        (category) => category.isHidden === filters.isHidden
+      );
+    }
+
+    if (filters.dateRange.start && filters.dateRange.end) {
+      result = result.filter((category) => {
+        const categoryDate = new Date(category.createdAt);
+        return (
+          categoryDate >= filters.dateRange.start! &&
+          categoryDate <= filters.dateRange.end!
+        );
+      });
+    }
+
+    // Apply sorting
     if (sortColumn) {
       result.sort((a, b) => {
-        const aValue = a[sortColumn];
-        const bValue = b[sortColumn];
+        let aValue = a[sortColumn];
+        let bValue = b[sortColumn];
 
         if (sortDirection === "asc") {
           return String(aValue).localeCompare(String(bValue));
@@ -89,15 +156,21 @@ export function useCategories(
     }
 
     return result;
-  }, [categories, filterValue, sortColumn, sortDirection]);
+  }, [categories, filters, sortColumn, sortDirection, getLocationName]);
 
-  // Pagination
+  // Pagination with memo
   const paginatedCategories = useMemo(() => {
     const startIndex = (currentPage - 1) * pageSize;
-    return filteredCategories.slice(startIndex, startIndex + pageSize);
+    const endIndex = startIndex + pageSize;
+    return filteredCategories.slice(startIndex, endIndex);
   }, [filteredCategories, currentPage, pageSize]);
 
   // Handlers
+  const handleFilterChange = (newFilters: Partial<CategoryFilters>) => {
+    setFilters((prev) => ({ ...prev, ...newFilters }));
+    setCurrentPage(1);
+  };
+
   const handleSort = (column: keyof Category) => {
     if (sortColumn === column) {
       setSortDirection((prev) => {
@@ -105,9 +178,6 @@ export function useCategories(
         if (prev === "desc") return null;
         return "asc";
       });
-      if (sortDirection === null) {
-        setSortColumn(null);
-      }
     } else {
       setSortColumn(column);
       setSortDirection("asc");
@@ -115,17 +185,11 @@ export function useCategories(
   };
 
   const handleAddCategory = (data: CategoryFormData) => {
-    const maxId = Math.max(...categories.map((c) => c.id), 0);
-    const newId = maxId + 1;
-
     const newCategory: Category = {
-      id: newId,
-      name: data.name,
-      description: data.description,
-      location: data.location,
-      isActive: data.isActive,
-      isHidden: data.isHidden,
-      lastUpdated: new Date().toISOString(),
+      id: Math.max(...categories.map((c) => c.id), 0) + 1,
+      ...data,
+      createdAt: new Date(),
+      updatedAt: new Date(),
     };
 
     setCategories((prev) => [...prev, newCategory]);
@@ -141,7 +205,7 @@ export function useCategories(
           ? {
               ...category,
               ...data,
-              lastUpdated: new Date().toISOString(),
+              updatedAt: new Date(),
             }
           : category
       )
@@ -162,50 +226,41 @@ export function useCategories(
     setEditingCategory(null);
   };
 
-  const handlePageChange = (page: number) => {
-    setCurrentPage(page);
-  };
-
-  const handlePageSizeChange = (size: number) => {
-    setPageSize(size);
-    setCurrentPage(1);
-  };
-
   return {
     // Data
     categories,
-    paginatedCategories,
     filteredCategories,
+    paginatedCategories,
     editingCategory,
+    locations,
+    getLocationName,
 
-    // State setters
-    setCategories,
-    setEditingCategory,
-
-    // UI state
-    filterValue,
-    setFilterValue,
+    // State
     isAddDialogOpen,
     setIsAddDialogOpen,
     isEditDialogOpen,
     setIsEditDialogOpen,
     isDeleteDialogOpen,
     setIsDeleteDialogOpen,
-
-    // Table state
     columnsVisible,
     setColumnsVisible,
     pageSize,
     currentPage,
     sortColumn,
     sortDirection,
+    filters,
 
     // Handlers
+    handleFilterChange,
     handleSort,
     handleAddCategory,
     handleEditCategory,
     handleDeleteCategory,
-    handlePageChange,
-    handlePageSizeChange,
+    handlePageChange: (page: number) => setCurrentPage(page),
+    handlePageSizeChange: (size: number) => {
+      setPageSize(size);
+      setCurrentPage(1);
+    },
+    setEditingCategory,
   };
 }

@@ -39,30 +39,30 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         name: t.teams.admin,
         logo: BookUser,
         plan: t.teams.adminPlan,
-        url: "/dashboard/business/retail/admin",
+        url: "/dashboard/business/admin",
       },
       {
         name: t.teams.sales,
         logo: AudioWaveform,
         plan: t.teams.salesPlan,
-        url: "/dashboard/business/retail/sales",
+        url: "/dashboard/business/sales",
       },
       {
         name: t.teams.warehouse,
         logo: Command,
         plan: t.teams.warehousePlan,
-        url: "/dashboard/business/retail/warehouse",
+        url: "/dashboard/business/warehouse",
       },
     ],
     projects: [
       {
         name: t.projects.overview,
-        url: "/dashboard/business/retail/admin/",
+        url: "/dashboard/business/admin/",
         icon: Gauge,
       },
       {
         name: t.projects.orders,
-        url: "/dashboard/business/retail/admin/orders",
+        url: "/dashboard/business/admin/orders",
         icon: ListOrdered,
       },
     ],
@@ -75,19 +75,19 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         items: [
           {
             title: t.manage.locations,
-            url: "/dashboard/business/retail/admin/locations",
+            url: "/dashboard/business/admin/locations",
           },
           {
             title: t.manage.categories,
-            url: "/dashboard/business/retail/admin/categories",
+            url: "/dashboard/business/admin/categories",
           },
           {
             title: t.manage.items,
-            url: "/dashboard/business/retail/admin/items",
+            url: "/dashboard/business/admin/items",
           },
           {
             title: t.manage.employees,
-            url: "/dashboard/business/retail/admin/employees",
+            url: "/dashboard/business/admin/employees",
           },
         ],
       },

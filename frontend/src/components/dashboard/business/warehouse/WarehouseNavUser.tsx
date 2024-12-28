@@ -95,7 +95,7 @@ export function NavUser({
             <DropdownMenuSeparator />
             <DropdownMenuGroup>
               <Link
-                href="/dashboard/business/retail/warehouse/settings"
+                href="/dashboard/business/warehouse/settings"
                 passHref
               >
                 <DropdownMenuItem asChild>

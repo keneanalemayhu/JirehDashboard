@@ -1,4 +1,4 @@
-import { AccountForm } from "@/components/dashboard/business/owner/settings/AccountForm";
+import { AccountForm } from "@/components/common/settings/AccountForm";
 
 export default function SettingsAccountPage() {
   return <AccountForm />;

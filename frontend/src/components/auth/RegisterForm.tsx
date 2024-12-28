@@ -23,8 +23,6 @@ import { translations } from "@/translations/auth";
 import { Icons } from "@/components/common/auth/AuthIcons";
 import AuthHeader from "@/components/common/auth/AuthHeader";
 
-interface FormProps extends React.FormHTMLAttributes<HTMLFormElement> {}
-
 export function RegisterForm() {
   const { language } = useLanguage(); // Updated to remove toggleLanguage
   const t = translations[language].register;

@@ -17,7 +17,7 @@ export default function PaymentSuccessPage() {
 
   useEffect(() => {
     const timer = setTimeout(() => {
-      router.push("/dashboard/business/retail/owner");
+      router.push("/dashboard/business/owner");
     }, 5000);
 
     return () => clearTimeout(timer);
@@ -41,7 +41,7 @@ export default function PaymentSuccessPage() {
         <CardFooter className="flex justify-center">
           <Button
             variant="link"
-            onClick={() => router.push("/dashboard/business/retail/owner")}
+            onClick={() => router.push("/dashboard/business/owner")}
           >
             Go to Dashboard
           </Button>

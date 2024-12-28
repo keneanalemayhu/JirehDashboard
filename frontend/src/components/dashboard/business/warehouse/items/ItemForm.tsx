@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { DialogFooter } from "@/components/ui/dialog";
-import { Item } from "@/types/dashboard/business/retail/warehouse/item";
+import { Item } from "@/types/dashboard/business/warehouse/item";
 
 interface ItemFormProps {
   initialData?: Item;

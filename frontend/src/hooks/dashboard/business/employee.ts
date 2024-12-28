@@ -5,7 +5,7 @@ import {
   Employee,
   EmployeeFormData,
   SortDirection,
-} from "@/types/dashboard/business/retail/admin/employee";
+} from "@/types/dashboard/business/admin/employee";
 
 const initialEmployees: Employee[] = [
   {

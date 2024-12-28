@@ -1,4 +1,4 @@
-// src/hooks/dashboard/business/retail/owner/location.ts
+// src/hooks/dashboard/business/owner/location.ts
 
 "use client";
 
