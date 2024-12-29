@@ -13,7 +13,6 @@ export interface User {
 
 export interface BusinessProfileData {
     business_name?: string;
-    business_type?: string;
     business_phone?: string;
     business_address?: string;
     tax_id?: string;
@@ -52,30 +51,29 @@ export function useAuth() {
     console.log('Sending login request with:', { identifier, password: '***' });
     try {
       const response = await axios.post('/api/auth/login/', {
-        email: identifier,  // Keep as 'email' for backend compatibility
+        email: identifier,
         password
       });
-      const { access, refresh, user, business_type, role } = response.data;
+
+      const { tokens, user, role } = response.data;
+      if (!tokens || !tokens.access || !tokens.refresh) {
+        throw new Error('Invalid response format: missing tokens');
+      }
 
       // Store tokens and user info
-      localStorage.setItem('accessToken', access);
-      localStorage.setItem('refreshToken', refresh);
+      localStorage.setItem('accessToken', tokens.access);
+      localStorage.setItem('refreshToken', tokens.refresh);
       localStorage.setItem('user', JSON.stringify(user));
-      localStorage.setItem('business_type', business_type);
-      localStorage.setItem('role', role);
+      localStorage.setItem('role', role || 'user');
 
       setUser(user);
       setIsAuthenticated(true);
 
-      // Redirect based on role and business type
+      // Redirect based on role
       if (role === 'super_admin') {
         router.push('/dashboard/sadmin');
-      } else if (business_type) {
-        router.push(`/dashboard/business/${business_type}/${role}`);
       } else {
-        // Handle case where business_type is not available
-        console.error('No business type available for user');
-        throw new Error('No business type available');
+        router.push(`/dashboard/business/retail/${role || 'user'}`);
       }
     } catch (error: any) {
       console.error('Login Error Details:', {
@@ -198,7 +196,6 @@ export function useAuth() {
       throw error;
     }
   };
-
 
   return { 
     user, 

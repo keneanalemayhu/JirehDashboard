@@ -3,7 +3,7 @@ from django.db import models
 from django.utils import timezone
 from phonenumber_field.modelfields import PhoneNumberField
 from django.conf import settings
-from store.models import Store, Location
+from store.models import  Location
 # Create your models here.
 
 class Employee(models.Model):
@@ -13,7 +13,6 @@ class Employee(models.Model):
         ('contract', 'Contract'),
         ('intern', 'Intern')
     ]
-    store = models.ForeignKey(Store, on_delete=models.CASCADE)
     location = models.ForeignKey(Location, on_delete=models.CASCADE)
     full_name = models.CharField(max_length=100)
     phone = PhoneNumberField(unique=True)
@@ -28,3 +27,4 @@ class Employee(models.Model):
 
     def __str__(self):
         return self.full_name
+

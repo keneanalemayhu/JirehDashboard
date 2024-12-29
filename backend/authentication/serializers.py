@@ -18,6 +18,7 @@ from phonenumber_field.validators import validate_international_phonenumber
 from django.core.exceptions import ValidationError
 #import is authenticated
 from rest_framework.permissions import IsAuthenticated
+from django.contrib.auth import authenticate
 User = get_user_model()
 
 class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
@@ -55,7 +56,7 @@ class UserUpdateSerializer(serializers.ModelSerializer):
         return instance
 
 class LoginSerializer(serializers.Serializer):
-    email = serializers.CharField(required=True)  
+    email = serializers.EmailField(required=True)
     password = serializers.CharField(
         style={'input_type': 'password'},
         trim_whitespace=False,
@@ -64,27 +65,24 @@ class LoginSerializer(serializers.Serializer):
     )
 
     def validate(self, attrs):
-        identifier = attrs.get('email', '').lower()  
+        email = attrs.get('email')
         password = attrs.get('password')
 
-        if not identifier or not password:
+        if not email or not password:
             raise serializers.ValidationError({
-                'detail': 'Both email/username and password are required.'
+                'detail': 'Both email and password are required.'
             })
 
-        # Try to find user by email or username
-        user = CustomUser.objects.filter(email__iexact=identifier).first()
-        if not user:
-            user = CustomUser.objects.filter(user_name__iexact=identifier).first()
-        
+        # Use Django's authenticate function
+        user = authenticate(
+            request=self.context.get('request'),
+            email=email,
+            password=password
+        )
+
         if not user:
             raise serializers.ValidationError({
-                'detail': 'No account found with this email or username.'
-            })
-            
-        if not user.check_password(password):
-            raise serializers.ValidationError({
-                'detail': 'Invalid password.'
+                'detail': 'Invalid email or password.'
             })
 
         attrs['user'] = user
@@ -242,34 +240,29 @@ class UserProfileUpdateSerializer(serializers.ModelSerializer):
 
 
 class BusinessProfileSerializer(serializers.ModelSerializer):
-    BUSINESS_TYPES = [
-        ('retail', 'Retail'),
-        ('wholesale', 'Wholesale'),
-        ('service', 'Service'),
-    ]
 
     class Meta:
         model = BusinessProfile
-        fields = ['business_name', 'business_type', 'business_phone', 'business_address']
+        fields = ['business_name', 'business_phone', 'business_address']
         extra_kwargs = {
             'business_name': {'required': True},
-            'business_type': {'required': True},
             'business_phone': {'required': False},
             'business_address': {'required': False},
+
         }
 
-    def validate_business_type(self, value):
-        if value not in [choice[0] for choice in self.BUSINESS_TYPES]:
-            raise serializers.ValidationError(
-                f"Invalid business type. Choose from {', '.join([choice[0] for choice in self.BUSINESS_TYPES])}"
-            )
-        return value
+    def update(self, instance, validated_data):
+        # Only update fields that are provided
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
+        instance.save()
+        return instance
 
 class RegisterSerializer(serializers.ModelSerializer):
     business_profile = BusinessProfileSerializer(required=False, allow_null=True)
     password1 = serializers.CharField(write_only=True, required=True)
     password2 = serializers.CharField(write_only=True, required=True)
-    name = serializers.CharField(write_only=True, required=False)  # Add this field to handle frontend's name field
+    name = serializers.CharField(write_only=True, required=False)
 
     class Meta:
         model = CustomUser
@@ -319,26 +312,25 @@ class RegisterSerializer(serializers.ModelSerializer):
                 print(f"Error formatting phone number: {str(e)}")
                 
         # Clean up business profile phone
-        if 'business_profile' in attrs and attrs['business_profile']:
-            business_data = attrs['business_profile']
-            if 'business_phone' in business_data and business_data['business_phone']:
-                try:
-                    phone = business_data['business_phone']
-                    # Remove any non-digit characters
-                    phone = ''.join(c for c in phone if c.isdigit())
+        business_data = attrs.get('business_profile')
+        if business_data and 'business_phone' in business_data and business_data['business_phone']:
+            try:
+                phone = business_data['business_phone']
+                # Remove any non-digit characters
+                phone = ''.join(c for c in phone if c.isdigit())
+                
+                # Handle Ethiopian numbers
+                if len(phone) == 9:  # Format: 911234567
+                    phone = '+251' + phone
+                elif len(phone) == 10 and phone.startswith('0'):  # Format: 0911234567
+                    phone = '+251' + phone[1:]
+                elif not phone.startswith('+'):
+                    phone = '+' + phone
                     
-                    # Handle Ethiopian numbers
-                    if len(phone) == 9:  # Format: 911234567
-                        phone = '+251' + phone
-                    elif len(phone) == 10 and phone.startswith('0'):  # Format: 0911234567
-                        phone = '+251' + phone[1:]
-                    elif not phone.startswith('+'):
-                        phone = '+' + phone
-                        
-                    business_data['business_phone'] = phone
-                except Exception as e:
-                    print(f"Error formatting business phone: {str(e)}")
-                    
+                business_data['business_phone'] = phone
+            except Exception as e:
+                print(f"Error formatting business phone: {str(e)}")
+                
         return attrs
 
     def create(self, validated_data):
@@ -346,7 +338,7 @@ class RegisterSerializer(serializers.ModelSerializer):
         validated_data.pop('password2', None)
         password = validated_data.pop('password1')
         
-        # Set default role to owner
+        # Set default role to owner if not provided
         role = validated_data.pop('role', 'owner')
         
         # Create user
@@ -364,9 +356,12 @@ class RegisterSerializer(serializers.ModelSerializer):
                 if v is not None and v != ''
             }
             if business_profile_data:
-                BusinessProfile.objects.create(
-                    user=user,
-                    **business_profile_data
-                )
+                try:
+                    BusinessProfile.objects.create(
+                        user=user,
+                        **business_profile_data
+                    )
+                except Exception as e:
+                    print(f"Error creating business profile: {str(e)}")
         
         return user

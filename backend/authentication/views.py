@@ -122,41 +122,29 @@ class UserProfileView(APIView):
 
 class LoginView(APIView):
     permission_classes = [AllowAny]
+    authentication_classes = []  # No authentication for login
 
     def post(self, request):
         try:
-            print("Login attempt with data:", request.data)
-            serializer = LoginSerializer(data=request.data)
-            
+            serializer = LoginSerializer(data=request.data, context={'request': request})
             if not serializer.is_valid():
-                print("Validation errors:", serializer.errors)
                 return Response({
                     'success': False,
-                    'detail': serializer.errors.get('detail', 'Invalid input'),
+                    'detail': serializer.errors.get('detail', 'Invalid credentials'),
                     'errors': serializer.errors
                 }, status=status.HTTP_400_BAD_REQUEST)
 
             user = serializer.validated_data['user']
-            
-            # Get business profile information
-            try:
-                business_profile = user.business_profile
-                business_type = business_profile.business_type if business_profile else None
-                role = 'super_admin' if user.is_superuser else user.role
-            except BusinessProfile.DoesNotExist:
-                business_type = None
-                role = 'super_admin' if user.is_superuser else 'user'
-            
-            # Generate tokens
             refresh = RefreshToken.for_user(user)
             
             return Response({
                 'success': True,
-                'access': str(refresh.access_token),
-                'refresh': str(refresh),
+                'tokens': {
+                    'access': str(refresh.access_token),
+                    'refresh': str(refresh)
+                },
                 'user': UserSerializer(user).data,
-                'business_type': business_type,
-                'role': role
+                'role': user.role if hasattr(user, 'role') else 'user'
             }, status=status.HTTP_200_OK)
             
         except Exception as e:
@@ -169,6 +157,7 @@ class LoginView(APIView):
 
 class RegisterView(APIView):
     permission_classes = [AllowAny]
+    authentication_classes = []  # No authentication for registration
 
     def post(self, request):
         try:
@@ -190,9 +179,10 @@ class RegisterView(APIView):
                 
                 # Add business profile if exists
                 try:
-                    business_profile = user.business_profile
-                    response_data['business_profile'] = BusinessProfileSerializer(business_profile).data
-                except BusinessProfile.DoesNotExist:
+                    if hasattr(user, 'business_profile'):
+                        business_profile = user.business_profile
+                        response_data['business_profile'] = BusinessProfileSerializer(business_profile).data
+                except (BusinessProfile.DoesNotExist, AttributeError):
                     pass
                 
                 return Response(response_data, status=status.HTTP_201_CREATED)

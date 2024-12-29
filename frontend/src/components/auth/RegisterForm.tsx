@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { Eye, EyeOff } from "lucide-react";
+import * as React from "react";
 import { useState } from "react";
 import { parsePhoneNumberFromString } from "libphonenumber-js";
 import { Button } from "@/components/ui/button";
@@ -24,6 +25,8 @@ import { translations } from "@/translations/auth";
 import { Icons } from "@/components/common/auth/AuthIcons";
 import AuthHeader from "@/components/common/auth/AuthHeader";
 import { RegisterData, useAuth } from "@/hooks/use-auth";
+import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 
 interface FormProps extends React.FormHTMLAttributes<HTMLFormElement> {}
 
@@ -35,7 +38,6 @@ export function RegisterForm() {
   const [isLoading, setIsLoading] = useState(false);
   const [name, setName] = useState("");
   const [username, setUsername] = useState("");
-
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -44,12 +46,12 @@ export function RegisterForm() {
   const [phone, setPhone] = useState("");
   const [error, setError] = useState("");
   const { register } = useAuth();
+  const router = useRouter();
 
   const [businessName, setBusinessName] = useState("");
   const [businessType, setBusinessType] = useState("");
   const [businessPhone, setBusinessPhone] = useState("");
   const [businessAddress, setBusinessAddress] = useState("");
-
   const [errors, setErrors] = useState<{
     email?: string;
     password?: string;
@@ -269,13 +271,6 @@ export function RegisterForm() {
       return;
     }
 
-    // Validate business type if provided
-    if (businessType && !validateBusinessType(businessType)) {
-      setError("Invalid business type selected");
-      setIsLoading(false);
-      return;
-    }
-
     try {
       // Create registration data object, adhering to RegisterData interface
       const registrationData: RegisterData = {
@@ -287,81 +282,52 @@ export function RegisterForm() {
         phone_number: formatPhoneNumber(phone),
         business_profile: businessName ? {
           business_name: businessName.trim(),
-          business_type: businessType.trim(),
           business_phone: formatPhoneNumber(businessPhone),
           business_address: businessAddress.trim()
         } : undefined
       };
 
-      // Remove undefined or empty string values
-      Object.keys(registrationData).forEach(key => {
-        if (registrationData[key as keyof RegisterData] === undefined || registrationData[key as keyof RegisterData] === '') {
-          delete registrationData[key as keyof RegisterData];
-        }
-      });
-
-      if (registrationData.business_profile) {
-        if (registrationData.business_profile) {
-          (Object.keys(registrationData.business_profile) as (keyof typeof registrationData.business_profile)[]).forEach(key => {
-            if (registrationData.business_profile![key] === undefined || registrationData.business_profile![key] === '') {
-              delete registrationData.business_profile![key];
-            }
-          });
-        }
-        
-        // Remove business_profile if it's empty
-        if (Object.keys(registrationData.business_profile).length === 0) {
-          delete registrationData.business_profile;
-        }
-      }
-
-      console.log(
-        "Submitting registration data:",
-        JSON.stringify(registrationData, null, 2)
-      );
+      console.log("Sending registration data:", registrationData);
 
       // Call the register function from useAuth
       await register(registrationData);
-    } catch (err: any) {
-      console.error("Registration Error:", {
-        message: err.message,
-        response: err.response?.data,
-        status: err.response?.status,
-        url: err.config?.url,
+
+      // If registration is successful, show success message and redirect
+      setIsLoading(false);
+      toast.success("Registration Successful", {
+        description: "Your account has been created successfully. Redirecting to login...",
       });
 
-      let errorMessage = "";
-
-      if (err.response?.data) {
-        const data = err.response.data;
-        if (typeof data === "object") {
-          // Handle nested error objects
-          const processErrors = (obj: any, prefix = ""): string[] => {
-            return Object.entries(obj).flatMap(([key, value]) => {
-              if (Array.isArray(value)) {
-                return [`${prefix}${key}: ${value.join(", ")}`];
-              }
-              if (typeof value === "object" && value !== null) {
-                return processErrors(value, `${prefix}${key}: `);
-              }
-              return [`${prefix}${key}: ${value}`];
-            });
-          };
-
-          errorMessage = processErrors(data).join("\n");
-        } else {
-          errorMessage = String(data);
-        }
-      } else if (err.message) {
-        errorMessage = err.message;
-      } else {
-        errorMessage = "An unexpected error occurred during registration";
-      }
-
-      setError(errorMessage);
-      console.error("Detailed Registration Error:", errorMessage); // Log detailed error
-    } finally {
+      // Redirect to login page after a short delay
+      setTimeout(() => {
+        router.push("/auth/login");
+      }, 2000);
+    } catch (error: any) {
       setIsLoading(false);
+      console.log("Detailed Registration Error:", error.response?.data);
+
+      // Handle specific error cases
+      if (error.response?.data?.errors?.includes("UNIQUE constraint failed: authentication_customuser.email")) {
+        setError("This email is already registered. Please use a different email or try logging in.");
+        toast.error("Registration Failed", {
+          description: "This email is already registered. Please use a different email or try logging in.",
+        });
+      } else if (error.response?.data?.errors) {
+        setError(error.response.data.errors);
+        toast.error("Registration Failed", {
+          description: error.response.data.errors,
+        });
+      } else if (error.response?.data?.message) {
+        setError(error.response.data.message);
+        toast.error("Registration Failed", {
+          description: error.response.data.message,
+        });
+      } else {
+        setError("Registration failed. Please try again.");
+        toast.error("Registration Failed", {
+          description: "An unexpected error occurred. Please try again.",
+        });
+      }
     }
   };
 
