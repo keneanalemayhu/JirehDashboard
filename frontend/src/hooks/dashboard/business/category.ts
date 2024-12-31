@@ -1,3 +1,4 @@
+/* eslint-disable prefer-const */
 "use client";
 
 import { useState, useMemo } from "react";
@@ -17,50 +18,50 @@ const initialCategories: Category[] = [
   {
     id: 1,
     businessId: 1,
-    locationId: 1, // Main Branch
+    locationId: 1,
     name: "Electronics",
     description: "Electronic devices and accessories",
     isActive: true,
     isHidden: false,
     createdBy: 1,
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
+    createdAt: new Date(),
+    updatedAt: new Date(),
   },
   {
     id: 2,
     businessId: 1,
-    locationId: 1, // Main Branch
+    locationId: 1,
     name: "Clothing",
     description: "Fashion and apparel items",
     isActive: true,
     isHidden: false,
     createdBy: 1,
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
+    createdAt: new Date(),
+    updatedAt: new Date(),
   },
   {
     id: 3,
     businessId: 1,
-    locationId: 2, // Airport Branch
+    locationId: 2,
     name: "Food & Beverages",
     description: "Food items and drinks",
     isActive: true,
     isHidden: false,
     createdBy: 1,
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
+    createdAt: new Date(),
+    updatedAt: new Date(),
   },
   {
     id: 4,
     businessId: 1,
-    locationId: 3, // Warehouse
+    locationId: 3,
     name: "Home & Living",
     description: "Household items and furniture",
     isActive: true,
     isHidden: false,
     createdBy: 1,
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
+    createdAt: new Date(),
+    updatedAt: new Date(),
   },
 ];
 

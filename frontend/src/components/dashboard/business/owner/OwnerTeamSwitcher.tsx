@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 "use client";
 
 import * as React from "react";
@@ -32,7 +33,12 @@ export function TeamSwitcher({
 }) {
   const { isMobile } = useSidebar();
   const { language } = useLanguage();
-  const t = translations[language]?.dashboard?.owner?.teamSwitcher || {
+  const t: {
+    label: string;
+    shortcutPrefix: string;
+    teams?: { [key: string]: string };
+    plans?: { [key: string]: string };
+  } = translations[language]?.dashboard?.owner?.teamSwitcher || {
     label: "Users",
     shortcutPrefix: "⌘",
   };

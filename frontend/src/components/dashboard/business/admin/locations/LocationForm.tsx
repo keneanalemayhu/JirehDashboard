@@ -5,66 +5,65 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { DialogFooter } from "@/components/ui/dialog";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Location } from "@/types/dashboard/business/location";
+import { Switch } from "@/components/ui/switch";
+import {
+  Location,
+  LocationFormData,
+} from "@/types/dashboard/business/location";
 
 interface LocationFormProps {
-  initialData?: Location;
-  onSubmit: (data: Omit<Location, "id">) => void;
+  initialData?: Partial<Location>;
+  onSubmit: (data: LocationFormData) => void;
 }
 
 export function LocationForm({ initialData, onSubmit }: LocationFormProps) {
-  const [formData, setFormData] = useState<Omit<Location, "id">>({
+  const [formData, setFormData] = useState<LocationFormData>({
     name: initialData?.name || "",
     address: initialData?.address || "",
-    phoneNumber: initialData?.phoneNumber || "+251",
-    isHidden: initialData?.isHidden || false,
+    contactNumber: initialData?.contactNumber || "+251",
+    isActive: initialData?.isActive ?? true,
   });
 
   const [errors, setErrors] = useState({
     name: false,
     address: false,
-    phoneNumber: false,
+    contactNumber: false,
   });
 
   useEffect(() => {
     if (initialData) {
       setFormData({
-        name: initialData.name,
-        address: initialData.address,
-        phoneNumber: initialData.phoneNumber.startsWith("+251")
-          ? initialData.phoneNumber
-          : "+251" + initialData.phoneNumber,
-        isHidden: initialData.isHidden || false,
+        name: initialData.name || "",
+        address: initialData.address || "",
+        contactNumber: initialData.contactNumber?.startsWith("+251")
+          ? initialData.contactNumber
+          : "+251" + initialData.contactNumber,
+        isActive: initialData.isActive ?? true,
       });
-      setErrors({ name: false, address: false, phoneNumber: false });
+      setErrors({ name: false, address: false, contactNumber: false });
     }
   }, [initialData]);
 
   const formatPhoneNumber = (value: string) => {
-    // Remove all non-digit characters except '+'
     let numbers = value.replace(/[^\d+]/g, "");
 
-    // Ensure it starts with +251
     if (!numbers.startsWith("+251")) {
       numbers = "+251";
     }
 
-    // Remove any digits beyond the maximum length (+251 + 9 digits)
     if (numbers.length > 13) {
       numbers = numbers.slice(0, 13);
     }
 
-    // Add hyphens after specific positions (if enough digits)
     const parts = [];
-    const digitsAfterPrefix = numbers.slice(4); // Get digits after +251
+    const digitsAfterPrefix = numbers.slice(4);
 
     if (digitsAfterPrefix.length > 0) {
-      parts.push(digitsAfterPrefix.slice(0, 2)); // First 2 digits
+      parts.push(digitsAfterPrefix.slice(0, 2));
       if (digitsAfterPrefix.length > 2) {
-        parts.push(digitsAfterPrefix.slice(2, 5)); // Next 3 digits
+        parts.push(digitsAfterPrefix.slice(2, 5));
         if (digitsAfterPrefix.length > 5) {
-          parts.push(digitsAfterPrefix.slice(5)); // Remaining digits
+          parts.push(digitsAfterPrefix.slice(5));
         }
       }
     }
@@ -74,19 +73,18 @@ export function LocationForm({ initialData, onSubmit }: LocationFormProps) {
 
   const handlePhoneNumberChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const formattedNumber = formatPhoneNumber(e.target.value);
-    setFormData({ ...formData, phoneNumber: formattedNumber });
-    setErrors({ ...errors, phoneNumber: false });
+    setFormData({ ...formData, contactNumber: formattedNumber });
+    setErrors({ ...errors, contactNumber: false });
   };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
-    // Validate required fields
     const newErrors = {
       name: !formData.name.trim(),
       address: !formData.address.trim(),
-      phoneNumber:
-        !formData.phoneNumber.trim() || formData.phoneNumber.length < 13,
+      contactNumber:
+        !formData.contactNumber.trim() || formData.contactNumber.length < 13,
     };
 
     setErrors(newErrors);
@@ -144,19 +142,19 @@ export function LocationForm({ initialData, onSubmit }: LocationFormProps) {
         </div>
 
         <div className="grid grid-cols-4 items-center gap-4">
-          <Label htmlFor="phoneNumber" className="text-right">
-            Phone Number <span className="text-red-500">*</span>
+          <Label htmlFor="contactNumber" className="text-right">
+            Contact Number <span className="text-red-500">*</span>
           </Label>
           <div className="col-span-3">
             <Input
-              id="phoneNumber"
-              value={formData.phoneNumber}
+              id="contactNumber"
+              value={formData.contactNumber}
               onChange={handlePhoneNumberChange}
-              className={errors.phoneNumber ? "border-red-500" : ""}
+              className={errors.contactNumber ? "border-red-500" : ""}
               placeholder="+251-xx-xxx-xxxx"
               required
             />
-            {errors.phoneNumber && (
+            {errors.contactNumber && (
               <p className="text-sm text-red-500 mt-1">
                 Please enter a valid Ethiopian phone number
               </p>
@@ -165,17 +163,20 @@ export function LocationForm({ initialData, onSubmit }: LocationFormProps) {
         </div>
 
         <div className="grid grid-cols-4 items-center gap-4">
-          <Label htmlFor="isHidden" className="text-right">
-            Hidden
+          <Label htmlFor="isActive" className="text-right">
+            Active
           </Label>
-          <div className="col-span-3 flex items-center">
-            <Checkbox
-              id="isHidden"
-              checked={formData.isHidden}
+          <div className="flex items-center space-x-2">
+            <Switch
+              id="isActive"
+              checked={formData.isActive}
               onCheckedChange={(checked) =>
-                setFormData({ ...formData, isHidden: checked as boolean })
+                setFormData({ ...formData, isActive: checked })
               }
             />
+            <Label htmlFor="isActive" className="text-sm text-muted-foreground">
+              Location is active and visible
+            </Label>
           </div>
         </div>
       </div>

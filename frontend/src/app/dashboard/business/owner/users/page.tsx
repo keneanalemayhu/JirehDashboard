@@ -159,7 +159,7 @@ export default function UsersPage() {
                       Enter the details for the new user.
                     </DialogDescription>
                   </DialogHeader>
-                  <UserForm onSubmit={handleAddUser} />
+                  <UserForm onSubmit={handleAddUser} location={location} />
                 </DialogContent>
               </Dialog>
             </div>
@@ -190,7 +190,7 @@ export default function UsersPage() {
 
           {/* Table */}
           <UserTable
-            users={paginatedUsers}
+            users={users}
             columnsVisible={columnsVisible}
             onSort={handleSort}
             onEdit={(user: User) => {

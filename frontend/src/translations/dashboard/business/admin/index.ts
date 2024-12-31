@@ -1,8 +1,10 @@
 // translations/dashboard/owner/index.ts
-import { en } from "./en";
 import { am } from "./am";
+import { or } from "./or";
+import { en } from "./en";
 
 export const translations = {
-  en,
   am,
+  or,
+  en,
 };

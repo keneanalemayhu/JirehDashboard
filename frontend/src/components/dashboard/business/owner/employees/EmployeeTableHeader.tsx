@@ -7,51 +7,49 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { ArrowUpDown } from "lucide-react";
-import { Employee } from "@/types/dashboard/business/employee";
-
-interface EmployeeTableHeaderProps {
-  columnsVisible: {
-    id: boolean;
-    name: boolean;
-    phone: boolean;
-    salary: boolean;
-    status: boolean;
-    location: boolean;
-  };
-  onSort: (column: keyof Employee) => void;
-}
-
-type ColumnConfig = {
-  key: keyof Omit<Employee, "isActive">;
-  label: string;
-  width?: string;
-};
+import { ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
+import {
+  Employee,
+  EmployeeTableHeaderProps,
+  COLUMNS,
+  SortDirection,
+} from "@/types/dashboard/business/employee";
+import { Button } from "@/components/ui/button";
 
 export function EmployeeTableHeader({
   columnsVisible,
   onSort,
-}: EmployeeTableHeaderProps) {
-  const columns: ColumnConfig[] = [
-    { key: "id", label: "ID", width: "w-[100px]" },
-    { key: "name", label: "Name" },
-    { key: "phone", label: "Phone" },
-    { key: "salary", label: "Salary", width: "w-[120px]" },
-    { key: "status", label: "Status", width: "w-[120px]" },
-    { key: "location", label: "Location" },
-  ];
+  sortColumn,
+  sortDirection,
+}: EmployeeTableHeaderProps & {
+  sortColumn: keyof Employee | null;
+  sortDirection: SortDirection;
+}) {
+  const renderSortIcon = (columnKey: keyof Employee) => {
+    if (sortColumn !== columnKey)
+      return <ArrowUpDown className="ml-2 h-4 w-4" />;
+    if (sortDirection === "asc") return <ArrowUp className="ml-2 h-4 w-4" />;
+    if (sortDirection === "desc") return <ArrowDown className="ml-2 h-4 w-4" />;
+    return <ArrowUpDown className="ml-2 h-4 w-4" />;
+  };
 
-  const renderSortableHeader = (column: ColumnConfig) => (
+  const renderSortableHeader = (columnKey: keyof Employee, label: string) => (
     <DropdownMenu>
-      <DropdownMenuTrigger className="flex items-center">
-        {column.label}
-        <ArrowUpDown className="ml-2 h-4 w-4" />
+      <DropdownMenuTrigger asChild>
+        <Button
+          variant="ghost"
+          size="sm"
+          className="-ml-3 h-8 data-[state=open]:bg-accent"
+        >
+          <span>{label}</span>
+          {renderSortIcon(columnKey)}
+        </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent>
-        <DropdownMenuItem onClick={() => onSort(column.key)}>
+      <DropdownMenuContent align="start">
+        <DropdownMenuItem onClick={() => onSort(columnKey)}>
           Sort Ascending
         </DropdownMenuItem>
-        <DropdownMenuItem onClick={() => onSort(column.key)}>
+        <DropdownMenuItem onClick={() => onSort(columnKey)}>
           Sort Descending
         </DropdownMenuItem>
       </DropdownMenuContent>
@@ -61,14 +59,16 @@ export function EmployeeTableHeader({
   return (
     <TableHeader>
       <TableRow>
-        {columns.map((column) =>
+        {COLUMNS.map((column) =>
           columnsVisible[column.key] ? (
             <TableHead key={column.key} className={column.width}>
-              {renderSortableHeader(column)}
+              {column.sortable
+                ? renderSortableHeader(column.key, column.label)
+                : column.label}
             </TableHead>
           ) : null
         )}
-        <TableHead className="w-[100px]">Actions</TableHead>
+        <TableHead className="w-[100px] text-right">Actions</TableHead>
       </TableRow>
     </TableHeader>
   );

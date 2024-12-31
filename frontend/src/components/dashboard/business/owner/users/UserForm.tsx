@@ -13,33 +13,26 @@ import {
 } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { DialogFooter } from "@/components/ui/dialog";
-import { locations, Role } from "@/types/dashboard/business/user";
+import {
+  Role,
+  UserFormData,
+  UserFormProps,
+} from "@/types/dashboard/business/user";
 
-interface User {
-  id?: string;
-  username: string;
-  name: string;
-  email: string;
-  phone: string;
-  location: string;
-  role: Role;
-  isActive: boolean; // Add this
-}
-
-interface UserFormProps {
-  initialData?: User;
-  onSubmit: (data: Omit<User, "id">) => void;
-}
-
-export function UserForm({ initialData, onSubmit }: UserFormProps) {
-  const [formData, setFormData] = useState<Omit<User, "id">>({
+export function UserForm({
+  initialData,
+  onSubmit,
+  locations = [],
+}: UserFormProps) {
+  const [formData, setFormData] = useState<UserFormData>({
+    businessId: initialData?.businessId || 0,
+    locationId: initialData?.locationId || 0,
     username: initialData?.username || "",
     name: initialData?.name || "",
     email: initialData?.email || "",
     phone: initialData?.phone || "+251",
-    location: initialData?.location || "",
-    role: initialData?.role || Role.EMPLOYEE,
-    isActive: initialData?.isActive ?? true, // Add this
+    role: initialData?.role || Role.SALES,
+    isActive: initialData?.isActive ?? true,
   });
 
   const [errors, setErrors] = useState({
@@ -47,29 +40,30 @@ export function UserForm({ initialData, onSubmit }: UserFormProps) {
     name: false,
     email: false,
     phone: false,
-    location: false,
+    locationId: false,
     role: false,
   });
 
   useEffect(() => {
     if (initialData) {
       setFormData({
-        username: initialData.username,
-        name: initialData.name,
-        email: initialData.email,
-        phone: initialData.phone.startsWith("+251")
+        businessId: initialData.businessId || 0,
+        locationId: initialData.locationId || 0,
+        username: initialData.username || "",
+        name: initialData.name || "",
+        email: initialData.email || "",
+        phone: initialData.phone?.startsWith("+251")
           ? initialData.phone
           : "+251" + initialData.phone,
-        location: initialData.location,
-        role: initialData.role,
-        isActive: initialData.isActive ?? true, // Add this
+        role: initialData.role || Role.SALES,
+        isActive: initialData.isActive ?? true,
       });
       setErrors({
         username: false,
         name: false,
         email: false,
         phone: false,
-        location: false,
+        locationId: false,
         role: false,
       });
     }
@@ -110,7 +104,7 @@ export function UserForm({ initialData, onSubmit }: UserFormProps) {
       name: !formData.name.trim(),
       email: !formData.email.trim() || !validateEmail(formData.email),
       phone: !formData.phone.trim() || formData.phone.length < 13,
-      location: !formData.location,
+      locationId: !formData.locationId,
       role: !formData.role,
     };
 
@@ -223,27 +217,27 @@ export function UserForm({ initialData, onSubmit }: UserFormProps) {
           </Label>
           <div className="col-span-3">
             <Select
-              value={formData.location}
+              value={formData.locationId.toString()}
               onValueChange={(value) => {
-                setFormData({ ...formData, location: value });
-                setErrors({ ...errors, location: false });
+                setFormData({ ...formData, locationId: parseInt(value) });
+                setErrors({ ...errors, locationId: false });
               }}
               required
             >
               <SelectTrigger
-                className={errors.location ? "border-red-500" : ""}
+                className={errors.locationId ? "border-red-500" : ""}
               >
                 <SelectValue placeholder="Select a location" />
               </SelectTrigger>
               <SelectContent>
                 {locations.map((location) => (
-                  <SelectItem key={location} value={location}>
-                    {location}
+                  <SelectItem key={location.id} value={location.id.toString()}>
+                    {location.name}
                   </SelectItem>
                 ))}
               </SelectContent>
             </Select>
-            {errors.location && (
+            {errors.locationId && (
               <p className="text-sm text-red-500 mt-1">Location is required</p>
             )}
           </div>
@@ -278,6 +272,7 @@ export function UserForm({ initialData, onSubmit }: UserFormProps) {
             )}
           </div>
         </div>
+
         <div className="grid grid-cols-4 items-center gap-4">
           <Label htmlFor="isActive" className="text-right">
             Active

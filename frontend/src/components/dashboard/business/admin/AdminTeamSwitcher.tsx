@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 "use client";
 
 import * as React from "react";
@@ -32,7 +33,12 @@ export function TeamSwitcher({
 }) {
   const { isMobile } = useSidebar();
   const { language } = useLanguage();
-  const t = translations[language]?.dashboard?.admin?.teamSwitcher || {
+  const t: {
+    label: string;
+    shortcutPrefix: string;
+    teams?: Record<string, string>;
+    plans?: Record<string, string>;
+  } = translations[language]?.dashboard?.admin?.teamSwitcher || {
     label: "Users",
     shortcutPrefix: "⌘",
   };
@@ -53,10 +59,10 @@ export function TeamSwitcher({
               </div>
               <div className="grid flex-1 text-left text-sm leading-tight">
                 <span className="truncate font-semibold">
-                  {t.teams?.[activeTeam.name.toLowerCase()] || activeTeam.name}
+                  {(t.teams as Record<string, string>)?.[activeTeam.name.toLowerCase()] || activeTeam.name}
                 </span>
                 <span className="truncate text-xs">
-                  {t.plans?.[
+                  {(t.plans as Record<string, string>)?.[
                     activeTeam.plan.toLowerCase().replace(/\s+/g, "_")
                   ] || activeTeam.plan}
                 </span>

@@ -1,7 +1,11 @@
 "use client";
 
 import { Table, TableBody } from "@/components/ui/table";
-import { Category } from "@/types/dashboard/business/category";
+import {
+  Category,
+  CategoryFormData,
+  ColumnVisibility,
+} from "@/types/dashboard/business/category";
 import { CategoryTableHeader } from "./CategoryTableHeader";
 import { CategoryTableRow } from "./CategoryTableRow";
 import {
@@ -17,12 +21,7 @@ import { CategoryForm } from "./CategoryForm";
 
 interface CategoryTableProps {
   categories: Category[];
-  columnsVisible: {
-    id: boolean;
-    name: boolean;
-    description: boolean;
-    location: boolean;
-  };
+  columnsVisible: ColumnVisibility;
   onSort: (column: keyof Category) => void;
   onEdit: (category: Category) => void;
   onDelete: (category: Category) => void;
@@ -31,8 +30,12 @@ interface CategoryTableProps {
   isDeleteDialogOpen: boolean;
   setIsDeleteDialogOpen: (open: boolean) => void;
   editingCategory: Category | null;
-  onEditSubmit: () => void;
+  onEditSubmit: (data: CategoryFormData) => void;
   onDeleteConfirm: () => void;
+  locations: Array<{ id: number; name: string }>;
+  getLocationName: (id: number) => string;
+  businessId: number;
+  userId: number;
 }
 
 export function CategoryTable({
@@ -48,25 +51,36 @@ export function CategoryTable({
   editingCategory,
   onEditSubmit,
   onDeleteConfirm,
+  locations,
+  getLocationName,
+  businessId,
+  userId,
 }: CategoryTableProps) {
+  // Loading state
   if (!categories) {
     return (
-      <div className="border rounded-lg p-4 text-center text-gray-500">
-        Loading items...
+      <div className="rounded-md border p-8">
+        <div className="text-center text-sm text-muted-foreground">
+          Loading categories...
+        </div>
       </div>
     );
   }
 
+  // Empty state
   if (categories.length === 0) {
     return (
-      <div className="border rounded-lg p-4 text-center text-gray-500">
-        No categories found.
+      <div className="rounded-md border p-8">
+        <div className="text-center text-sm text-muted-foreground">
+          No categories found.
+        </div>
       </div>
     );
   }
+
   return (
-    <div className="border rounded-lg overflow-hidden">
-      <div className="overflow-x-auto">
+    <div className="rounded-md border">
+      <div className="relative">
         <Table>
           <CategoryTableHeader
             columnsVisible={columnsVisible}
@@ -80,6 +94,7 @@ export function CategoryTable({
                 columnsVisible={columnsVisible}
                 onEdit={onEdit}
                 onDelete={onDelete}
+                getLocationName={getLocationName}
               />
             ))}
           </TableBody>
@@ -88,17 +103,20 @@ export function CategoryTable({
 
       {/* Edit Dialog */}
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-        <DialogContent>
+        <DialogContent className="sm:max-w-[425px]">
           <DialogHeader>
             <DialogTitle>Edit Category</DialogTitle>
             <DialogDescription>
-              Make changes to the category details.
+              Make changes to the category details. Click save when you&apos;re done.
             </DialogDescription>
           </DialogHeader>
           {editingCategory && (
             <CategoryForm
-              initialData={editingCategory} // Make sure initialData matches the Category type
+              initialData={editingCategory}
               onSubmit={onEditSubmit}
+              locations={locations}
+              businessId={businessId}
+              userId={userId}
             />
           )}
         </DialogContent>
@@ -106,23 +124,24 @@ export function CategoryTable({
 
       {/* Delete Dialog */}
       <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
-        <DialogContent>
+        <DialogContent className="sm:max-w-[425px]">
           <DialogHeader>
             <DialogTitle>Delete Category</DialogTitle>
             <DialogDescription>
               Are you sure you want to delete this category? This action cannot
-              be undone.
+              be undone and may affect related items.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
             <Button
               variant="outline"
               onClick={() => setIsDeleteDialogOpen(false)}
+              className="mr-2"
             >
               Cancel
             </Button>
             <Button variant="destructive" onClick={onDeleteConfirm}>
-              Delete
+              Delete Category
             </Button>
           </DialogFooter>
         </DialogContent>

@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Edit, Trash2 } from "lucide-react";
 import { User, Role } from "@/types/dashboard/business/user";
 import { cn } from "@/lib/utils";
+import { useLocations } from "@/hooks/dashboard/business/location";
 
 interface UserTableRowProps {
   user: User;
@@ -14,8 +15,9 @@ interface UserTableRowProps {
     name: boolean;
     email: boolean;
     phone: boolean;
-    location: boolean;
+    locationId: boolean;
     role: boolean;
+    isActive: boolean;
   };
   onEdit: (user: User) => void;
   onDelete: (user: User) => void;
@@ -27,14 +29,14 @@ export function UserTableRow({
   onEdit,
   onDelete,
 }: UserTableRowProps) {
+  const { getLocationName } = useLocations();
+
   const getRoleColor = (role: Role) => {
     switch (role) {
+      case Role.OWNER:
+        return "bg-yellow-100 text-yellow-800";
       case Role.ADMIN:
         return "bg-red-100 text-red-800";
-      case Role.MANAGER:
-        return "bg-purple-100 text-purple-800";
-      case Role.EMPLOYEE:
-        return "bg-blue-100 text-blue-800";
       case Role.SALES:
         return "bg-green-100 text-green-800";
       case Role.WAREHOUSE:
@@ -44,8 +46,14 @@ export function UserTableRow({
     }
   };
 
+  const getStatusColor = (isActive: boolean) => {
+    return isActive
+      ? "bg-green-100 text-green-800"
+      : "bg-gray-100 text-gray-800";
+  };
+
   return (
-    <TableRow className={!user.isActive ? "opacity-50" : ""}>
+    <TableRow>
       {columnsVisible.id && <TableCell>{user.id}</TableCell>}
 
       {columnsVisible.username && <TableCell>{user.username}</TableCell>}
@@ -56,10 +64,10 @@ export function UserTableRow({
 
       {columnsVisible.phone && <TableCell>{user.phone}</TableCell>}
 
-      {columnsVisible.location && (
+      {columnsVisible.locationId && (
         <TableCell>
           <span className="inline-flex items-center rounded-md bg-gray-50 px-2 py-1 text-xs font-medium text-gray-600 ring-1 ring-inset ring-gray-500/10">
-            {user.location}
+            {getLocationName(user.locationId)}
           </span>
         </TableCell>
       )}
@@ -68,7 +76,7 @@ export function UserTableRow({
         <TableCell>
           <span
             className={cn(
-              "px-2 py-1 rounded-full text-xs font-medium",
+              "inline-flex items-center rounded-full px-2 py-1 text-xs font-medium",
               getRoleColor(user.role)
             )}
           >
@@ -77,9 +85,27 @@ export function UserTableRow({
         </TableCell>
       )}
 
+      {columnsVisible.isActive && (
+        <TableCell>
+          <span
+            className={cn(
+              "inline-flex items-center rounded-full px-2 py-1 text-xs font-medium",
+              getStatusColor(user.isActive)
+            )}
+          >
+            {user.isActive ? "Active" : "Inactive"}
+          </span>
+        </TableCell>
+      )}
+
       <TableCell>
         <div className="flex space-x-2">
-          <Button variant="ghost" size="icon" onClick={() => onEdit(user)}>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => onEdit(user)}
+            className="hover:text-primary"
+          >
             <Edit className="w-4 h-4" />
             <span className="sr-only">Edit {user.name}</span>
           </Button>

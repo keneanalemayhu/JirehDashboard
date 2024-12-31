@@ -3,6 +3,7 @@
  */
 export interface Item {
   id: string;
+  businessId: number;
   name: string;
   barcode: string;
   price: string;
@@ -38,6 +39,7 @@ export type SortDirection = "asc" | "desc" | null;
 
 export interface ColumnVisibility {
   id: boolean;
+  businessId: boolean;
   categoryId: boolean;
   name: boolean;
   price: boolean;
@@ -119,6 +121,7 @@ export interface ColumnConfig {
 
 export const COLUMNS: ColumnConfig[] = [
   { key: "id", label: "ID", width: "w-[100px]", sortable: true },
+  { key: "businessId", label: "Business", width: "w-[100px]", sortable: true },
   { key: "categoryId", label: "Category", sortable: true },
   { key: "name", label: "Name", sortable: true },
   { key: "price", label: "Price", sortable: true },
@@ -142,6 +145,7 @@ export const DEFAULT_PAGE_SIZE = 10;
 
 export const DEFAULT_COLUMN_VISIBILITY: ColumnVisibility = {
   id: true,
+  businessId: false,
   categoryId: true,
   name: true,
   price: true,
@@ -158,6 +162,7 @@ export const DEFAULT_COLUMN_VISIBILITY: ColumnVisibility = {
 };
 
 export const INITIAL_FORM_DATA: ItemFormData = {
+  businessId: 0,
   categoryId: 0,
   name: "",
   price: "",
@@ -201,6 +206,8 @@ export interface UseItemsReturn {
   setColumnsVisible: (visibility: ColumnVisibility) => void;
   pageSize: number;
   currentPage: number;
+  sortColumn: keyof Item | null;
+  sortDirection: SortDirection;
 
   // Handlers
   handleSort: (column: keyof Item) => void;
@@ -210,4 +217,5 @@ export interface UseItemsReturn {
   handlePageChange: (page: number) => void;
   handlePageSizeChange: (size: number) => void;
   handleTabChange: (tab: "regular" | "temporary") => void;
+  getTemporaryItemStatus: (item: Item) => string;
 }

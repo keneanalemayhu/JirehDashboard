@@ -190,7 +190,13 @@ export function ExpenseTable({
               </DialogDescription>
             </DialogHeader>
             <ExpenseForm
-              initialData={editingExpense}
+              initialData={{
+                ...editingExpense,
+                expenseDate: new Date(editingExpense.expenseDate),
+                recurringEndDate: editingExpense.recurringEndDate
+                  ? new Date(editingExpense.recurringEndDate)
+                  : undefined,
+              }}
               onSubmit={onEditSubmit}
               locations={locations}
             />

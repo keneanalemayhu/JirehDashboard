@@ -7,7 +7,38 @@ export const metadata: Metadata = {
     template: "%s | Jireh-Dashboard",
     default: "JirehDashboard",
   },
+  icons: {
+    icon: "/favicon.ico",
+  },
+  robots: {
+    index: true,
+    follow: true,
+  },
   description: "Simplify Management, Empower Businesses, Scale with Confidence",
+  openGraph: {
+    type: "website",
+    locale: "en_US",
+    url: process.env.NEXT_PUBLIC_APP_URL,
+    siteName: "JirehDashboard",
+    title: "JirehDashboard",
+    description:
+      "Simplify Management, Empower Businesses, Scale with Confidence",
+    images: [
+      {
+        url: `${process.env.NEXT_PUBLIC_APP_URL}/images/jireh.png`,
+        width: 1200,
+        height: 630,
+        alt: "Jireh Dashboard",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "JirehDashboard",
+    description:
+      "Simplify Management, Empower Businesses, Scale with Confidence",
+    images: [`${process.env.NEXT_PUBLIC_APP_URL}/images/jireh.png`],
+  },
 };
 
 export default function RootLayout({
@@ -17,10 +48,6 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <head>
-        <meta charSet="utf-8" />
-        <meta name="viewport" content="width=device-width, initial-scale=1" />
-      </head>
       <body suppressHydrationWarning>
         <Providers>{children}</Providers>
       </body>

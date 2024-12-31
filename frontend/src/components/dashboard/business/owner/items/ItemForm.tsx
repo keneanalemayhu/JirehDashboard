@@ -41,6 +41,7 @@ export function ItemForm({
     isTemporary: (defaultTemporary || initialData?.isTemporary) ?? false,
     expiryHours: initialData?.expiryHours ?? null,
     autoResetQuantity: initialData?.autoResetQuantity ?? false,
+    businessId: initialData?.businessId ?? 0,
   });
 
   const [errors, setErrors] = useState({
@@ -52,28 +53,29 @@ export function ItemForm({
   });
 
   useEffect(() => {
-    if (initialData) {
-      setFormData({
-        name: initialData.name ?? "",
-        price: initialData.price ?? "",
-        categoryId: initialData.categoryId ?? 0,
-        barcode: initialData.barcode ?? "",
-        quantity: initialData.quantity ?? 0,
-        isHidden: initialData.isHidden ?? false,
-        isActive: initialData.isActive ?? true,
-        isTemporary: initialData.isTemporary ?? false,
-        expiryHours: initialData.expiryHours ?? null,
-        autoResetQuantity: initialData.autoResetQuantity ?? false,
-      });
-      setErrors({
-        name: false,
-        price: false,
-        categoryId: false,
-        quantity: false,
-        expiryHours: false,
-      });
-    }
-  }, [initialData]);
+      if (initialData) {
+        setFormData({
+          name: initialData.name ?? "",
+          price: initialData.price ?? "",
+          categoryId: initialData.categoryId ?? 0,
+          barcode: initialData.barcode ?? "",
+          quantity: initialData.quantity ?? 0,
+          isHidden: initialData.isHidden ?? false,
+          isActive: initialData.isActive ?? true,
+          isTemporary: initialData.isTemporary ?? false,
+          expiryHours: initialData.expiryHours ?? null,
+          autoResetQuantity: initialData.autoResetQuantity ?? false,
+          businessId: initialData.businessId ?? 0,
+        });
+        setErrors({
+          name: false,
+          price: false,
+          categoryId: false,
+          quantity: false,
+          expiryHours: false,
+        });
+      }
+    }, [initialData]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();

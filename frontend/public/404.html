@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Redirecting...</title>
+    <script>
+        const pathSegments = window.location.pathname.split('/');
+        const path = window.location.pathname;
+
+        // Handle root path
+        if (path === '/' || path === '') {
+            window.location.href = '/auth/login/';
+            
+        // Handle business dashboard routes
+        } else if (path.includes('/dashboard/business/')) {
+            const role = pathSegments[3]; // owner, admin, sales, or warehouse
+            
+            if (role === 'owner' && pathSegments.length <= 4) {
+                window.location.href = '/dashboard/business/owner/overview/';
+            } else if (role === 'admin' && pathSegments.length <= 4) {
+                window.location.href = '/dashboard/business/admin/overview/';
+            } else if (role === 'sales' && pathSegments.length <= 4) {
+                window.location.href = '/dashboard/business/sales/orders/';
+            } else if (role === 'warehouse' && pathSegments.length <= 4) {
+                window.location.href = '/dashboard/business/warehouse/items/';
+            } else {
+                // For all other paths, try to serve the path with index.html
+                const withoutHTML = path.replace('.html', '');
+                window.location.href = withoutHTML + '/';
+            }
+            
+        // Handle auth routes    
+        } else if (path === '/auth' || path === '/auth/') {
+            window.location.href = '/auth/login/';
+            
+        } else {
+            // For all other paths, try to serve the path with index.html
+            const withoutHTML = path.replace('.html', '');
+            window.location.href = withoutHTML + '/';
+        }
+    </script>
+</head>
+<body>
+    <div style="text-align: center; padding-top: 100px;">
+        Redirecting...
+    </div>
+</body>
+</html>

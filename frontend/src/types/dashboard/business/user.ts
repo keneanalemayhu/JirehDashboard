@@ -1,14 +1,8 @@
-export interface User {
-  id: string;
-  username: string;
-  name: string;
-  email: string;
-  phone: string;
-  location: string;
-  role: Role;
-  isActive: boolean;
-}
+// src/types/dashboard/business/owner/user.ts
 
+/**
+ * Enums
+ */
 export enum Role {
   OWNER = "Owner",
   ADMIN = "Admin",
@@ -16,29 +10,63 @@ export enum Role {
   WAREHOUSE = "Warehouse",
 }
 
-export type UserFormData = Omit<User, "id">;
+/**
+ * Core entity interfaces
+ */
+export interface User {
+  id: string;
+  businessId: number;
+  locationId: number;
+  username: string;
+  name: string;
+  email: string;
+  phone: string;
+  role: Role;
+  isActive: boolean;
+  lastLogin: Date | null;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+/**
+ * Form-related types
+ */
+export type UserFormData = Omit<
+  User,
+  "id" | "lastLogin" | "createdAt" | "updatedAt"
+>;
 
 export interface UserFormProps {
   initialData?: Partial<User>;
   onSubmit: (data: UserFormData) => void;
+  locations: Array<{ id: number; name: string }>;
 }
 
+/**
+ * Table-related types
+ */
 export type SortDirection = "asc" | "desc" | null;
 
 export interface ColumnVisibility {
   id: boolean;
+  businessId: boolean;
+  locationId: boolean;
   username: boolean;
   name: boolean;
   email: boolean;
   phone: boolean;
-  location: boolean;
   role: boolean;
+  isActive: boolean;
+  lastLogin: boolean;
+  createdAt: boolean;
+  updatedAt: boolean;
 }
 
 export interface ColumnConfig {
   key: ColumnKey;
   label: string;
   width?: string;
+  sortable: boolean;
 }
 
 export type ColumnKey = keyof User;
@@ -54,13 +82,16 @@ export interface UserTableProps {
   isDeleteDialogOpen: boolean;
   setIsDeleteDialogOpen: (open: boolean) => void;
   editingUser: User | null;
-  onEditSubmit: () => void;
+  onEditSubmit: (data: UserFormData) => void;
   onDeleteConfirm: () => void;
+  getLocationName: (id: number) => string;
 }
 
 export interface UserTableHeaderProps {
   columnsVisible: ColumnVisibility;
   onSort: (column: keyof User) => void;
+  sortColumn?: keyof User | null;
+  sortDirection?: SortDirection;
 }
 
 export interface UserTableRowProps {
@@ -68,6 +99,7 @@ export interface UserTableRowProps {
   columnsVisible: ColumnVisibility;
   onEdit: (user: User) => void;
   onDelete: (user: User) => void;
+  getLocationName: (id: number) => string;
 }
 
 export interface UserTablePaginationProps {
@@ -80,72 +112,62 @@ export interface UserTablePaginationProps {
 
 export interface UserTableSettingsProps {
   columnsVisible: ColumnVisibility;
-  onColumnVisibilityChange: (
-    column: keyof ColumnVisibility,
-    visible: boolean
-  ) => void;
+  onColumnVisibilityChange: (column: keyof User, visible: boolean) => void;
 }
 
-export interface UseUsersReturn {
-  users: User[];
-  paginatedUsers: User[];
-  filteredUsers: User[];
-  editingUser: User | null;
-  setUsers: (users: User[]) => void;
-  setEditingUser: (user: User | null) => void;
-  filterValue: string;
-  setFilterValue: (value: string) => void;
-  isAddDialogOpen: boolean;
-  setIsAddDialogOpen: (open: boolean) => void;
-  isEditDialogOpen: boolean;
-  setIsEditDialogOpen: (open: boolean) => void;
-  isDeleteDialogOpen: boolean;
-  setIsDeleteDialogOpen: (open: boolean) => void;
-  columnsVisible: ColumnVisibility;
-  setColumnsVisible: (visibility: ColumnVisibility) => void;
-  pageSize: number;
-  currentPage: number;
-  sortColumn: keyof User | null;
-  sortDirection: SortDirection;
-  handleSort: (column: keyof User) => void;
-  handleAddUser: (data: UserFormData) => void;
-  handleEditUser: (data: UserFormData) => void;
-  handleDeleteUser: () => void;
-  handlePageChange: (page: number) => void;
-  handlePageSizeChange: (size: number) => void;
+/**
+ * Filter interfaces
+ */
+export interface UserFilters {
+  search: string;
+  locationId: number | null;
+  role: Role | null;
+  isActive: boolean | null;
+  dateRange: {
+    start: Date | null;
+    end: Date | null;
+  };
 }
 
 export const COLUMNS: ColumnConfig[] = [
-  { key: "id", label: "ID", width: "w-[100px]" },
-  { key: "username", label: "Username" },
-  { key: "name", label: "Name" },
-  { key: "email", label: "Email" },
-  { key: "phone", label: "Phone" },
-  { key: "location", label: "Location" },
-  { key: "role", label: "Role" },
+  { key: "id", label: "ID", width: "w-[100px]", sortable: true },
+  { key: "businessId", label: "Business", width: "w-[100px]", sortable: true },
+  { key: "locationId", label: "Location", width: "w-[150px]", sortable: true },
+  { key: "username", label: "Username", width: "w-[150px]", sortable: true },
+  { key: "name", label: "Name", width: "w-[200px]", sortable: true },
+  { key: "email", label: "Email", width: "w-[200px]", sortable: true },
+  { key: "phone", label: "Phone", width: "w-[150px]", sortable: true },
+  { key: "role", label: "Role", width: "w-[120px]", sortable: true },
+  { key: "isActive", label: "Status", width: "w-[100px]", sortable: true },
+  { key: "lastLogin", label: "Last Login", width: "w-[150px]", sortable: true },
+  { key: "createdAt", label: "Created At", width: "w-[150px]", sortable: true },
+  { key: "updatedAt", label: "Updated At", width: "w-[150px]", sortable: true },
 ];
 
 export const PAGE_SIZE_OPTIONS = [10, 20, 30, 40, 50] as const;
 
-export const locations = ["Location 1", "Location 2", "Location 3"] as const;
-export type LocationType = (typeof locations)[number];
-
 export const DEFAULT_COLUMN_VISIBILITY: ColumnVisibility = {
   id: true,
+  businessId: false,
+  locationId: true,
   username: true,
   name: true,
   email: true,
   phone: true,
-  location: true,
   role: true,
+  isActive: true,
+  lastLogin: false,
+  createdAt: false,
+  updatedAt: false,
 };
 
 export const INITIAL_FORM_DATA: UserFormData = {
+  businessId: 0,
+  locationId: 0,
   username: "",
   name: "",
   email: "",
   phone: "+251",
-  location: "",
-  role: "",
+  role: Role.SALES,
   isActive: true,
 };

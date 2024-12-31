@@ -1,5 +1,3 @@
-//
-
 "use client";
 
 import { useState, useMemo } from "react";
@@ -13,11 +11,12 @@ import {
 const initialItems: Item[] = [
   {
     id: "1",
+    businessId: 1,
     name: "Samsung Galaxy S24",
     barcode: "890123456789",
     price: "999.99",
     quantity: 10,
-    categoryId: 1, // Electronics
+    categoryId: 1,
     isActive: true,
     isHidden: false,
     isTemporary: false,
@@ -28,11 +27,12 @@ const initialItems: Item[] = [
   },
   {
     id: "2",
+    businessId: 1,
     name: "Flash Sale - Nike Air Max",
     barcode: "123456789012",
     price: "199.99",
     quantity: 30,
-    categoryId: 2, // Clothing
+    categoryId: 2,
     isActive: true,
     isHidden: false,
     isTemporary: true,
@@ -41,62 +41,16 @@ const initialItems: Item[] = [
     lastQuantityReset: new Date("2024-03-02"),
     lastInventoryUpdate: new Date("2024-03-02"),
   },
-  {
-    id: "3",
-    name: "Coffee Maker Deluxe",
-    barcode: "345678901234",
-    price: "299.99",
-    quantity: 15,
-    categoryId: 3, // Home & Kitchen
-    isActive: true,
-    isHidden: false,
-    isTemporary: false,
-    expiryHours: null,
-    autoResetQuantity: false,
-    lastQuantityReset: null,
-    lastInventoryUpdate: new Date("2024-03-01"),
-  },
-  {
-    id: "4",
-    name: "Limited Edition Book Set",
-    barcode: "456789012345",
-    price: "149.99",
-    quantity: 5,
-    categoryId: 4, // Books
-    isActive: true,
-    isHidden: false,
-    isTemporary: true,
-    expiryHours: 48,
-    autoResetQuantity: false,
-    lastQuantityReset: new Date("2024-03-02"),
-    lastInventoryUpdate: new Date("2024-03-02"),
-  },
-  {
-    id: "5",
-    name: "Fresh Organic Juice",
-    barcode: "567890123456",
-    price: "5.99",
-    quantity: 50,
-    categoryId: 6, // Food & Beverages
-    isActive: true,
-    isHidden: false,
-    isTemporary: true,
-    expiryHours: 12,
-    autoResetQuantity: true,
-    lastQuantityReset: new Date("2024-03-03"),
-    lastInventoryUpdate: new Date("2024-03-03"),
-  },
 ];
 
 export function useItems(defaultItems: Item[] = initialItems) {
-  // Basic state
+  // States
   const [items, setItems] = useState<Item[]>(defaultItems);
   const [filterValue, setFilterValue] = useState("");
   const [editingItem, setEditingItem] = useState<Item | null>(null);
   const [activeTab, setActiveTab] = useState<"regular" | "temporary">(
     "regular"
   );
-  const [error] = useState<string | null>(null);
 
   // Dialog states
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
@@ -106,6 +60,7 @@ export function useItems(defaultItems: Item[] = initialItems) {
   // Table state
   const [columnsVisible, setColumnsVisible] = useState<ColumnVisibility>({
     id: true,
+    businessId: false,
     name: true,
     barcode: true,
     price: true,
@@ -161,6 +116,8 @@ export function useItems(defaultItems: Item[] = initialItems) {
 
         if (
           sortColumn === "quantity" ||
+          sortColumn === "businessId" ||
+          sortColumn === "categoryId" ||
           sortColumn === "lastInventoryUpdate" ||
           sortColumn === "expiryHours" ||
           sortColumn === "lastQuantityReset"
@@ -290,7 +247,6 @@ export function useItems(defaultItems: Item[] = initialItems) {
     paginatedItems,
     filteredItems,
     editingItem,
-    error,
 
     // State setters
     setItems,

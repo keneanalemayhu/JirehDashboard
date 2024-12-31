@@ -6,85 +6,181 @@ import { SidebarLayout } from "@/components/common/dashboard/business/sales/Side
 import { OrderTable } from "@/components/dashboard/business/sales/orders/OrderTable";
 import { OrderTableSettings } from "@/components/dashboard/business/sales/orders/OrderTableSettings";
 import { OrderTablePagination } from "@/components/dashboard/business/sales/orders/OrderTablePagination";
-import { useOrders } from "@/hooks/dashboard/business/order";
+import { useOrders, initialOrders } from "@/hooks/dashboard/business/order";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Download } from "lucide-react";
+import { Download, FileDown, FileSpreadsheet, FileText } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
-import { Order } from "@/types/dashboard/business/order";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { PaymentStatus, OrderFilters } from "@/types/dashboard/business/order";
 
 export default function OrdersPage() {
+  const [timeframe, setTimeframe] = React.useState("today");
+  const [showAmounts, setShowAmounts] = React.useState(true);
+  const [showEmployeeInfo, setShowEmployeeInfo] = React.useState(true);
+  const [showCustomerInfo, setShowCustomerInfo] = React.useState(true);
+  const [sortDirection, setSortDirection] = React.useState<"asc" | "desc">(
+    "desc"
+  );
+  const [itemsPerPage, setItemsPerPage] = React.useState(10);
+
   const {
     orders,
-    filterValue,
-    setFilterValue,
-    handleUpdatePaymentStatus,
-    isDetailsDialogOpen,
-    setIsDetailsDialogOpen,
+    filters,
+    setFilters,
     selectedOrder,
-    setSelectedOrder,
-    handleSort,
-    filteredOrders,
     paginatedOrders,
-    statusFilter,
-    handleStatusFilterChange,
-    pageSize,
     currentPage,
-    handlePageChange,
-    handlePageSizeChange,
-  } = useOrders();
+    pageSize,
+    setPage,
+    setPageSize,
+    updateOrder,
+    handleSort,
+    sortColumn,
+  } = useOrders(initialOrders);
 
-  // Calculate totals
-  const totalOrders = filteredOrders?.length || 0;
-  const totalAmount =
-    filteredOrders?.reduce((sum, order) => sum + order.total_amount, 0) || 0;
-  const paidOrders =
-    filteredOrders?.filter((order) => order.payment_status === "paid").length ||
-    0;
-  const pendingOrders =
-    filteredOrders?.filter((order) => order.payment_status === "pending")
-      .length || 0;
+  // Function to get filtered orders based on timeframe
+  const getTimeframeOrders = React.useCallback(() => {
+    const now = new Date();
+    const startOfDay = new Date(now.setHours(0, 0, 0, 0));
+    const startOfWeek = new Date(now);
+    startOfWeek.setDate(now.getDate() - now.getDay());
+    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+    const startOfYear = new Date(now.getFullYear(), 0, 1);
 
-  // Export orders
-  const handleExport = () => {
+    let startDate;
+    switch (timeframe) {
+      case "today":
+        startDate = startOfDay;
+        break;
+      case "week":
+        startDate = startOfWeek;
+        break;
+      case "month":
+        startDate = startOfMonth;
+        break;
+      case "year":
+        startDate = startOfYear;
+        break;
+      default:
+        return orders;
+    }
+
+    return orders.filter((order) => new Date(order.order_date) >= startDate);
+  }, [timeframe, orders]);
+
+  const timeframeOrders = React.useMemo(
+    () => getTimeframeOrders(),
+    [getTimeframeOrders]
+  );
+
+  // Calculate statistics based on timeframe orders
+  const stats = React.useMemo(
+    () => ({
+      totalOrders: timeframeOrders.length,
+      totalAmount: timeframeOrders.reduce(
+        (sum, order) => sum + order.total_amount,
+        0
+      ),
+      paidOrders: timeframeOrders.filter(
+        (order) => order.payment_status === PaymentStatus.PAID
+      ).length,
+      pendingOrders: timeframeOrders.filter(
+        (order) => order.payment_status === PaymentStatus.PENDING
+      ).length,
+      cancelledOrders: timeframeOrders.filter(
+        (order) => order.payment_status === PaymentStatus.CANCELLED
+      ).length,
+    }),
+    [timeframeOrders]
+  );
+
+  // Handle timeframe change
+  const handleTimeframeChange = (newTimeframe: string) => {
+    setTimeframe(newTimeframe);
+    setPage(1);
+  };
+
+  // Handle search
+  const handleSearch = (searchTerm: string) => {
+    setFilters({ ...filters, searchTerm });
+  };
+
+  // Handle status filter change
+  const handleStatusFilterChange = (statuses: PaymentStatus[]) => {
+    setFilters({ ...filters, paymentStatus: statuses });
+  };
+
+  // Handle payment status update
+  const handleUpdatePaymentStatus = async (
+    orderId: string,
+    newStatus: PaymentStatus
+  ) => {
+    await updateOrder(orderId, { payment_status: newStatus });
+  };
+
+  // Export functions
+  const handleExport = (format: "csv" | "excel" | "sheets") => {
     const headers = [
       "Order ID",
-      "Date",
-      "Customer",
-      "Items",
-      "Total Amount",
+      "Order Number",
+      ...(showCustomerInfo
+        ? ["Customer Name", "Customer Phone", "Customer Email"]
+        : []),
+      ...(showEmployeeInfo ? ["Employee Name"] : []),
+      "Status",
       "Payment Status",
-      "Order Status",
-      "Employee",
-      "Location",
+      ...(showAmounts ? ["Total Amount"] : []),
+      "Order Date",
     ];
 
-    const csvContent = [
-      headers.join(","),
-      ...filteredOrders.map((order) =>
-        [
-          order.id,
-          new Date(order.order_date).toLocaleString(),
-          `"${order.customer_name}"`,
-          order.items_count,
-          order.total_amount,
-          `"${order.payment_status}"`,
-          `"${order.status}"`,
-          `"${order.employee_name}"`,
-          `"${order.location_name}"`,
-        ].join(",")
-      ),
-    ].join("\n");
+    const rows = timeframeOrders.map((order) => {
+      const row = [order.order_id, order.order_number];
 
-    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
-    const link = document.createElement("a");
+      if (showCustomerInfo) {
+        row.push(
+          order.customer.name,
+          order.customer.phone,
+          order.customer.email
+        );
+      }
+
+      if (showEmployeeInfo) {
+        row.push(order.employee_name);
+      }
+
+      row.push(order.status, order.payment_status);
+
+      if (showAmounts) {
+        row.push(order.total_amount.toString());
+      }
+
+      row.push(new Date(order.order_date).toLocaleString());
+
+      return row;
+    });
+
+    const content = [headers, ...rows].map((row) => row.join(",")).join("\n");
+
+    const blob = new Blob([content], {
+      type:
+        format === "csv"
+          ? "text/csv;charset=utf-8;"
+          : "application/vnd.ms-excel;charset=utf-8;",
+    });
+
     const url = URL.createObjectURL(blob);
-
-    link.setAttribute("href", url);
-    link.setAttribute(
-      "download",
-      `orders-export-${new Date().toISOString().split("T")[0]}.csv`
-    );
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `orders-export-${timeframe}-${
+      new Date().toISOString().split("T")[0]
+    }.${format === "csv" ? "csv" : format === "excel" ? "xls" : "tsv"}`;
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -102,27 +198,69 @@ export default function OrdersPage() {
                 Orders Management
               </h1>
               <p className="text-sm text-muted-foreground">
-                Track and manage your sales orders
+                {timeframe === "today"
+                  ? "Today's"
+                  : timeframe === "week"
+                  ? "This Week's"
+                  : timeframe === "month"
+                  ? "This Month's"
+                  : timeframe === "year"
+                  ? "This Year's"
+                  : "Total"}{" "}
+                Orders Overview ({stats.totalOrders}{" "}
+                {stats.totalOrders === 1 ? "order" : "orders"})
               </p>
             </div>
-            <Button
-              variant="outline"
-              size="icon"
-              onClick={handleExport}
-              title="Export Orders"
-            >
-              <Download className="h-4 w-4" />
-            </Button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" size="icon">
+                  <Download className="h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-[200px]">
+                <DropdownMenuItem onClick={() => handleExport("sheets")}>
+                  <FileText className="mr-2 h-4 w-4" />
+                  <span>Export for Google Sheets</span>
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => handleExport("excel")}>
+                  <FileSpreadsheet className="mr-2 h-4 w-4" />
+                  <span>Export as Excel</span>
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => handleExport("csv")}>
+                  <FileDown className="mr-2 h-4 w-4" />
+                  <span>Export as CSV</span>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
 
+          {/* Time Navigation */}
+          <Card className="border-none shadow-none">
+            <CardContent className="p-0">
+              <Tabs
+                defaultValue="today"
+                value={timeframe}
+                onValueChange={handleTimeframeChange}
+              >
+                <TabsList>
+                  <TabsTrigger value="today">Today</TabsTrigger>
+                  <TabsTrigger value="week">This Week</TabsTrigger>
+                  <TabsTrigger value="month">This Month</TabsTrigger>
+                  <TabsTrigger value="year">This Year</TabsTrigger>
+                  <TabsTrigger value="total">Total</TabsTrigger>
+                </TabsList>
+              </Tabs>
+            </CardContent>
+          </Card>
+
           {/* Summary Cards */}
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
             <Card>
               <CardContent className="p-4">
                 <div className="text-sm font-medium text-muted-foreground">
                   Total Orders
                 </div>
-                <div className="text-2xl font-bold">{totalOrders}</div>
+                <div className="text-2xl font-bold">{stats.totalOrders}</div>
               </CardContent>
             </Card>
             <Card>
@@ -131,7 +269,7 @@ export default function OrdersPage() {
                   Total Amount
                 </div>
                 <div className="text-2xl font-bold">
-                  ETB {totalAmount.toLocaleString()}
+                  ETB {stats.totalAmount.toLocaleString()}
                 </div>
               </CardContent>
             </Card>
@@ -141,7 +279,7 @@ export default function OrdersPage() {
                   Paid Orders
                 </div>
                 <div className="text-2xl font-bold text-green-600">
-                  {paidOrders}
+                  {stats.paidOrders}
                 </div>
               </CardContent>
             </Card>
@@ -151,7 +289,17 @@ export default function OrdersPage() {
                   Pending Orders
                 </div>
                 <div className="text-2xl font-bold text-yellow-600">
-                  {pendingOrders}
+                  {stats.pendingOrders}
+                </div>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="p-4">
+                <div className="text-sm font-medium text-muted-foreground">
+                  Cancelled Orders
+                </div>
+                <div className="text-2xl font-bold text-red-600">
+                  {stats.cancelledOrders}
                 </div>
               </CardContent>
             </Card>
@@ -163,14 +311,26 @@ export default function OrdersPage() {
               <Input
                 placeholder="Search orders..."
                 className="max-w-sm"
-                value={filterValue}
-                onChange={(e) => setFilterValue(e.target.value)}
+                value={filters.searchTerm || ""}
+                onChange={(e) => handleSearch(e.target.value)}
               />
               <OrderTableSettings
-                showCurrency={true}
-                onShowCurrencyChange={() => {}}
-                statusFilter={statusFilter}
-                onStatusFilterChange={handleStatusFilterChange}
+                settings={{
+                  showAmounts,
+                  showEmployeeInfo,
+                  showCustomerInfo,
+                  statusFilter: filters.paymentStatus || [],
+                  sortDirection,
+                  itemsPerPage,
+                }}
+                onSettingsChange={{
+                  onShowAmountsChange: setShowAmounts,
+                  onShowEmployeeInfoChange: setShowEmployeeInfo,
+                  onShowCustomerInfoChange: setShowCustomerInfo,
+                  onStatusFilterChange: handleStatusFilterChange,
+                  onSortDirectionChange: setSortDirection,
+                  onItemsPerPageChange: setItemsPerPage,
+                }}
               />
             </div>
           </div>
@@ -178,20 +338,26 @@ export default function OrdersPage() {
           {/* Table */}
           <OrderTable
             orders={paginatedOrders}
+            settings={{
+              showAmounts,
+              showEmployeeInfo,
+              showCustomerInfo,
+              sortDirection,
+              itemsPerPage,
+              statusFilter: filters.paymentStatus || [],
+            }}
             onSort={handleSort}
             onStatusUpdate={handleUpdatePaymentStatus}
-            isDetailsDialogOpen={isDetailsDialogOpen}
-            setIsDetailsDialogOpen={setIsDetailsDialogOpen}
             selectedOrder={selectedOrder}
           />
 
           {/* Pagination */}
           <OrderTablePagination
-            totalItems={totalOrders}
+            totalItems={timeframeOrders.length}
             pageSize={pageSize}
             currentPage={currentPage}
-            onPageChange={handlePageChange}
-            onPageSizeChange={handlePageSizeChange}
+            onPageChange={setPage}
+            onPageSizeChange={setPageSize}
           />
         </div>
       </div>

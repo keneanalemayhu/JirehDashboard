@@ -1,0 +1,7 @@
+/*    /index.html   200
+/     /auth/login   301
+/auth  /auth/login  301
+/dashboard/business/owner      /dashboard/business/owner/overview    301
+/dashboard/business/admin      /dashboard/business/admin/overview    301
+/dashboard/business/sales      /dashboard/business/sales/orders      301
+/dashboard/business/warehouse  /dashboard/business/warehouse/items   301

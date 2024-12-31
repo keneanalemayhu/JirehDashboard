@@ -14,47 +14,75 @@ import {
 import { Checkbox } from "@/components/ui/checkbox";
 import { DialogFooter } from "@/components/ui/dialog";
 import {
-  Employee,
+  EmployeeFormProps,
   EmployeeStatus,
-  locations,
 } from "@/types/dashboard/business/employee";
+import { format } from "date-fns";
 
-export function EmployeeForm({ initialData, onSubmit }: EmployeeFormProps) {
-  const [formData, setFormData] = useState<Omit<Employee, "id">>({
+const EMPLOYMENT_STATUSES = ["Active", "On Leave", "Suspended", "Terminated"];
+
+export function EmployeeForm({
+  initialData,
+  onSubmit,
+  locations,
+}: EmployeeFormProps) {
+  const [formData, setFormData] = useState({
+    businessId: initialData?.businessId || 0,
+    locationId: initialData?.locationId || 0,
     name: initialData?.name || "",
+    email: initialData?.email || "",
     phone: initialData?.phone || "+251",
+    position: initialData?.position || "",
     salary: initialData?.salary || 0,
     status: initialData?.status || EmployeeStatus.FULL_TIME,
-    location: initialData?.location || "",
-    isActive: initialData?.isActive || true,
+    employmentStatus: initialData?.employmentStatus || "Active",
+    isActive: initialData?.isActive ?? true,
+    hireDate: initialData?.hireDate
+      ? format(initialData.hireDate, "yyyy-MM-dd")
+      : format(new Date(), "yyyy-MM-dd"),
   });
 
   const [errors, setErrors] = useState({
     name: false,
+    email: false,
     phone: false,
+    position: false,
     salary: false,
     status: false,
-    location: false,
+    locationId: false,
+    employmentStatus: false,
+    hireDate: false,
   });
 
   useEffect(() => {
     if (initialData) {
       setFormData({
-        name: initialData.name,
-        phone: initialData.phone.startsWith("+251")
-          ? initialData.phone
-          : "+251" + initialData.phone,
-        salary: initialData.salary,
-        status: initialData.status,
-        location: initialData.location,
-        isActive: initialData.isActive,
+        businessId: initialData.businessId || 0,
+        locationId: initialData.locationId || 0,
+        name: initialData.name || "",
+        email: initialData.email || "",
+        phone: (initialData.phone ?? "").startsWith("+251")
+          ? initialData.phone ?? ""
+          : "+251" + (initialData.phone ?? ""),
+        position: initialData.position || "",
+        salary: initialData.salary || 0,
+        status: initialData.status || EmployeeStatus.FULL_TIME,
+        employmentStatus: initialData.employmentStatus || "Active",
+        isActive: initialData.isActive ?? true,
+        hireDate: initialData.hireDate
+          ? format(initialData.hireDate, "yyyy-MM-dd")
+          : "",
       });
       setErrors({
         name: false,
+        email: false,
         phone: false,
+        position: false,
         salary: false,
         status: false,
-        location: false,
+        locationId: false,
+        employmentStatus: false,
+        hireDate: false,
       });
     }
   }, [initialData]);
@@ -90,18 +118,8 @@ export function EmployeeForm({ initialData, onSubmit }: EmployeeFormProps) {
     return "+251" + (parts.length > 0 ? "-" + parts.join("-") : "");
   };
 
-  const handlePhoneNumberChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const formattedNumber = formatPhoneNumber(e.target.value);
-    setFormData({ ...formData, phone: formattedNumber });
-    setErrors({ ...errors, phone: false });
-  };
-
-  const formatSalary = (value: string) => {
-    // Remove all non-digit characters
-    const numbers = value.replace(/[^\d]/g, "");
-    // Convert to number and format with ETB
-    const amount = Number(numbers);
-    return amount;
+  const validateEmail = (email: string) => {
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -109,10 +127,14 @@ export function EmployeeForm({ initialData, onSubmit }: EmployeeFormProps) {
 
     const newErrors = {
       name: !formData.name.trim(),
+      email: !validateEmail(formData.email),
       phone: !formData.phone.trim() || formData.phone.length < 13,
+      position: !formData.position.trim(),
       salary: formData.salary <= 0,
       status: !formData.status,
-      location: !formData.location,
+      locationId: formData.locationId === 0,
+      employmentStatus: !formData.employmentStatus,
+      hireDate: !formData.hireDate,
     };
 
     setErrors(newErrors);
@@ -121,12 +143,49 @@ export function EmployeeForm({ initialData, onSubmit }: EmployeeFormProps) {
       return;
     }
 
-    onSubmit(formData);
+    onSubmit({
+      ...formData,
+      hireDate: new Date(formData.hireDate),
+    });
   };
 
   return (
     <form onSubmit={handleSubmit}>
       <div className="grid gap-4 py-4">
+        {/* Location Selection */}
+        <div className="grid grid-cols-4 items-center gap-4">
+          <Label htmlFor="locationId" className="text-right">
+            Location <span className="text-red-500">*</span>
+          </Label>
+          <div className="col-span-3">
+            <Select
+              value={formData.locationId.toString()}
+              onValueChange={(value) => {
+                setFormData({ ...formData, locationId: parseInt(value) });
+                setErrors({ ...errors, locationId: false });
+              }}
+              required
+            >
+              <SelectTrigger
+                className={errors.locationId ? "border-red-500" : ""}
+              >
+                <SelectValue placeholder="Select a location" />
+              </SelectTrigger>
+              <SelectContent>
+                {locations.map((location) => (
+                  <SelectItem key={location.id} value={location.id.toString()}>
+                    {location.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            {errors.locationId && (
+              <p className="text-sm text-red-500 mt-1">Location is required</p>
+            )}
+          </div>
+        </div>
+
+        {/* Name Field */}
         <div className="grid grid-cols-4 items-center gap-4">
           <Label htmlFor="name" className="text-right">
             Name <span className="text-red-500">*</span>
@@ -148,6 +207,32 @@ export function EmployeeForm({ initialData, onSubmit }: EmployeeFormProps) {
           </div>
         </div>
 
+        {/* Email Field */}
+        <div className="grid grid-cols-4 items-center gap-4">
+          <Label htmlFor="email" className="text-right">
+            Email <span className="text-red-500">*</span>
+          </Label>
+          <div className="col-span-3">
+            <Input
+              id="email"
+              type="email"
+              value={formData.email}
+              onChange={(e) => {
+                setFormData({ ...formData, email: e.target.value });
+                setErrors({ ...errors, email: false });
+              }}
+              className={errors.email ? "border-red-500" : ""}
+              required
+            />
+            {errors.email && (
+              <p className="text-sm text-red-500 mt-1">
+                Valid email is required
+              </p>
+            )}
+          </div>
+        </div>
+
+        {/* Phone Field */}
         <div className="grid grid-cols-4 items-center gap-4">
           <Label htmlFor="phone" className="text-right">
             Phone <span className="text-red-500">*</span>
@@ -156,7 +241,11 @@ export function EmployeeForm({ initialData, onSubmit }: EmployeeFormProps) {
             <Input
               id="phone"
               value={formData.phone}
-              onChange={handlePhoneNumberChange}
+              onChange={(e) => {
+                const formattedNumber = formatPhoneNumber(e.target.value);
+                setFormData({ ...formData, phone: formattedNumber });
+                setErrors({ ...errors, phone: false });
+              }}
               className={errors.phone ? "border-red-500" : ""}
               placeholder="+251-xx-xxx-xxxx"
               required
@@ -169,6 +258,29 @@ export function EmployeeForm({ initialData, onSubmit }: EmployeeFormProps) {
           </div>
         </div>
 
+        {/* Position Field */}
+        <div className="grid grid-cols-4 items-center gap-4">
+          <Label htmlFor="position" className="text-right">
+            Position <span className="text-red-500">*</span>
+          </Label>
+          <div className="col-span-3">
+            <Input
+              id="position"
+              value={formData.position}
+              onChange={(e) => {
+                setFormData({ ...formData, position: e.target.value });
+                setErrors({ ...errors, position: false });
+              }}
+              className={errors.position ? "border-red-500" : ""}
+              required
+            />
+            {errors.position && (
+              <p className="text-sm text-red-500 mt-1">Position is required</p>
+            )}
+          </div>
+        </div>
+
+        {/* Salary Field */}
         <div className="grid grid-cols-4 items-center gap-4">
           <Label htmlFor="salary" className="text-right">
             Salary (ETB) <span className="text-red-500">*</span>
@@ -183,8 +295,7 @@ export function EmployeeForm({ initialData, onSubmit }: EmployeeFormProps) {
                 type="number"
                 value={formData.salary}
                 onChange={(e) => {
-                  const value = formatSalary(e.target.value);
-                  setFormData({ ...formData, salary: value });
+                  setFormData({ ...formData, salary: Number(e.target.value) });
                   setErrors({ ...errors, salary: false });
                 }}
                 className={`pl-12 ${errors.salary ? "border-red-500" : ""}`}
@@ -200,6 +311,7 @@ export function EmployeeForm({ initialData, onSubmit }: EmployeeFormProps) {
           </div>
         </div>
 
+        {/* Status Field */}
         <div className="grid grid-cols-4 items-center gap-4">
           <Label htmlFor="status" className="text-right">
             Status <span className="text-red-500">*</span>
@@ -230,38 +342,65 @@ export function EmployeeForm({ initialData, onSubmit }: EmployeeFormProps) {
           </div>
         </div>
 
+        {/* Employment Status Field */}
         <div className="grid grid-cols-4 items-center gap-4">
-          <Label htmlFor="location" className="text-right">
-            Location <span className="text-red-500">*</span>
+          <Label htmlFor="employmentStatus" className="text-right">
+            Employment Status <span className="text-red-500">*</span>
           </Label>
           <div className="col-span-3">
             <Select
-              value={formData.location}
+              value={formData.employmentStatus}
               onValueChange={(value) => {
-                setFormData({ ...formData, location: value });
-                setErrors({ ...errors, location: false });
+                setFormData({ ...formData, employmentStatus: value });
+                setErrors({ ...errors, employmentStatus: false });
               }}
               required
             >
               <SelectTrigger
-                className={errors.location ? "border-red-500" : ""}
+                className={errors.employmentStatus ? "border-red-500" : ""}
               >
-                <SelectValue placeholder="Select a location" />
+                <SelectValue placeholder="Select employment status" />
               </SelectTrigger>
               <SelectContent>
-                {locations.map((location) => (
-                  <SelectItem key={location} value={location}>
-                    {location}
+                {EMPLOYMENT_STATUSES.map((status) => (
+                  <SelectItem key={status} value={status}>
+                    {status}
                   </SelectItem>
                 ))}
               </SelectContent>
             </Select>
-            {errors.location && (
-              <p className="text-sm text-red-500 mt-1">Location is required</p>
+            {errors.employmentStatus && (
+              <p className="text-sm text-red-500 mt-1">
+                Employment status is required
+              </p>
             )}
           </div>
         </div>
 
+        {/* Hire Date Field */}
+        <div className="grid grid-cols-4 items-center gap-4">
+          <Label htmlFor="hireDate" className="text-right">
+            Hire Date <span className="text-red-500">*</span>
+          </Label>
+          <div className="col-span-3">
+            <Input
+              id="hireDate"
+              type="date"
+              value={formData.hireDate}
+              onChange={(e) => {
+                setFormData({ ...formData, hireDate: e.target.value });
+                setErrors({ ...errors, hireDate: false });
+              }}
+              className={errors.hireDate ? "border-red-500" : ""}
+              required
+            />
+            {errors.hireDate && (
+              <p className="text-sm text-red-500 mt-1">Hire date is required</p>
+            )}
+          </div>
+        </div>
+
+        {/* Active Status */}
         <div className="grid grid-cols-4 items-center gap-4">
           <Label htmlFor="isActive" className="text-right">
             Active

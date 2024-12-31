@@ -126,7 +126,7 @@ export function useLocations(defaultLocations: Location[] = initialLocations) {
 
     const newLocation: Location = {
       id: newId,
-      businessId: 1, // This should come from context or props
+      businessId: 1,
       ...data,
       isActive: true,
       createdAt: new Date().toISOString(),

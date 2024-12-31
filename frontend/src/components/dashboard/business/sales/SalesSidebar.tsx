@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { Gauge, CirclePlus, ListOrdered, Command } from "lucide-react";
+import { ListOrdered, Command } from "lucide-react";
 
 import { NavUser } from "@/components/dashboard/business/sales/SalesNavUser";
 import { NavProjects } from "@/components/dashboard/business/sales/SalesNavProjects";
@@ -35,16 +35,6 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       },
     ],
     projects: [
-      {
-        name: t.projects.overview,
-        url: "/dashboard/business/sales/",
-        icon: Gauge,
-      },
-      {
-        name: t.projects.newOrder,
-        url: "/dashboard/business/sales/new-order",
-        icon: CirclePlus,
-      },
       {
         name: t.projects.orders,
         url: "/dashboard/business/sales/orders",

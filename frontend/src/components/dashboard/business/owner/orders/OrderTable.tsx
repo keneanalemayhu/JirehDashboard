@@ -31,9 +31,7 @@ interface OrderTableProps {
 export function OrderTable({
   orders,
   settings,
-  onSort,
   onStatusUpdate,
-  selectedOrder,
 }: OrderTableProps) {
   const formatCurrency = (amount: number | undefined | null) => {
     if (amount === undefined || amount === null) return "ETB 0";
@@ -123,7 +121,7 @@ export function OrderTable({
                         variant="outline"
                         size="sm"
                         onClick={() =>
-                          onStatusUpdate(order.order_id, PaymentStatus.PAID)
+                          onStatusUpdate(order.order_id.toString(), PaymentStatus.PAID)
                         }
                       >
                         Mark as Paid
@@ -136,7 +134,7 @@ export function OrderTable({
                         size="sm"
                         onClick={() =>
                           onStatusUpdate(
-                            order.order_id,
+                            order.order_id.toString(),
                             PaymentStatus.CANCELLED
                           )
                         }

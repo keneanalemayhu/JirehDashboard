@@ -4,51 +4,90 @@ import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Checkbox } from "@/components/ui/checkbox";
 import { DialogFooter } from "@/components/ui/dialog";
-import { Item } from "@/types/dashboard/business/warehouse/item";
+import { Switch } from "@/components/ui/switch";
+import { Item, ItemFormData } from "@/types/dashboard/business/item";
+import { useCategories } from "@/hooks/dashboard/business/category";
 
 interface ItemFormProps {
-  initialData?: Item;
-  onSubmit: (data: Omit<Item, "id">) => void;
+  initialData?: Partial<Item>;
+  onSubmit: (data: ItemFormData) => void;
+  defaultTemporary?: boolean;
 }
 
-export function ItemForm({ initialData, onSubmit }: ItemFormProps) {
-  const [formData, setFormData] = useState<Omit<Item, "id">>({
+export function ItemForm({
+  initialData,
+  onSubmit,
+  defaultTemporary = false,
+}: ItemFormProps) {
+  const { categories } = useCategories();
+
+  const [formData, setFormData] = useState<ItemFormData>({
     name: initialData?.name ?? "",
     price: initialData?.price ?? "",
-    category: initialData?.category ?? "",
+    categoryId: initialData?.categoryId ?? Number(categories[0]?.id) ?? 0,
     barcode: initialData?.barcode ?? "",
     quantity: initialData?.quantity ?? 0,
     isHidden: initialData?.isHidden ?? false,
     isActive: initialData?.isActive ?? true,
+    isTemporary: (defaultTemporary || initialData?.isTemporary) ?? false,
+    expiryHours: initialData?.expiryHours ?? null,
+    autoResetQuantity: initialData?.autoResetQuantity ?? false,
+    businessId: initialData?.businessId ?? 0,
   });
 
   const [errors, setErrors] = useState({
+    name: false,
+    price: false,
+    categoryId: false,
     quantity: false,
+    expiryHours: false,
   });
 
   useEffect(() => {
-    if (initialData) {
-      setFormData({
-        name: initialData.name ?? "",
-        price: initialData.price ?? "",
-        category: initialData.category ?? "",
-        barcode: initialData.barcode ?? "",
-        quantity: initialData.quantity ?? 0,
-        isHidden: initialData.isHidden ?? false,
-        isActive: initialData.isActive ?? true,
-      });
-      setErrors({
-        quantity: false,
-      });
-    }
-  }, [initialData]);
+      if (initialData) {
+        setFormData({
+          name: initialData.name ?? "",
+          price: initialData.price ?? "",
+          categoryId: initialData.categoryId ?? 0,
+          barcode: initialData.barcode ?? "",
+          quantity: initialData.quantity ?? 0,
+          isHidden: initialData.isHidden ?? false,
+          isActive: initialData.isActive ?? true,
+          isTemporary: initialData.isTemporary ?? false,
+          expiryHours: initialData.expiryHours ?? null,
+          autoResetQuantity: initialData.autoResetQuantity ?? false,
+          businessId: initialData.businessId ?? 0,
+        });
+        setErrors({
+          name: false,
+          price: false,
+          categoryId: false,
+          quantity: false,
+          expiryHours: false,
+        });
+      }
+    }, [initialData]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
     const newErrors = {
+      name: !formData.name.trim(),
+      price: !formData.price || parseFloat(formData.price) <= 0,
+      categoryId: !formData.categoryId,
       quantity: typeof formData.quantity !== "number" || formData.quantity < 0,
+      expiryHours:
+        formData.isTemporary &&
+        (!formData.expiryHours || formData.expiryHours <= 0),
     };
 
     setErrors(newErrors);
@@ -57,10 +96,7 @@ export function ItemForm({ initialData, onSubmit }: ItemFormProps) {
       return;
     }
 
-    onSubmit({
-      ...initialData!,
-      quantity: formData.quantity,
-    });
+    onSubmit(formData);
   };
 
   const handleQuantityChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -70,28 +106,54 @@ export function ItemForm({ initialData, onSubmit }: ItemFormProps) {
       ...formData,
       quantity: isNaN(numValue) ? 0 : numValue,
     });
-    setErrors({ quantity: false });
+    setErrors({ ...errors, quantity: false });
+  };
+
+  const handlePriceChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setFormData({
+      ...formData,
+      price: value === "" ? "0" : value,
+    });
+    setErrors({ ...errors, price: false });
+  };
+
+  const handleExpiryHoursChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    const numValue = parseInt(value);
+    setFormData({
+      ...formData,
+      expiryHours: isNaN(numValue) ? null : numValue,
+    });
+    setErrors({ ...errors, expiryHours: false });
   };
 
   return (
     <form onSubmit={handleSubmit}>
       <div className="grid gap-4 py-4">
-        {/* Name (Read-only) */}
+        {/* Name Input */}
         <div className="grid grid-cols-4 items-center gap-4">
           <Label htmlFor="name" className="text-right">
-            Name
+            Name <span className="text-red-500">*</span>
           </Label>
           <div className="col-span-3">
             <Input
               id="name"
               value={formData.name}
-              disabled
-              className="bg-gray-50"
+              onChange={(e) => {
+                setFormData({ ...formData, name: e.target.value });
+                setErrors({ ...errors, name: false });
+              }}
+              className={errors.name ? "border-red-500" : ""}
+              required
             />
+            {errors.name && (
+              <p className="text-sm text-red-500 mt-1">Name is required</p>
+            )}
           </div>
         </div>
 
-        {/* Barcode (Read-only) */}
+        {/* Barcode Input */}
         <div className="grid grid-cols-4 items-center gap-4">
           <Label htmlFor="barcode" className="text-right">
             Barcode
@@ -100,28 +162,38 @@ export function ItemForm({ initialData, onSubmit }: ItemFormProps) {
             <Input
               id="barcode"
               value={formData.barcode}
-              disabled
-              className="bg-gray-50"
+              onChange={(e) => {
+                setFormData({ ...formData, barcode: e.target.value });
+              }}
             />
           </div>
         </div>
 
-        {/* Price (Read-only) */}
+        {/* Price Input */}
         <div className="grid grid-cols-4 items-center gap-4">
           <Label htmlFor="price" className="text-right">
-            Price
+            Price <span className="text-red-500">*</span>
           </Label>
           <div className="col-span-3">
             <Input
               id="price"
+              type="number"
+              step="0.01"
+              min="0"
               value={formData.price}
-              disabled
-              className="bg-gray-50"
+              onChange={handlePriceChange}
+              className={errors.price ? "border-red-500" : ""}
+              required
             />
+            {errors.price && (
+              <p className="text-sm text-red-500 mt-1">
+                Valid price is required
+              </p>
+            )}
           </div>
         </div>
 
-        {/* Quantity (Editable) */}
+        {/* Quantity Input */}
         <div className="grid grid-cols-4 items-center gap-4">
           <Label htmlFor="quantity" className="text-right">
             Quantity <span className="text-red-500">*</span>
@@ -144,38 +216,150 @@ export function ItemForm({ initialData, onSubmit }: ItemFormProps) {
           </div>
         </div>
 
-        {/* Category (Read-only) */}
+        {/* Category Select */}
         <div className="grid grid-cols-4 items-center gap-4">
-          <Label htmlFor="category" className="text-right">
-            Category
+          <Label htmlFor="categoryId" className="text-right">
+            Category <span className="text-red-500">*</span>
           </Label>
           <div className="col-span-3">
-            <Input
-              id="category"
-              value={formData.category}
-              disabled
-              className="bg-gray-50"
-            />
+            <Select
+              value={formData.categoryId?.toString()} // Use categoryId
+              onValueChange={(value) => {
+                setFormData({ ...formData, categoryId: parseInt(value, 10) });
+                setErrors({ ...errors, categoryId: false });
+              }}
+              required
+            >
+              <SelectTrigger
+                className={errors.categoryId ? "border-red-500" : ""}
+              >
+                <SelectValue placeholder="Select a category" />
+              </SelectTrigger>
+              <SelectContent>
+                {categories?.map((category) => (
+                  <SelectItem key={category.id} value={category.id.toString()}>
+                    {category.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            {errors.categoryId && (
+              <p className="text-sm text-red-500 mt-1">Category is required</p>
+            )}
           </div>
         </div>
 
-        {/* Status Display */}
+        {/* Temporary Item Toggle */}
         <div className="grid grid-cols-4 items-center gap-4">
-          <Label className="text-right">Status</Label>
-          <div className="col-span-3">
-            <Input
-              value={`${formData.isActive ? "Active" : "Inactive"} ${
-                formData.isHidden ? "(Hidden)" : "(Visible)"
-              }`}
-              disabled
-              className="bg-gray-50"
+          <Label htmlFor="isTemporary" className="text-right">
+            Temporary Item
+          </Label>
+          <div className="flex items-center space-x-2">
+            <Switch
+              id="isTemporary"
+              checked={formData.isTemporary}
+              onCheckedChange={(checked) => {
+                setFormData({
+                  ...formData,
+                  isTemporary: checked,
+                  expiryHours: checked ? formData.expiryHours : null,
+                  autoResetQuantity: checked
+                    ? formData.autoResetQuantity
+                    : false,
+                });
+              }}
             />
+            <Label
+              htmlFor="isTemporary"
+              className="text-sm text-muted-foreground"
+            >
+              Enable temporary item settings
+            </Label>
           </div>
+        </div>
+
+        {/* Expiry Hours Input - Only shown if isTemporary is true */}
+        {formData.isTemporary && (
+          <div className="grid grid-cols-4 items-center gap-4">
+            <Label htmlFor="expiryHours" className="text-right">
+              Expiry Hours <span className="text-red-500">*</span>
+            </Label>
+            <div className="col-span-3">
+              <Input
+                id="expiryHours"
+                type="number"
+                min="1"
+                value={formData.expiryHours || ""}
+                onChange={handleExpiryHoursChange}
+                className={errors.expiryHours ? "border-red-500" : ""}
+                required={formData.isTemporary}
+              />
+              {errors.expiryHours && (
+                <p className="text-sm text-red-500 mt-1">
+                  Valid expiry hours required for temporary items
+                </p>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* Auto Reset Quantity Toggle - Only shown if isTemporary is true */}
+        {formData.isTemporary && (
+          <div className="grid grid-cols-4 items-center gap-4">
+            <Label htmlFor="autoResetQuantity" className="text-right">
+              Auto Reset Quantity
+            </Label>
+            <div className="flex items-center space-x-2">
+              <Switch
+                id="autoResetQuantity"
+                checked={formData.autoResetQuantity}
+                onCheckedChange={(checked) => {
+                  setFormData({ ...formData, autoResetQuantity: checked });
+                }}
+              />
+              <Label
+                htmlFor="autoResetQuantity"
+                className="text-sm text-muted-foreground"
+              >
+                Automatically reset quantity after expiry
+              </Label>
+            </div>
+          </div>
+        )}
+
+        {/* Active Checkbox */}
+        <div className="grid grid-cols-4 items-center gap-4">
+          <Label htmlFor="isActive" className="text-right">
+            Active
+          </Label>
+          <Checkbox
+            id="isActive"
+            checked={formData.isActive}
+            onCheckedChange={(checked) =>
+              setFormData({ ...formData, isActive: !!checked })
+            }
+          />
+        </div>
+
+        {/* Hidden Checkbox */}
+        <div className="grid grid-cols-4 items-center gap-4">
+          <Label htmlFor="isHidden" className="text-right">
+            Hidden
+          </Label>
+          <Checkbox
+            id="isHidden"
+            checked={formData.isHidden}
+            onCheckedChange={(checked) =>
+              setFormData({ ...formData, isHidden: !!checked })
+            }
+          />
         </div>
       </div>
 
       <DialogFooter>
-        <Button type="submit">Update Quantity</Button>
+        <Button type="submit">
+          {initialData ? "Save changes" : "Add Item"}
+        </Button>
       </DialogFooter>
     </form>
   );

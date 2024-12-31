@@ -19,6 +19,7 @@ import { Input } from "@/components/ui/input";
 import { Avatar, AvatarImage } from "@/components/ui/avatar";
 
 const profileFormSchema = z.object({
+  avatar: z.string().optional(),
   username: z
     .string()
     .min(2, {

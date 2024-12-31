@@ -1,7 +1,5 @@
-"use client";
-
 import { Table, TableBody } from "@/components/ui/table";
-import { User } from "@/types/dashboard/business/user";
+import { User, UserFormData } from "@/types/dashboard/business/user";
 import { UserTableHeader } from "./UserTableHeader";
 import { UserTableRow } from "./UserTableRow";
 import {
@@ -14,6 +12,7 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { UserForm } from "./UserForm";
+import { useLocations } from "@/hooks/dashboard/business/location";
 
 interface UserTableProps {
   users: User[];
@@ -23,8 +22,13 @@ interface UserTableProps {
     name: boolean;
     email: boolean;
     phone: boolean;
-    location: boolean;
+    locationId: boolean;
     role: boolean;
+    isActive: boolean;
+    businessId: boolean;
+    lastLogin: boolean;
+    createdAt: boolean;
+    updatedAt: boolean;
   };
   onSort: (column: keyof User) => void;
   onEdit: (user: User) => void;
@@ -34,7 +38,7 @@ interface UserTableProps {
   isDeleteDialogOpen: boolean;
   setIsDeleteDialogOpen: (open: boolean) => void;
   editingUser: User | null;
-  onEditSubmit: () => void;
+  onEditSubmit: (data: UserFormData) => void;
   onDeleteConfirm: () => void;
 }
 
@@ -52,10 +56,13 @@ export function UserTable({
   onEditSubmit,
   onDeleteConfirm,
 }: UserTableProps) {
+  // Get locations for the form
+  const { locations } = useLocations();
+
   if (!users) {
     return (
       <div className="border rounded-lg p-4 text-center text-gray-500">
-        Loading items...
+        Loading users...
       </div>
     );
   }
@@ -67,6 +74,7 @@ export function UserTable({
       </div>
     );
   }
+
   return (
     <div className="border rounded-lg overflow-hidden">
       <div className="overflow-x-auto">
@@ -95,7 +103,11 @@ export function UserTable({
             </DialogDescription>
           </DialogHeader>
           {editingUser && (
-            <UserForm initialData={editingUser} onSubmit={onEditSubmit} />
+            <UserForm
+              initialData={editingUser}
+              onSubmit={onEditSubmit}
+              locations={locations}
+            />
           )}
         </DialogContent>
       </Dialog>

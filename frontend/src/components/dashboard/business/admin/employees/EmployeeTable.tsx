@@ -1,7 +1,10 @@
 "use client";
 
 import { Table, TableBody } from "@/components/ui/table";
-import { Employee } from "@/types/dashboard/business/employee"; // You'll need to create this type
+import {
+  EmployeeTableProps,
+  EmployeeFormData,
+} from "@/types/dashboard/business/employee";
 import { EmployeeTableHeader } from "./EmployeeTableHeader";
 import { EmployeeTableRow } from "./EmployeeTableRow";
 import {
@@ -14,28 +17,6 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { EmployeeForm } from "./EmployeeForm";
-
-interface EmployeeTableProps {
-  employees: Employee[];
-  columnsVisible: {
-    id: boolean;
-    firstName: boolean;
-    lastName: boolean;
-    email: boolean;
-    department: boolean;
-    position: boolean;
-  };
-  onSort: (column: keyof Employee) => void;
-  onEdit: (employee: Employee) => void;
-  onDelete: (employee: Employee) => void;
-  isEditDialogOpen: boolean;
-  setIsEditDialogOpen: (open: boolean) => void;
-  isDeleteDialogOpen: boolean;
-  setIsDeleteDialogOpen: (open: boolean) => void;
-  editingEmployee: Employee | null;
-  onEditSubmit: () => void;
-  onDeleteConfirm: () => void;
-}
 
 export function EmployeeTable({
   employees,
@@ -50,30 +31,32 @@ export function EmployeeTable({
   editingEmployee,
   onEditSubmit,
   onDeleteConfirm,
+  getLocationName,
+  locations,
 }: EmployeeTableProps) {
   if (!employees) {
     return (
-      <div className="border rounded-lg p-4 text-center text-gray-500">
-        Loading items...
+      <div className="rounded-lg border p-4 text-center text-gray-500">
+        Loading employees...
       </div>
     );
   }
 
   if (employees.length === 0) {
     return (
-      <div className="border rounded-lg p-4 text-center text-gray-500">
+      <div className="rounded-lg border p-4 text-center text-gray-500">
         No employees found.
       </div>
     );
   }
+
   return (
-    <div className="border rounded-lg overflow-hidden">
+    <div className="rounded-lg border">
       <div className="overflow-x-auto">
         <Table>
           <EmployeeTableHeader
             columnsVisible={columnsVisible}
-            onSort={onSort}
-          />
+            onSort={onSort} sortColumn={null} sortDirection={null}          />
           <TableBody>
             {employees.map((employee) => (
               <EmployeeTableRow
@@ -82,6 +65,7 @@ export function EmployeeTable({
                 columnsVisible={columnsVisible}
                 onEdit={onEdit}
                 onDelete={onDelete}
+                getLocationName={getLocationName}
               />
             ))}
           </TableBody>
@@ -90,18 +74,22 @@ export function EmployeeTable({
 
       {/* Edit Dialog */}
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-        <DialogContent>
+        <DialogContent className="sm:max-w-2xl">
           <DialogHeader>
             <DialogTitle>Edit Employee</DialogTitle>
             <DialogDescription>
-              Make changes to the employee details.
+              Make changes to the employee information below.
             </DialogDescription>
           </DialogHeader>
           {editingEmployee && (
             <EmployeeForm
               initialData={editingEmployee}
-              onSubmit={onEditSubmit}
-            />
+              onSubmit={(data: EmployeeFormData) => {
+                onEditSubmit(data);
+                setIsEditDialogOpen(false);
+              } }
+              locations={locations} // Pass locations prop here
+              sortColumn={null} sortDirection={null}            />
           )}
         </DialogContent>
       </Dialog>
@@ -123,7 +111,13 @@ export function EmployeeTable({
             >
               Cancel
             </Button>
-            <Button variant="destructive" onClick={onDeleteConfirm}>
+            <Button
+              variant="destructive"
+              onClick={() => {
+                onDeleteConfirm();
+                setIsDeleteDialogOpen(false);
+              }}
+            >
               Delete
             </Button>
           </DialogFooter>

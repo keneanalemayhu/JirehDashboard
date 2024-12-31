@@ -20,14 +20,11 @@ export const RECURRING_FREQUENCIES = [
   "yearly",
 ] as const;
 
-export const APPROVAL_STATUSES = ["pending", "approved", "rejected"] as const;
-
 /**
  * Derived types from constants
  */
 export type PaymentMethod = (typeof PAYMENT_METHODS)[number];
 export type RecurringFrequency = (typeof RECURRING_FREQUENCIES)[number];
-export type ApprovalStatus = (typeof APPROVAL_STATUSES)[number];
 export type SortDirection = "asc" | "desc" | null;
 
 /**
@@ -48,11 +45,9 @@ export interface Expense {
   recurringFrequency?: RecurringFrequency | null;
   recurringEndDate?: Date | null;
   createdBy: number;
-  approvedBy?: number | null;
-  approvalStatus: ApprovalStatus;
-  approvalDate?: Date | null;
   createdAt: Date;
   updatedAt: Date;
+  approvalStatus: "pending";
 }
 
 /**
@@ -62,7 +57,6 @@ export interface ExpenseFilters {
   search: string;
   locationId: number | null;
   isRecurring: boolean | null;
-  approvalStatus: ApprovalStatus | "";
   dateRange: {
     start: Date | null;
     end: Date | null;
@@ -85,23 +79,24 @@ export interface ColumnVisibility {
   recurringFrequency: boolean;
   recurringEndDate: boolean;
   recurringStatus: boolean;
-  approvalStatus: boolean;
+  approvalStatus?: boolean;
 }
 
 /**
  * Component Props Interfaces
  */
 export interface ExpenseFormData
-  extends Omit<Expense, "id" | "createdAt" | "updatedAt" | "approvalDate"> {
+  extends Omit<Expense, "id" | "createdAt" | "updatedAt" > {
   paymentMethod: PaymentMethod;
   recurringFrequency?: RecurringFrequency;
-  approvalStatus: ApprovalStatus;
 }
 
 export interface ExpenseFormProps {
   initialData?: Partial<Expense>;
   onSubmit: (data: ExpenseFormData) => void;
   locations: Array<{ id: number; name: string }>;
+  activeTab?: "regular" | "recurring";
+  onTabChange?: (tab: "regular" | "recurring") => void;
 }
 
 export interface ExpenseTableProps {
@@ -118,6 +113,7 @@ export interface ExpenseTableProps {
   onEditSubmit: (data: ExpenseFormData) => void;
   onDeleteConfirm: () => void;
   getLocationName: (id: number) => string;
+  locations: Location[];
 }
 
 /**
@@ -149,7 +145,6 @@ export const DEFAULT_COLUMN_VISIBILITY: ColumnVisibility = {
   recurringFrequency: true,
   recurringEndDate: true,
   recurringStatus: true,
-  approvalStatus: true,
 };
 
 export const INITIAL_FORM_DATA: ExpenseFormData = {
@@ -162,5 +157,5 @@ export const INITIAL_FORM_DATA: ExpenseFormData = {
   paymentMethod: "Cash",
   isRecurring: false,
   createdBy: 0,
-  approvalStatus: "pending",
+  approvalStatus: "pending"
 };

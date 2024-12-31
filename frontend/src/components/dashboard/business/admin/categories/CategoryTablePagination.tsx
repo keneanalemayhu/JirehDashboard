@@ -14,6 +14,7 @@ import {
   ChevronLeft,
   ChevronRight,
 } from "lucide-react";
+import { PAGE_SIZE_OPTIONS } from "@/types/dashboard/business/category";
 
 interface CategoryTablePaginationProps {
   totalItems: number;
@@ -22,8 +23,6 @@ interface CategoryTablePaginationProps {
   onPageChange: (page: number) => void;
   onPageSizeChange: (pageSize: number) => void;
 }
-
-const PAGE_SIZE_OPTIONS = [10, 20, 30, 40, 50];
 
 export function CategoryTablePagination({
   totalItems,
@@ -36,10 +35,13 @@ export function CategoryTablePagination({
   const isFirstPage = currentPage === 1;
   const isLastPage = currentPage === totalPages;
 
+  const startItem = (currentPage - 1) * pageSize + 1;
+  const endItem = Math.min(currentPage * pageSize, totalItems);
+
   return (
-    <div className="flex items-center justify-between">
+    <div className="flex items-center justify-between px-2 py-4">
       <div className="text-sm text-muted-foreground">
-        {totalItems} row(s) found
+        Showing {startItem} to {endItem} of {totalItems} entries
       </div>
       <div className="flex items-center gap-6">
         {/* Page Size Selector */}
@@ -49,7 +51,7 @@ export function CategoryTablePagination({
             value={pageSize.toString()}
             onValueChange={(value) => onPageSizeChange(Number(value))}
           >
-            <SelectTrigger className="w-16">
+            <SelectTrigger className="w-[70px]">
               <SelectValue placeholder={pageSize.toString()} />
             </SelectTrigger>
             <SelectContent>
@@ -63,7 +65,7 @@ export function CategoryTablePagination({
         </div>
 
         {/* Page Information */}
-        <div className="flex w-[100px] items-center justify-center text-sm font-medium">
+        <div className="flex min-w-[100px] items-center justify-center text-sm font-medium">
           Page {currentPage} of {totalPages}
         </div>
 
@@ -75,8 +77,10 @@ export function CategoryTablePagination({
             size="icon"
             onClick={() => onPageChange(1)}
             disabled={isFirstPage}
+            aria-label="Go to first page"
+            className="h-8 w-8"
           >
-            <ChevronFirst className="w-4 h-4" />
+            <ChevronFirst className="h-4 w-4" />
           </Button>
 
           {/* Previous Page */}
@@ -85,8 +89,10 @@ export function CategoryTablePagination({
             size="icon"
             onClick={() => onPageChange(currentPage - 1)}
             disabled={isFirstPage}
+            aria-label="Go to previous page"
+            className="h-8 w-8"
           >
-            <ChevronLeft className="w-4 h-4" />
+            <ChevronLeft className="h-4 w-4" />
           </Button>
 
           {/* Next Page */}
@@ -95,8 +101,10 @@ export function CategoryTablePagination({
             size="icon"
             onClick={() => onPageChange(currentPage + 1)}
             disabled={isLastPage}
+            aria-label="Go to next page"
+            className="h-8 w-8"
           >
-            <ChevronRight className="w-4 h-4" />
+            <ChevronRight className="h-4 w-4" />
           </Button>
 
           {/* Last Page */}
@@ -105,8 +113,10 @@ export function CategoryTablePagination({
             size="icon"
             onClick={() => onPageChange(totalPages)}
             disabled={isLastPage}
+            aria-label="Go to last page"
+            className="h-8 w-8"
           >
-            <ChevronLast className="w-4 h-4" />
+            <ChevronLast className="h-4 w-4" />
           </Button>
         </div>
       </div>

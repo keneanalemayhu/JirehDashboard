@@ -6,12 +6,11 @@ import {
   DropdownMenu,
   DropdownMenuCheckboxItem,
   DropdownMenuContent,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import {
-  Location,
-  ColumnVisibility,
-} from "@/types/dashboard/business/location";
+import { ColumnVisibility, COLUMNS } from "@/types/dashboard/business/location";
 
 interface LocationTableSettingsProps {
   columnsVisible: ColumnVisibility;
@@ -21,20 +20,30 @@ interface LocationTableSettingsProps {
   ) => void;
 }
 
-type ColumnConfig = {
-  key: keyof ColumnVisibility;
-  label: string;
-};
-
 export function LocationTableSettings({
   columnsVisible,
   onColumnVisibilityChange,
 }: LocationTableSettingsProps) {
-  const columns: ColumnConfig[] = [
-    { key: "id", label: "ID" },
-    { key: "name", label: "Name" },
-    { key: "address", label: "Address" },
-    { key: "phoneNumber", label: "Phone Number" },
+  // Group our columns for better organization
+  const columnGroups = [
+    {
+      name: "Basic Information",
+      columns: COLUMNS.filter((col) =>
+        ["id", "name"].includes(col.key as string)
+      ),
+    },
+    {
+      name: "Contact Details",
+      columns: COLUMNS.filter((col) =>
+        ["address", "contactNumber"].includes(col.key as string)
+      ),
+    },
+    {
+      name: "Status Information",
+      columns: COLUMNS.filter((col) =>
+        ["isActive", "updatedAt"].includes(col.key as string)
+      ),
+    },
   ];
 
   return (
@@ -45,17 +54,28 @@ export function LocationTableSettings({
           <span className="sr-only">Toggle column visibility</span>
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end">
-        {columns.map((column) => (
-          <DropdownMenuCheckboxItem
-            key={column.key}
-            checked={columnsVisible[column.key]}
-            onCheckedChange={(checked) =>
-              onColumnVisibilityChange(column.key, checked)
-            }
-          >
-            {column.label}
-          </DropdownMenuCheckboxItem>
+      <DropdownMenuContent align="end" className="min-w-[200px]">
+        {columnGroups.map((group, index) => (
+          <div key={group.name}>
+            <DropdownMenuLabel className="font-bold">
+              {group.name}
+            </DropdownMenuLabel>
+            {group.columns.map((column) => (
+              <DropdownMenuCheckboxItem
+                key={column.key}
+                checked={columnsVisible[column.key as keyof ColumnVisibility]}
+                onCheckedChange={(checked) =>
+                  onColumnVisibilityChange(
+                    column.key as keyof ColumnVisibility,
+                    checked
+                  )
+                }
+              >
+                {column.label}
+              </DropdownMenuCheckboxItem>
+            ))}
+            {index < columnGroups.length - 1 && <DropdownMenuSeparator />}
+          </div>
         ))}
       </DropdownMenuContent>
     </DropdownMenu>

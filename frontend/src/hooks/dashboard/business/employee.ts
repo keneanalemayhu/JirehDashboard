@@ -1,199 +1,214 @@
+/* eslint-disable prefer-const */
 "use client";
 
 import { useState, useMemo } from "react";
+import { startOfMonth, endOfMonth } from "date-fns";
 import {
   Employee,
   EmployeeFormData,
+  EmployeeFilters,
+  ColumnVisibility,
+  DEFAULT_COLUMN_VISIBILITY,
   SortDirection,
-} from "@/types/dashboard/business/admin/employee";
+  EmployeeStatus,
+} from "@/types/dashboard/business/employee";
+import { useLocations } from "@/hooks/dashboard/business/location";
 
+// Sample initial data
 const initialEmployees: Employee[] = [
   {
     id: "1",
+    businessId: 1,
+    locationId: 1,
     name: "John Doe",
-    phone: "+251-91-112-1314",
-    salary: 75000,
-    status: "Full Time",
-    location: "Location 1",
+    email: "john.doe@example.com",
+    phone: "+251912345674",
+    position: "Senior Developer",
+    salary: 85000,
+    status: EmployeeStatus.FULL_TIME,
+    employmentStatus: "Active",
     isActive: true,
+    hireDate: new Date("2023-01-15"),
+    createdAt: new Date("2023-01-15"),
+    updatedAt: new Date("2023-01-15"),
   },
   {
     id: "2",
+    businessId: 1,
+    locationId: 2,
     name: "Jane Smith",
-    phone: "+251-92-223-2425",
-    salary: 60000,
-    status: "Part Time",
-    location: "Location 2",
-    isActive: false,
+    email: "jane.smith@example.com",
+    phone: "+251912345674",
+    position: "Project Manager",
+    salary: 95000,
+    status: EmployeeStatus.FULL_TIME,
+    employmentStatus: "Active",
+    isActive: true,
+    hireDate: new Date("2023-02-01"),
+    createdAt: new Date("2023-02-01"),
+    updatedAt: new Date("2023-02-01"),
   },
   {
     id: "3",
-    name: "Michael Johnson",
-    phone: "+251-93-334-3536",
-    salary: 80000,
-    status: "Contract",
-    location: "Location 3",
-    isActive: true,
-  },
-  {
-    id: "4",
-    name: "Emily Brown",
-    phone: "+251-94-445-4647",
-    salary: 55000,
-    status: "Full Time",
-    location: "Location 1",
-    isActive: false,
-  },
-  {
-    id: "5",
-    name: "David Lee",
-    phone: "+251-95-556-5758",
-    salary: 70000,
-    status: "Part Time",
-    location: "Location 2",
-    isActive: true,
-  },
-  {
-    id: "6",
-    name: "Sarah Kim",
-    phone: "+251-96-667-6869",
-    salary: 90000,
-    status: "Contract",
-    location: "Location 3",
-    isActive: false,
-  },
-  {
-    id: "7",
-    name: "Thomas Wilson",
-    phone: "+251-97-778-7980",
+    businessId: 1,
+    locationId: 1,
+    name: "Bob Johnson",
+    email: "bob.johnson@example.com",
+    phone: "+251912345674",
+    position: "Junior Developer",
     salary: 65000,
-    status: "Full Time",
-    location: "Location 1",
+    status: EmployeeStatus.PART_TIME,
+    employmentStatus: "Active",
     isActive: true,
-  },
-  {
-    id: "8",
-    name: "Olivia Taylor",
-    phone: "+251-98-889-9091",
-    salary: 50000,
-    status: "Part Time",
-    location: "Location 2",
-    isActive: false,
-  },
-  {
-    id: "9",
-    name: "Benjamin Clark",
-    phone: "+251-91-123-4567",
-    salary: 85000,
-    status: "Contract",
-    location: "Location 3",
-    isActive: true,
-  },
-  {
-    id: "EMP-010",
-    name: "Sophia Harris",
-    phone: "+251-92-456-7890",
-    salary: 70000,
-    status: "Full Time",
-    location: "Location 1",
-    isActive: false,
+    hireDate: new Date("2023-03-15"),
+    createdAt: new Date("2023-03-15"),
+    updatedAt: new Date("2023-03-15"),
   },
 ];
 
 export function useEmployees(defaultEmployees: Employee[] = initialEmployees) {
-  // States
+  // Get locations from the useLocations hook
+  const { locations, getLocationName } = useLocations();
+
+  // State
   const [employees, setEmployees] = useState<Employee[]>(defaultEmployees);
-  const [filterValue, setFilterValue] = useState("");
   const [editingEmployee, setEditingEmployee] = useState<Employee | null>(null);
+
+  // UI State
+  const [filters, setFilters] = useState<EmployeeFilters>({
+    search: "",
+    locationId: null,
+    status: null,
+    employmentStatus: null,
+    isActive: null,
+    dateRange: {
+      start: startOfMonth(new Date()),
+      end: endOfMonth(new Date()),
+    },
+  });
+
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-  const [columnsVisible, setColumnsVisible] = useState({
-    id: true,
-    name: true,
-    phone: true,
-    salary: true,
-    status: true,
-    location: true,
-  });
+  const [columnsVisible, setColumnsVisible] = useState<ColumnVisibility>(
+    DEFAULT_COLUMN_VISIBILITY
+  );
+
   const [sortColumn, setSortColumn] = useState<keyof Employee | null>(null);
   const [sortDirection, setSortDirection] = useState<SortDirection>(null);
   const [pageSize, setPageSize] = useState(10);
   const [currentPage, setCurrentPage] = useState(1);
 
-  // Filtering and sorting
+  // Location utility
+  // getLocationName is already declared in useLocations
+
+  // Filtered & Sorted Employees
   const filteredEmployees = useMemo(() => {
-    const employeesToFilter = employees || [];
-    const searchTerm = filterValue.toLowerCase();
+    let result = [...employees];
 
-    const result = employeesToFilter.filter((employee) => {
-      const searchableFields = [
-        employee.name || "",
-        employee.phone || "",
-        employee.status || "",
-        employee.location || "",
-        employee.salary?.toString() || "",
-      ];
-
-      return searchableFields.some((field) =>
-        field.toLowerCase().includes(searchTerm)
+    if (filters.search) {
+      const searchTerm = filters.search.toLowerCase();
+      result = result.filter(
+        (employee) =>
+          employee.name.toLowerCase().includes(searchTerm) ||
+          employee.email.toLowerCase().includes(searchTerm) ||
+          employee.phone.toLowerCase().includes(searchTerm) ||
+          employee.position.toLowerCase().includes(searchTerm) ||
+          getLocationName(employee.locationId)
+            .toLowerCase()
+            .includes(searchTerm)
       );
-    });
+    }
+
+    if (filters.locationId !== null) {
+      result = result.filter(
+        (employee) => employee.locationId === filters.locationId
+      );
+    }
+
+    if (filters.status !== null) {
+      result = result.filter((employee) => employee.status === filters.status);
+    }
+
+    if (filters.employmentStatus !== null) {
+      result = result.filter(
+        (employee) => employee.employmentStatus === filters.employmentStatus
+      );
+    }
+
+    if (filters.isActive !== null) {
+      result = result.filter(
+        (employee) => employee.isActive === filters.isActive
+      );
+    }
+
+    if (filters.dateRange.start && filters.dateRange.end) {
+      result = result.filter((employee) => {
+        const hireDate = new Date(employee.hireDate);
+        return (
+          hireDate >= filters.dateRange.start! &&
+          hireDate <= filters.dateRange.end!
+        );
+      });
+    }
 
     if (sortColumn) {
       result.sort((a, b) => {
-        const aValue = a[sortColumn];
-        const bValue = b[sortColumn];
+        let aValue = a[sortColumn];
+        let bValue = b[sortColumn];
 
-        // Handle number type specifically for salary
-        if (typeof aValue === "number" && typeof bValue === "number") {
-          return sortDirection === "asc" ? aValue - bValue : bValue - aValue;
+        if (aValue === null || aValue === undefined) return 1;
+        if (bValue === null || bValue === undefined) return -1;
+
+        if (aValue instanceof Date) {
+          return sortDirection === "asc"
+            ? aValue.getTime() - (bValue as Date).getTime()
+            : (bValue as Date).getTime() - aValue.getTime();
         }
 
-        // Convert to strings for other comparisons
-        const aString = String(aValue || "");
-        const bString = String(bValue || "");
-
-        if (sortDirection === "asc") {
-          return aString.localeCompare(bString);
-        } else if (sortDirection === "desc") {
-          return bString.localeCompare(aString);
+        if (typeof aValue === "string") {
+          return sortDirection === "asc"
+            ? aValue.localeCompare(String(bValue))
+            : String(bValue).localeCompare(aValue);
         }
-        return 0;
+
+        return sortDirection === "asc"
+          ? Number(aValue) - Number(bValue)
+          : Number(bValue) - Number(aValue);
       });
     }
 
     return result;
-  }, [employees, filterValue, sortColumn, sortDirection]);
+  }, [employees, filters, sortColumn, sortDirection, getLocationName]);
 
-  // Pagination
+  // Paginated Employees
   const paginatedEmployees = useMemo(() => {
     const startIndex = (currentPage - 1) * pageSize;
     return filteredEmployees.slice(startIndex, startIndex + pageSize);
   }, [filteredEmployees, currentPage, pageSize]);
 
-  // Fixed handlers
+  // Handlers
+  const handleFilterChange = (newFilters: Partial<EmployeeFilters>) => {
+    setFilters((prev) => ({ ...prev, ...newFilters }));
+    setCurrentPage(1);
+  };
+
   const handleSort = (column: keyof Employee) => {
-    if (sortColumn === column) {
-      setSortDirection((prev) => {
-        if (prev === "asc") return "desc";
-        if (prev === "desc") return null;
-        return "asc";
-      });
-      if (sortDirection === null) {
-        setSortColumn(null);
-      }
-    } else {
-      setSortColumn(column);
-      setSortDirection("asc");
-    }
+    setSortDirection((prev) => {
+      if (sortColumn !== column) return "asc";
+      if (prev === "asc") return "desc";
+      if (prev === "desc") return null;
+      return "asc";
+    });
+    setSortColumn(column);
   };
 
   const handleAddEmployee = (data: EmployeeFormData) => {
-    const newId = `EMP-${String(employees.length + 1).padStart(3, "0")}`;
     const newEmployee: Employee = {
-      id: newId,
+      id: (Math.max(...employees.map((e) => Number(e.id)), 0) + 1).toString(),
       ...data,
+      createdAt: new Date(),
+      updatedAt: new Date(),
     };
     setEmployees((prev) => [...prev, newEmployee]);
     setIsAddDialogOpen(false);
@@ -201,9 +216,12 @@ export function useEmployees(defaultEmployees: Employee[] = initialEmployees) {
 
   const handleEditEmployee = (data: EmployeeFormData) => {
     if (!editingEmployee) return;
+
     setEmployees((prev) =>
       prev.map((employee) =>
-        employee.id === editingEmployee.id ? { ...employee, ...data } : employee
+        employee.id === editingEmployee.id
+          ? { ...employee, ...data, updatedAt: new Date() }
+          : employee
       )
     );
     setIsEditDialogOpen(false);
@@ -212,6 +230,7 @@ export function useEmployees(defaultEmployees: Employee[] = initialEmployees) {
 
   const handleDeleteEmployee = () => {
     if (!editingEmployee) return;
+
     setEmployees((prev) =>
       prev.filter((employee) => employee.id !== editingEmployee.id)
     );
@@ -234,14 +253,16 @@ export function useEmployees(defaultEmployees: Employee[] = initialEmployees) {
     paginatedEmployees,
     filteredEmployees,
     editingEmployee,
+    locations, // Now coming from useLocations
+    getLocationName, // Now coming from useLocations
 
     // State setters
     setEmployees,
     setEditingEmployee,
 
     // UI state
-    filterValue,
-    setFilterValue,
+    filters,
+    setFilters,
     isAddDialogOpen,
     setIsAddDialogOpen,
     isEditDialogOpen,
@@ -258,6 +279,7 @@ export function useEmployees(defaultEmployees: Employee[] = initialEmployees) {
     sortDirection,
 
     // Handlers
+    handleFilterChange,
     handleSort,
     handleAddEmployee,
     handleEditEmployee,

@@ -1,3 +1,4 @@
+/* eslint-disable prefer-const */
 "use client";
 
 import { useState, useMemo } from "react";
@@ -12,8 +13,8 @@ import {
 } from "@/types/dashboard/business/expense";
 import { useLocations } from "@/hooks/dashboard/business/location";
 
-// Enhanced initial expenses with sample data matching new interface
-const initialExpenses: Expense[] = [
+
+export const initialExpenses: Expense[] = [
   {
     id: 1,
     businessId: 1,
@@ -29,11 +30,9 @@ const initialExpenses: Expense[] = [
     recurringFrequency: "monthly",
     recurringEndDate: new Date("2024-12-31"),
     createdBy: 1,
-    approvedBy: 2,
-    approvalStatus: "approved",
-    approvalDate: new Date("2024-03-16"),
     createdAt: new Date("2024-03-15"),
     updatedAt: new Date("2024-03-16"),
+    approvalStatus: "pending",
   },
   {
     id: 2,
@@ -50,11 +49,9 @@ const initialExpenses: Expense[] = [
     recurringFrequency: "monthly",
     recurringEndDate: new Date("2025-03-31"),
     createdBy: 1,
-    approvedBy: 2,
-    approvalStatus: "approved",
-    approvalDate: new Date("2024-03-30"),
     createdAt: new Date("2024-03-30"),
     updatedAt: new Date("2024-03-30"),
+    approvalStatus: "pending",
   },
   {
     id: 3,
@@ -71,11 +68,9 @@ const initialExpenses: Expense[] = [
     recurringFrequency: "monthly",
     recurringEndDate: null,
     createdBy: 1,
-    approvedBy: null,
-    approvalStatus: "pending",
-    approvalDate: null,
     createdAt: new Date("2024-04-05"),
     updatedAt: new Date("2024-04-05"),
+    approvalStatus: "pending",
   },
   {
     id: 4,
@@ -92,11 +87,9 @@ const initialExpenses: Expense[] = [
     recurringFrequency: null,
     recurringEndDate: null,
     createdBy: 2,
-    approvedBy: 1,
-    approvalStatus: "approved",
-    approvalDate: new Date("2024-04-10"),
     createdAt: new Date("2024-04-10"),
     updatedAt: new Date("2024-04-10"),
+    approvalStatus: "pending",
   },
   {
     id: 5,
@@ -113,11 +106,9 @@ const initialExpenses: Expense[] = [
     recurringFrequency: "yearly",
     recurringEndDate: new Date("2027-04-15"),
     createdBy: 1,
-    approvedBy: 2,
-    approvalStatus: "approved",
-    approvalDate: new Date("2024-04-15"),
     createdAt: new Date("2024-04-15"),
     updatedAt: new Date("2024-04-15"),
+    approvalStatus: "pending",
   },
   {
     id: 6,
@@ -134,11 +125,9 @@ const initialExpenses: Expense[] = [
     recurringFrequency: null,
     recurringEndDate: null,
     createdBy: 2,
-    approvedBy: null,
-    approvalStatus: "rejected",
-    approvalDate: new Date("2024-04-19"),
     createdAt: new Date("2024-04-18"),
     updatedAt: new Date("2024-04-19"),
+    approvalStatus: "pending",
   },
 ];
 
@@ -149,7 +138,6 @@ export function useExpenses(defaultExpenses: Expense[] = initialExpenses) {
     search: "",
     locationId: null,
     isRecurring: null,
-    approvalStatus: "",
     dateRange: {
       start: startOfMonth(new Date()),
       end: endOfMonth(new Date()),
@@ -172,9 +160,17 @@ export function useExpenses(defaultExpenses: Expense[] = initialExpenses) {
   const [pageSize, setPageSize] = useState(10);
   const [currentPage, setCurrentPage] = useState(1);
 
+  const [activeTab, setActiveTab] = useState<"regular" | "recurring">(
+    "regular"
+  );
+
   // Enhanced filtering
   const filteredExpenses = useMemo(() => {
     let result = [...expenses];
+
+    result = result.filter((expense) =>
+      activeTab === "regular" ? !expense.isRecurring : expense.isRecurring
+    );
 
     if (filters.search) {
       const searchTerm = filters.search.toLowerCase();
@@ -198,12 +194,6 @@ export function useExpenses(defaultExpenses: Expense[] = initialExpenses) {
     if (filters.isRecurring !== null) {
       result = result.filter(
         (expense) => expense.isRecurring === filters.isRecurring
-      );
-    }
-
-    if (filters.approvalStatus) {
-      result = result.filter(
-        (expense) => expense.approvalStatus === filters.approvalStatus
       );
     }
 
@@ -233,7 +223,14 @@ export function useExpenses(defaultExpenses: Expense[] = initialExpenses) {
     }
 
     return result;
-  }, [expenses, filters, sortColumn, sortDirection, getLocationName]);
+  }, [
+    expenses,
+    filters,
+    sortColumn,
+    sortDirection,
+    getLocationName,
+    activeTab,
+  ]);
 
   // Calculate paginated expenses
   const paginatedExpenses = useMemo(() => {
@@ -319,6 +316,8 @@ export function useExpenses(defaultExpenses: Expense[] = initialExpenses) {
     setColumnsVisible,
     pageSize,
     currentPage,
+    activeTab,
+    setActiveTab,
 
     // Handlers
     handleFilterChange,

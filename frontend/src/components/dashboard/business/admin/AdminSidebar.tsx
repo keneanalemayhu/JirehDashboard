@@ -1,17 +1,18 @@
 "use client";
 
 import * as React from "react";
+import { usePathname } from "next/navigation"; // Add this import
 import {
   AudioWaveform,
   Command,
-  Gauge,
-  Wrench,
-  ListOrdered,
-  BookUser,
+  GalleryVerticalEnd,
+  DollarSign,
+  LayoutDashboard,
+  Package,
+  Users,
 } from "lucide-react";
 import { NavMain } from "@/components/dashboard/business/admin/AdminNavMain";
 import { NavUser } from "@/components/dashboard/business/admin/AdminNavUser";
-import { NavProjects } from "@/components/dashboard/business/admin/AdminNavProjects";
 import { TeamSwitcher } from "@/components/dashboard/business/admin/AdminTeamSwitcher";
 import {
   Sidebar,
@@ -24,6 +25,7 @@ import { useLanguage } from "@/components/context/LanguageContext";
 import { translations } from "@/translations/dashboard/business/admin";
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
+  const pathname = usePathname();
   const { language } = useLanguage();
   const t = translations[language].dashboard.admin.sidebar;
 
@@ -37,7 +39,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     teams: [
       {
         name: t.teams.admin,
-        logo: BookUser,
+        logo: GalleryVerticalEnd,
         plan: t.teams.adminPlan,
         url: "/dashboard/business/admin",
       },
@@ -54,40 +56,83 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         url: "/dashboard/business/warehouse",
       },
     ],
-    projects: [
-      {
-        name: t.projects.overview,
-        url: "/dashboard/business/admin/",
-        icon: Gauge,
-      },
-      {
-        name: t.projects.orders,
-        url: "/dashboard/business/admin/orders",
-        icon: ListOrdered,
-      },
-    ],
     navMain: [
       {
-        title: t.manage.title,
+        title: t.dashboard.title,
         url: "#",
-        icon: Wrench,
-        isActive: true,
+        icon: LayoutDashboard,
+        isActive: pathname.startsWith("/dashboard/business/admin"),
+        defaultOpen: true,
         items: [
           {
-            title: t.manage.locations,
-            url: "/dashboard/business/admin/locations",
+            title: t.dashboard.overview,
+            url: "/dashboard/business/admin/overview",
+            isActive: pathname === "/dashboard/business/admin/overview",
+          },
+        ],
+      },
+      {
+        title: t.sales_profit.title,
+        url: "#",
+        icon: DollarSign,
+        isActive:
+          pathname.includes("/dashboard/business/admin/orders") ||
+          pathname.includes("/dashboard/business/admin/expenses"),
+        defaultOpen: true,
+        items: [
+          {
+            title: t.sales_profit.orders,
+            url: "/dashboard/business/admin/orders",
+            isActive: pathname === "/dashboard/business/admin/orders",
           },
           {
-            title: t.manage.categories,
-            url: "/dashboard/business/admin/categories",
+            title: t.sales_profit.expenses,
+            url: "/dashboard/business/admin/expenses",
+            isActive: pathname === "/dashboard/business/admin/expenses",
           },
+        ],
+      },
+      {
+        title: t.inventory.title,
+        url: "#",
+        icon: Package,
+        isActive:
+          pathname.includes("/dashboard/business/admin/items") ||
+          pathname.includes("/dashboard/business/admin/categories") ||
+          pathname.includes("/dashboard/business/admin/transfer"),
+        defaultOpen: true,
+        items: [
           {
-            title: t.manage.items,
+            title: t.inventory.items,
             url: "/dashboard/business/admin/items",
+            isActive: pathname === "/dashboard/business/admin/items",
           },
           {
-            title: t.manage.employees,
+            title: t.inventory.categories,
+            url: "/dashboard/business/admin/categories",
+            isActive: pathname === "/dashboard/business/admin/categories",
+          },
+        ],
+      },
+      {
+        title: t.management.title,
+        url: "#",
+        icon: Users,
+        isActive:
+          pathname.includes("/dashboard/business/admin/locations") ||
+          pathname.includes("/dashboard/business/admin/employees") ||
+          pathname.includes("/dashboard/business/admin/users"),
+        defaultOpen: true,
+        items: [
+          {
+            title: t.management.locations,
+            url: "/dashboard/business/admin/locations",
+            isActive: pathname === "/dashboard/business/admin/locations",
+          },
+          {
+            title: t.management.employees,
             url: "/dashboard/business/admin/employees",
+            isActive: pathname === "/dashboard/business/admin/employees",
           },
         ],
       },
@@ -100,7 +145,6 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         <TeamSwitcher teams={data.teams} />
       </SidebarHeader>
       <SidebarContent>
-        <NavProjects projects={data.projects} />
         <NavMain items={data.navMain} />
       </SidebarContent>
       <SidebarFooter>

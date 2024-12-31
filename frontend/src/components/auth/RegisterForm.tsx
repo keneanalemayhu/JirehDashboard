@@ -276,7 +276,7 @@ export function RegisterForm() {
               <HoverCard>
                 <HoverCardTrigger asChild>
                   <Link
-                    href="/app/legal/terms"
+                    href="/legal/terms"
                     target="_blank"
                     className="underline underline-offset-4 hover:text-primary"
                   >
@@ -286,7 +286,7 @@ export function RegisterForm() {
                 <HoverCardContent>
                   <p>{t.termsofservice}</p>
                   <Link
-                    href="/app/legal/terms"
+                    href="/legal/terms"
                     target="_blank"
                     className="text-blue-500 underline hover:text-blue-700 dark:hover:text-blue-400"
                   >
@@ -298,7 +298,7 @@ export function RegisterForm() {
               <HoverCard>
                 <HoverCardTrigger asChild>
                   <Link
-                    href="/app/legal/privacy"
+                    href="/legal/privacy"
                     target="_blank"
                     className="underline underline-offset-4 hover:text-primary"
                   >
@@ -308,7 +308,7 @@ export function RegisterForm() {
                 <HoverCardContent>
                   <p>{t.privacypolicy}</p>
                   <Link
-                    href="/app/legal/privacy"
+                    href="/legal/privacy"
                     target="_blank"
                     className="text-blue-500 underline hover:text-blue-700 dark:hover:text-blue-400"
                   >

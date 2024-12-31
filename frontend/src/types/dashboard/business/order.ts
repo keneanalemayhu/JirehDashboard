@@ -1,5 +1,7 @@
 // src/types/dashboard/business/owner/order.ts
 
+import { Key, ReactNode } from "react";
+
 /**
  * Core enums
  */
@@ -38,6 +40,9 @@ export interface CustomerInfo {
 }
 
 export interface OrderItem {
+  name: ReactNode;
+  id: Key | null | undefined;
+  price: number;
   item_id: number;
   category_id: number;
   item_name: string;
@@ -52,10 +57,10 @@ export interface OrderItem {
  */
 export interface Order {
   // Identifiers
-  order_id: string;
+  order_id: number;
   order_number: string;
-  store_id: number;
-  location_id: number;
+  businessId: number;
+  locationId: number;
   user_id: number;
   employee_id: number;
 

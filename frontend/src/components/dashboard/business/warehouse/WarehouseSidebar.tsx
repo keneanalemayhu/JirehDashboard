@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { Gauge, CirclePlus, ListOrdered, Command } from "lucide-react";
+import { CirclePlus, ListOrdered, Command } from "lucide-react";
 
 import { NavUser } from "@/components/dashboard/business/warehouse/WarehouseNavUser";
 import { NavProjects } from "@/components/dashboard/business/warehouse/WarehouseNavProjects";
@@ -31,23 +31,18 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         name: t.teams.warehouse,
         logo: Command,
         plan: t.teams.warehousePlan,
-        url: "/dashboard/business4/warehouse",
+        url: "/dashboard/business/warehouse",
       },
     ],
     projects: [
       {
-        name: t.projects.overview,
-        url: "/dashboard/business4/warehouse/",
-        icon: Gauge,
-      },
-      {
         name: t.projects.items,
-        url: "/dashboard/business4/warehouse/items",
+        url: "/dashboard/business/warehouse/items",
         icon: CirclePlus,
       },
       {
         name: t.projects.orders,
-        url: "/dashboard/business4/warehouse/orders",
+        url: "/dashboard/business/warehouse/orders",
         icon: ListOrdered,
       },
     ],

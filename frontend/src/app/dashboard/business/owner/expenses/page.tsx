@@ -182,11 +182,17 @@ export default function ExpensesPage() {
 
           {/* Table */}
           <ExpenseTable
-            expenses={paginatedExpenses}
+            expenses={expenses}
             columnsVisible={columnsVisible}
             onSort={handleSort}
-            onEdit={handleEditExpense}
-            onDelete={handleDeleteExpense}
+            onEdit={(expense: Expense) => {
+              setEditingExpense(expense);
+              setIsEditDialogOpen(true);
+            }}
+            onDelete={(expense: Expense) => {
+              setEditingExpense(expense);
+              setIsDeleteDialogOpen(true);
+            }}
             isEditDialogOpen={isEditDialogOpen}
             setIsEditDialogOpen={setIsEditDialogOpen}
             isDeleteDialogOpen={isDeleteDialogOpen}
@@ -195,6 +201,9 @@ export default function ExpensesPage() {
             onEditSubmit={handleEditExpense}
             onDeleteConfirm={handleDeleteExpense}
             getLocationName={getLocationName}
+            locations={locations}
+            activeTab={activeTab}
+            onTabChange={setActiveTab}
           />
 
           {/* Pagination */}

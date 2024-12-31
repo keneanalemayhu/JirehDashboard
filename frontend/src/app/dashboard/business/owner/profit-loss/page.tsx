@@ -59,8 +59,11 @@ import {
   ChartTooltipContent,
 } from "@/components/ui/chart";
 import { createSwapy } from "swapy";
-import { useExpenses } from "@/hooks/dashboard/business/expense";
-import { useOrders } from "@/hooks/dashboard/business/order";
+import {
+  useExpenses,
+  initialExpenses,
+} from "@/hooks/dashboard/business/expense";
+import { useOrders, initialOrders } from "@/hooks/dashboard/business/order";
 import { jsPDF } from "jspdf";
 import "jspdf-autotable";
 
@@ -75,8 +78,8 @@ const lossChartConfig = {
 };
 
 export default function ProfitLossPage() {
-  const { expenses = [], filteredExpenses = [] } = useExpenses();
-  const { orders = [], filteredOrders = [] } = useOrders();
+  const { orders } = useOrders(initialOrders);
+  const { expenses } = useExpenses(initialExpenses);
 
   const metricsContainerRef = useRef(null);
   const chartsContainerRef = useRef(null);
@@ -118,14 +121,16 @@ export default function ProfitLossPage() {
   // Recent Transactions
   const recentTransactions = useMemo(() => {
     const transactions = [
-      ...filteredOrders.map((order) => ({
+      ...(orders || []).map((order) => ({
+        // Changed from filteredOrders
         date: new Date(order.order_date),
         type: "Revenue",
         description: `Order ${order.order_number}`,
         amount: order.total_amount,
         isProfit: true,
       })),
-      ...filteredExpenses.map((expense) => ({
+      ...(expenses || []).map((expense) => ({
+        // Changed from filteredExpenses
         date: new Date(expense.expenseDate),
         type: "Expense",
         description: expense.name,
@@ -135,7 +140,7 @@ export default function ProfitLossPage() {
     ].sort((a, b) => b.date.getTime() - a.date.getTime());
 
     return transactions;
-  }, [filteredOrders, filteredExpenses]);
+  }, [orders, expenses]); // Changed dependencies
 
   const processedTransactions = useMemo(() => {
     let filtered = recentTransactions;
@@ -180,43 +185,65 @@ export default function ProfitLossPage() {
 
   // Summary Metrics
   const summaryMetrics = useMemo(() => {
-    const totalRevenue = filteredOrders.reduce(
-      (acc, order) => acc + order.total_amount,
+    if (!orders.length && !expenses.length)
+      return {
+        totalRevenue: 0,
+        totalExpenses: 0,
+        netProfit: 0,
+        profitMargin: 0,
+        revenueChange: 0,
+        expenseChange: 0,
+      };
+
+    // Calculate total revenue from orders
+    const totalRevenue = orders.reduce(
+      (acc, order) => acc + (order.total_amount || 0),
       0
     );
-    const totalExpenses = filteredExpenses.reduce(
-      (acc, expense) => acc + expense.amount,
+
+    // Calculate total expenses
+    const totalExpenses = expenses.reduce(
+      (acc, expense) => acc + (expense.amount || 0),
       0
     );
+
     const netProfit = totalRevenue - totalExpenses;
     const profitMargin =
       totalRevenue > 0 ? (netProfit / totalRevenue) * 100 : 0;
 
+    // Get current and last month metrics
     const now = new Date();
     const currentMonth = now.getMonth();
     const lastMonth = new Date(now.getFullYear(), now.getMonth() - 1);
 
-    const prevMonthOrders = filteredOrders.filter(
+    // Filter previous month orders
+    const prevMonthOrders = orders.filter(
       (order) => new Date(order.order_date).getMonth() === lastMonth.getMonth()
     );
-    const prevMonthExpenses = filteredExpenses.filter(
+
+    // Filter previous month expenses
+    const prevMonthExpenses = expenses.filter(
       (expense) =>
         new Date(expense.expenseDate).getMonth() === lastMonth.getMonth()
     );
 
+    // Calculate previous month totals
     const prevMonthRevenue = prevMonthOrders.reduce(
-      (acc, order) => acc + order.total_amount,
-      0
-    );
-    const prevMonthExpenses_total = prevMonthExpenses.reduce(
-      (acc, expense) => acc + expense.amount,
+      (acc, order) => acc + (order.total_amount || 0),
       0
     );
 
+    const prevMonthExpenses_total = prevMonthExpenses.reduce(
+      (acc, expense) => acc + (expense.amount || 0),
+      0
+    );
+
+    // Calculate change percentages
     const revenueChange =
       prevMonthRevenue > 0
         ? ((totalRevenue - prevMonthRevenue) / prevMonthRevenue) * 100
         : 0;
+
     const expenseChange =
       prevMonthExpenses_total > 0
         ? ((totalExpenses - prevMonthExpenses_total) /
@@ -232,19 +259,20 @@ export default function ProfitLossPage() {
       revenueChange,
       expenseChange,
     };
-  }, [filteredOrders, filteredExpenses]);
+  }, [orders, expenses]);
 
   // Chart Data Calculations
   const profitData = useMemo(() => {
-    const totalOrders = filteredOrders.length;
-    const totalRevenue = summaryMetrics.totalRevenue;
-    const salesCount = filteredOrders.reduce((acc, order) => acc + 1, 0);
+    if (!orders.length) return [];
+    const totalOrders = orders.length;
+    const totalRevenue = summaryMetrics?.totalRevenue || 0;
+    const salesCount = orders.length;
 
     return [
       { name: "Sales", value: salesCount, fill: "hsl(var(--chart-1))" },
       { name: "Revenue", value: totalRevenue, fill: "hsl(var(--chart-2))" },
     ];
-  }, [filteredOrders, summaryMetrics.totalRevenue]);
+  }, [orders, summaryMetrics?.totalRevenue]); // Changed dependencies
 
   const lossData = useMemo(() => {
     const totalExpenses = summaryMetrics.totalExpenses;
@@ -260,38 +288,65 @@ export default function ProfitLossPage() {
   }, [summaryMetrics.totalExpenses]);
 
   const trendData = useMemo(() => {
+    // Return empty array if no data
+    if (!orders.length && !expenses.length) return [];
+
     const monthlyData = new Map();
 
-    filteredOrders.forEach((order) => {
+    // Process orders
+    orders.forEach((order) => {
       const date = new Date(order.order_date);
       const monthKey = `${date.getFullYear()}-${String(
         date.getMonth() + 1
       ).padStart(2, "0")}`;
 
       if (!monthlyData.has(monthKey)) {
-        monthlyData.set(monthKey, { month: monthKey, profit: 0, loss: 0 });
+        monthlyData.set(monthKey, {
+          month: monthKey,
+          profit: 0,
+          loss: 0,
+          total: 0, // Add total for tracking overall monthly performance
+        });
       }
       const data = monthlyData.get(monthKey);
-      data.profit += order.total_amount;
+      const amount = order.total_amount || 0;
+      data.profit += amount;
+      data.total += amount;
     });
 
-    filteredExpenses.forEach((expense) => {
+    // Process expenses
+    expenses.forEach((expense) => {
       const date = new Date(expense.expenseDate);
       const monthKey = `${date.getFullYear()}-${String(
         date.getMonth() + 1
       ).padStart(2, "0")}`;
 
       if (!monthlyData.has(monthKey)) {
-        monthlyData.set(monthKey, { month: monthKey, profit: 0, loss: 0 });
+        monthlyData.set(monthKey, {
+          month: monthKey,
+          profit: 0,
+          loss: 0,
+          total: 0,
+        });
       }
       const data = monthlyData.get(monthKey);
-      data.loss += expense.amount;
+      const amount = expense.amount || 0;
+      data.loss += amount;
+      data.total -= amount;
     });
 
+    // Convert to array, sort by date, and take last 6 months
     return Array.from(monthlyData.values())
       .sort((a, b) => a.month.localeCompare(b.month))
-      .slice(-6);
-  }, [filteredOrders, filteredExpenses]);
+      .slice(-6)
+      .map((data) => ({
+        ...data,
+        // Ensure non-null values
+        profit: data.profit || 0,
+        loss: data.loss || 0,
+        total: data.total || 0,
+      }));
+  }, [orders, expenses]); // Changed dependencies to main arrays
 
   // Report generation handlers
   const handleDownloadPDF = () => {
@@ -444,7 +499,7 @@ export default function ProfitLossPage() {
                   </CardHeader>
                   <CardContent>
                     <div className="text-2xl font-bold">
-                      ${summaryMetrics.totalRevenue.toLocaleString()}
+                      ${summaryMetrics?.totalRevenue?.toLocaleString() ?? "0"}
                     </div>
                     <p className="text-xs text-muted-foreground">
                       <span

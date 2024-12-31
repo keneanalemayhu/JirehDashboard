@@ -52,9 +52,9 @@ export const getDateRangeForTimeframe = (timeframe: string) => {
 
 export const initialOrders: Order[] = [
   {
-    order_id: "ORD-001",
-    store_id: 1,
-    location_id: 1,
+    order_id: 1,
+    businessId: 1,
+    locationId: 1,
     user_id: 1,
     employee_id: 1,
     order_number: "ORD/2024/001",
@@ -85,9 +85,9 @@ export const initialOrders: Order[] = [
     updated_at: "2024-07-26T10:00:00.000Z",
   },
   {
-    order_id: "ORD-002",
-    store_id: 2,
-    location_id: 2,
+    order_id: 2,
+    businessId: 2,
+    locationId: 2,
     user_id: 2,
     employee_id: 2,
     order_number: "ORD/2024/002",
@@ -118,9 +118,9 @@ export const initialOrders: Order[] = [
     updated_at: "2024-07-27T11:00:00.000Z",
   },
   {
-    order_id: "ORD-003",
-    store_id: 3,
-    location_id: 3,
+    order_id: 3,
+    businessId: 3,
+    locationId: 3,
     user_id: 3,
     employee_id: 3,
     order_number: "ORD/2024/003",
@@ -151,9 +151,9 @@ export const initialOrders: Order[] = [
     updated_at: "2024-07-28T09:30:00.000Z",
   },
   {
-    order_id: "ORD-004",
-    store_id: 4,
-    location_id: 4,
+    order_id: 4,
+    businessId: 4,
+    locationId: 4,
     user_id: 4,
     employee_id: 4,
     order_number: "ORD/2024/004",
@@ -184,9 +184,9 @@ export const initialOrders: Order[] = [
     updated_at: "2024-07-29T12:00:00.000Z",
   },
   {
-    order_id: "ORD-005",
-    store_id: 5,
-    location_id: 5,
+    order_id: 5,
+    businessId: 5,
+    locationId: 5,
     user_id: 5,
     employee_id: 5,
     order_number: "ORD/2024/005",
@@ -217,9 +217,9 @@ export const initialOrders: Order[] = [
     updated_at: "2024-07-30T13:45:00.000Z",
   },
   {
-    order_id: "ORD-006",
-    store_id: 6,
-    location_id: 6,
+    order_id: 6,
+    businessId: 6,
+    locationId: 6,
     user_id: 6,
     employee_id: 6,
     order_number: "ORD/2024/006",
@@ -250,9 +250,9 @@ export const initialOrders: Order[] = [
     updated_at: "2024-07-31T10:30:00.000Z",
   },
   {
-    order_id: "ORD-007",
-    store_id: 7,
-    location_id: 7,
+    order_id: 7,
+    businessId: 7,
+    locationId: 7,
     user_id: 7,
     employee_id: 7,
     order_number: "ORD/2024/007",
@@ -283,9 +283,9 @@ export const initialOrders: Order[] = [
     updated_at: "2024-08-01T09:00:00.000Z",
   },
   {
-    order_id: "ORD-008",
-    store_id: 8,
-    location_id: 8,
+    order_id: 8,
+    businessId: 8,
+    locationId: 8,
     user_id: 8,
     employee_id: 8,
     order_number: "ORD/2024/008",
@@ -316,9 +316,9 @@ export const initialOrders: Order[] = [
     updated_at: "2024-08-02T14:15:00.000Z",
   },
   {
-    order_id: "ORD-009",
-    store_id: 9,
-    location_id: 9,
+    order_id: 9,
+    businessId: 9,
+    locationId: 9,
     user_id: 9,
     employee_id: 9,
     order_number: "ORD/2024/009",
@@ -349,9 +349,9 @@ export const initialOrders: Order[] = [
     updated_at: "2024-08-03T16:30:00.000Z",
   },
   {
-    order_id: "ORD-010",
-    store_id: 10,
-    location_id: 10,
+    order_id: 10,
+    businessId: 10,
+    locationId: 10,
     user_id: 10,
     employee_id: 10,
     order_number: "ORD/2024/010",
@@ -383,9 +383,9 @@ export const initialOrders: Order[] = [
   },
   // Today's orders (December 25, 2024)
   {
-    order_id: "ORD-011",
-    store_id: 11,
-    location_id: 11,
+    order_id: 11,
+    businessId: 11,
+    locationId: 11,
     user_id: 11,
     employee_id: 11,
     order_number: "ORD/2024/011",
@@ -418,9 +418,9 @@ export const initialOrders: Order[] = [
 
   // This week (December 23, 2024)
   {
-    order_id: "ORD-012",
-    store_id: 12,
-    location_id: 12,
+    order_id: 12,
+    businessId: 12,
+    locationId: 12,
     user_id: 12,
     employee_id: 12,
     order_number: "ORD/2024/012",
@@ -453,9 +453,9 @@ export const initialOrders: Order[] = [
 
   // This month (December 15, 2024)
   {
-    order_id: "ORD-013",
-    store_id: 13,
-    location_id: 13,
+    order_id: 13,
+    businessId: 13,
+    locationId: 13,
     user_id: 13,
     employee_id: 13,
     order_number: "ORD/2024/013",
@@ -488,9 +488,9 @@ export const initialOrders: Order[] = [
 
   // This quarter (November 5, 2024)
   {
-    order_id: "ORD-014",
-    store_id: 14,
-    location_id: 14,
+    order_id: 14,
+    businessId: 14,
+    locationId: 14,
     user_id: 14,
     employee_id: 14,
     order_number: "ORD/2024/014",
@@ -523,9 +523,9 @@ export const initialOrders: Order[] = [
 
   // This quarter (October 20, 2024)
   {
-    order_id: "ORD-015",
-    store_id: 15,
-    location_id: 15,
+    order_id: 15,
+    businessId: 15,
+    locationId: 15,
     user_id: 15,
     employee_id: 15,
     order_number: "ORD/2024/015",

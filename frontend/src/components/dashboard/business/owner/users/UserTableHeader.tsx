@@ -1,5 +1,3 @@
-"use client";
-
 import { TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import {
   DropdownMenu,
@@ -11,38 +9,32 @@ import { ArrowUpDown } from "lucide-react";
 import { User } from "@/types/dashboard/business/user";
 
 interface UserTableHeaderProps {
-  columnsVisible: {
-    id: boolean;
-    username: boolean;
-    name: boolean;
-    email: boolean;
-    phone: boolean;
-    location: boolean;
-    role: boolean;
-  };
+  columnsVisible: Record<keyof User, boolean>;
   onSort: (column: keyof User) => void;
 }
 
 type ColumnConfig = {
-  key: keyof Omit<User, "password">;
+  key: keyof User;
   label: string;
   width?: string;
+  sortable?: boolean;
 };
+
+const COLUMNS: ColumnConfig[] = [
+  { key: "id", label: "ID", width: "w-[100px]", sortable: true },
+  { key: "username", label: "Username", sortable: true },
+  { key: "name", label: "Name", sortable: true },
+  { key: "email", label: "Email", sortable: true },
+  { key: "phone", label: "Phone", sortable: true },
+  { key: "locationId", label: "Location", sortable: true },
+  { key: "role", label: "Role", width: "w-[120px]", sortable: true },
+  { key: "isActive", label: "Status", width: "w-[100px]", sortable: true },
+];
 
 export function UserTableHeader({
   columnsVisible,
   onSort,
 }: UserTableHeaderProps) {
-  const columns: ColumnConfig[] = [
-    { key: "id", label: "ID", width: "w-[100px]" },
-    { key: "username", label: "Username" },
-    { key: "name", label: "Name" },
-    { key: "email", label: "Email" },
-    { key: "phone", label: "Phone" },
-    { key: "location", label: "Location" },
-    { key: "role", label: "Role", width: "w-[120px]" },
-  ];
-
   const renderSortableHeader = (column: ColumnConfig) => (
     <DropdownMenu>
       <DropdownMenuTrigger className="flex items-center">
@@ -63,12 +55,13 @@ export function UserTableHeader({
   return (
     <TableHeader>
       <TableRow>
-        {columns.map((column) =>
-          columnsVisible[column.key] ? (
-            <TableHead key={column.key} className={column.width}>
-              {renderSortableHeader(column)}
-            </TableHead>
-          ) : null
+        {COLUMNS.map(
+          (column) =>
+            columnsVisible[column.key] && (
+              <TableHead key={column.key} className={column.width}>
+                {column.sortable ? renderSortableHeader(column) : column.label}
+              </TableHead>
+            )
         )}
         <TableHead className="w-[100px]">Actions</TableHead>
       </TableRow>

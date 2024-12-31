@@ -21,12 +21,10 @@ import {
 import { CategoryForm } from "@/components/dashboard/business/owner/categories/CategoryForm";
 import {
   Category,
-  CategoryFormData,
 } from "@/types/dashboard/business/category";
 
 export default function CategoriesPage() {
   const {
-    categories,
     filteredCategories,
     paginatedCategories,
     editingCategory,

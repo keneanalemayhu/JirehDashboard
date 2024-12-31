@@ -13,8 +13,8 @@ import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/components/context/LanguageContext";
 
 const languages = [
-  { code: "am", name: "አማርኛ", flag: "🇪🇹", enabled: true },
   { code: "en", name: "English", flag: "🇺🇸", enabled: true },
+  { code: "am", name: "አማርኛ", flag: "🇪🇹", enabled: false },
   { code: "or", name: "Afaan Oromoo", flag: "🇪🇹", enabled: false },
 ] as const;
 

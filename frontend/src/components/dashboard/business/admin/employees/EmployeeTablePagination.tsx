@@ -14,16 +14,10 @@ import {
   ChevronLeft,
   ChevronRight,
 } from "lucide-react";
-
-interface EmployeeTablePaginationProps {
-  totalItems: number;
-  pageSize: number;
-  currentPage: number;
-  onPageChange: (page: number) => void;
-  onPageSizeChange: (pageSize: number) => void;
-}
-
-const PAGE_SIZE_OPTIONS = [10, 20, 30, 40, 50];
+import {
+  EmployeeTablePaginationProps,
+  PAGE_SIZE_OPTIONS,
+} from "@/types/dashboard/business/employee";
 
 export function EmployeeTablePagination({
   totalItems,
@@ -36,10 +30,14 @@ export function EmployeeTablePagination({
   const isFirstPage = currentPage === 1;
   const isLastPage = currentPage === totalPages;
 
+  const startItem = (currentPage - 1) * pageSize + 1;
+  const endItem = Math.min(currentPage * pageSize, totalItems);
+
   return (
-    <div className="flex items-center justify-between">
+    <div className="flex items-center justify-between px-2">
       <div className="text-sm text-muted-foreground">
-        {totalItems} employee(s) found
+        Showing {startItem}-{endItem} of {totalItems} employee
+        {totalItems !== 1 ? "s" : ""}
       </div>
       <div className="flex items-center gap-6">
         {/* Page Size Selector */}
@@ -47,14 +45,22 @@ export function EmployeeTablePagination({
           <p className="text-sm font-medium">Rows per page</p>
           <Select
             value={pageSize.toString()}
-            onValueChange={(value) => onPageSizeChange(Number(value))}
+            onValueChange={(value) => {
+              onPageSizeChange(Number(value));
+              // Reset to first page when changing page size
+              onPageChange(1);
+            }}
           >
-            <SelectTrigger className="w-16">
+            <SelectTrigger className="h-8 w-[70px]">
               <SelectValue placeholder={pageSize.toString()} />
             </SelectTrigger>
-            <SelectContent>
+            <SelectContent side="top">
               {PAGE_SIZE_OPTIONS.map((size) => (
-                <SelectItem key={size} value={size.toString()}>
+                <SelectItem
+                  key={size}
+                  value={size.toString()}
+                  className="text-sm"
+                >
                   {size}
                 </SelectItem>
               ))}
@@ -62,52 +68,61 @@ export function EmployeeTablePagination({
           </Select>
         </div>
 
-        {/* Page Information */}
-        <div className="flex w-[100px] items-center justify-center text-sm font-medium">
-          Page {currentPage} of {totalPages}
-        </div>
-
-        {/* Navigation Controls */}
+        {/* Page Navigation */}
         <div className="flex items-center space-x-2">
-          {/* First Page */}
-          <Button
-            variant="outline"
-            size="icon"
-            onClick={() => onPageChange(1)}
-            disabled={isFirstPage}
-          >
-            <ChevronFirst className="w-4 h-4" />
-          </Button>
+          <div className="flex w-[100px] items-center justify-center text-sm font-medium">
+            Page {currentPage} of {totalPages}
+          </div>
 
-          {/* Previous Page */}
-          <Button
-            variant="outline"
-            size="icon"
-            onClick={() => onPageChange(currentPage - 1)}
-            disabled={isFirstPage}
-          >
-            <ChevronLeft className="w-4 h-4" />
-          </Button>
+          <div className="flex items-center space-x-1">
+            {/* First Page */}
+            <Button
+              variant="outline"
+              size="icon"
+              className="h-8 w-8"
+              onClick={() => onPageChange(1)}
+              disabled={isFirstPage}
+              title="First Page"
+            >
+              <ChevronFirst className="h-4 w-4" />
+            </Button>
 
-          {/* Next Page */}
-          <Button
-            variant="outline"
-            size="icon"
-            onClick={() => onPageChange(currentPage + 1)}
-            disabled={isLastPage}
-          >
-            <ChevronRight className="w-4 h-4" />
-          </Button>
+            {/* Previous Page */}
+            <Button
+              variant="outline"
+              size="icon"
+              className="h-8 w-8"
+              onClick={() => onPageChange(currentPage - 1)}
+              disabled={isFirstPage}
+              title="Previous Page"
+            >
+              <ChevronLeft className="h-4 w-4" />
+            </Button>
 
-          {/* Last Page */}
-          <Button
-            variant="outline"
-            size="icon"
-            onClick={() => onPageChange(totalPages)}
-            disabled={isLastPage}
-          >
-            <ChevronLast className="w-4 h-4" />
-          </Button>
+            {/* Next Page */}
+            <Button
+              variant="outline"
+              size="icon"
+              className="h-8 w-8"
+              onClick={() => onPageChange(currentPage + 1)}
+              disabled={isLastPage}
+              title="Next Page"
+            >
+              <ChevronRight className="h-4 w-4" />
+            </Button>
+
+            {/* Last Page */}
+            <Button
+              variant="outline"
+              size="icon"
+              className="h-8 w-8"
+              onClick={() => onPageChange(totalPages)}
+              disabled={isLastPage}
+              title="Last Page"
+            >
+              <ChevronLast className="h-4 w-4" />
+            </Button>
+          </div>
         </div>
       </div>
     </div>

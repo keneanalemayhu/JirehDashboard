@@ -7,64 +7,88 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { ArrowUpDown } from "lucide-react";
-import { Location } from "@/types/dashboard/business/location";
+import { ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
+import {
+  Location,
+  ColumnVisibility,
+  SortDirection,
+  COLUMNS,
+} from "@/types/dashboard/business/location";
 
 interface LocationTableHeaderProps {
-  columnsVisible: {
-    id: boolean;
-    name: boolean;
-    address: boolean;
-    phoneNumber: boolean;
-  };
+  columnsVisible: ColumnVisibility;
   onSort: (column: keyof Location) => void;
+  sortColumn?: keyof Location | null;
+  sortDirection?: SortDirection;
 }
-
-type ColumnConfig = {
-  key: keyof Location;
-  label: string;
-  width?: string;
-};
 
 export function LocationTableHeader({
   columnsVisible,
   onSort,
+  sortColumn,
+  sortDirection,
 }: LocationTableHeaderProps) {
-  const columns: ColumnConfig[] = [
-    { key: "id", label: "ID", width: "w-[100px]" },
-    { key: "name", label: "Name" },
-    { key: "address", label: "Address" },
-    { key: "phoneNumber", label: "Phone Number" },
-  ];
+  const renderSortableHeader = (column: (typeof COLUMNS)[number]) => {
+    if (!column.sortable) {
+      return <span className="flex items-center">{column.label}</span>;
+    }
 
-  const renderSortableHeader = (column: ColumnConfig) => (
-    <DropdownMenu>
-      <DropdownMenuTrigger className="flex items-center">
-        {column.label}
-        <ArrowUpDown className="ml-2 h-4 w-4" />
-      </DropdownMenuTrigger>
-      <DropdownMenuContent>
-        <DropdownMenuItem onClick={() => onSort(column.key)}>
-          Sort Ascending
-        </DropdownMenuItem>
-        <DropdownMenuItem onClick={() => onSort(column.key)}>
-          Sort Descending
-        </DropdownMenuItem>
-      </DropdownMenuContent>
-    </DropdownMenu>
-  );
+    const isActive = sortColumn === column.key;
+    let SortIcon = ArrowUpDown;
+    if (isActive) {
+      SortIcon = sortDirection === "asc" ? ArrowUp : ArrowDown;
+    }
+
+    return (
+      <DropdownMenu>
+        <DropdownMenuTrigger className="flex items-center group">
+          {column.label}
+          <SortIcon
+            className={`ml-2 h-4 w-4 ${
+              isActive ? "opacity-100" : "opacity-0 group-hover:opacity-100"
+            } transition-opacity`}
+          />
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="start">
+          <DropdownMenuItem
+            onClick={() => onSort(column.key as keyof Location)}
+            className={
+              sortColumn === column.key && sortDirection === "asc"
+                ? "bg-accent"
+                : ""
+            }
+          >
+            Sort Ascending
+          </DropdownMenuItem>
+          <DropdownMenuItem
+            onClick={() => onSort(column.key as keyof Location)}
+            className={
+              sortColumn === column.key && sortDirection === "desc"
+                ? "bg-accent"
+                : ""
+            }
+          >
+            Sort Descending
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+    );
+  };
 
   return (
     <TableHeader>
       <TableRow>
-        {columns.map((column) =>
-          columnsVisible[column.key as keyof typeof columnsVisible] ? (
-            <TableHead key={column.key} className={column.width}>
+        {COLUMNS.map((column) =>
+          columnsVisible[column.key as keyof ColumnVisibility] ? (
+            <TableHead
+              key={column.key}
+              className={`${column.width || ""} ${column.align || ""}`}
+            >
               {renderSortableHeader(column)}
             </TableHead>
           ) : null
         )}
-        <TableHead className="w-[100px]">Actions</TableHead>
+        <TableHead className="w-[100px] text-right">Actions</TableHead>
       </TableRow>
     </TableHeader>
   );

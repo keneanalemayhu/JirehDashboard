@@ -36,10 +36,19 @@ export function OrderTablePagination({
   const isFirstPage = currentPage === 1;
   const isLastPage = currentPage === totalPages;
 
+  // Calculate the range of items being displayed
+  const startItem = (currentPage - 1) * pageSize + 1;
+  const endItem = Math.min(currentPage * pageSize, totalItems);
+
   return (
     <div className="flex items-center justify-between">
-      <div className="text-sm text-muted-foreground">
-        {totalItems} order{totalItems !== 1 ? "s" : ""} found
+      <div className="flex items-center gap-4">
+        <div className="text-sm text-muted-foreground">
+          {totalItems} order{totalItems !== 1 ? "s" : ""} found
+        </div>
+        <div className="text-sm text-muted-foreground">
+          Showing {startItem}-{endItem}
+        </div>
       </div>
       <div className="flex items-center gap-6">
         {/* Page Size Selector */}

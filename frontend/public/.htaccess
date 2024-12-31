@@ -1,0 +1,57 @@
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    RewriteBase /
+
+    # If an existing asset or directory is requested, serve it
+    RewriteCond %{DOCUMENT_ROOT}%{REQUEST_URI} -f [OR]
+    RewriteCond %{DOCUMENT_ROOT}%{REQUEST_URI} -d
+    RewriteRule ^ - [L]
+
+    # Handle root redirect to login
+    RewriteRule ^$ /auth/login [R=301,L]
+
+    # Redirect auth paths to login
+    RewriteRule ^auth/?$ /auth/login [R=301,L]
+
+    # Redirect dashboard/business to login (unauthorized path)
+    RewriteRule ^dashboard/business/?$ /auth/login [R=301,L]
+
+    # Handle business role redirects (with or without trailing slash)
+    RewriteRule ^dashboard/business/owner/?$ /dashboard/business/owner/overview [R=301,L]
+    RewriteRule ^dashboard/business/admin/?$ /dashboard/business/admin/overview [R=301,L]
+    RewriteRule ^dashboard/business/sales/?$ /dashboard/business/sales/orders [R=301,L]
+    RewriteRule ^dashboard/business/warehouse/?$ /dashboard/business/warehouse/items [R=301,L]
+
+    # Handle settings redirects for each role
+    RewriteRule ^dashboard/business/owner/settings/?$ /dashboard/business/owner/settings/profile [R=301,L]
+    RewriteRule ^dashboard/business/admin/settings/?$ /dashboard/business/admin/settings/profile [R=301,L]
+    RewriteRule ^dashboard/business/sales/settings/?$ /dashboard/business/sales/settings/profile [R=301,L]
+    RewriteRule ^dashboard/business/warehouse/settings/?$ /dashboard/business/warehouse/settings/profile [R=301,L]
+
+    # Remove .html extension
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteCond %{REQUEST_FILENAME}.html -f
+    RewriteRule ^(.+)$ $1.html [L]
+
+    # If the requested resource doesn't exist, serve index.html
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteRule ^ index.html [L]
+</IfModule>
+
+# Serve all resources with UTF-8 encoding
+AddDefaultCharset utf-8
+
+# Browser caching for static assets
+<IfModule mod_expires.c>
+    ExpiresActive On
+    ExpiresByType text/css "access plus 1 year"
+    ExpiresByType text/javascript "access plus 1 year"
+    ExpiresByType image/jpeg "access plus 1 year"
+    ExpiresByType image/png "access plus 1 year"
+    ExpiresByType image/svg+xml "access plus 1 year"
+</IfModule>
+
+# Prevent directory listings
+Options -Indexes

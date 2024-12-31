@@ -7,7 +7,7 @@ import { Edit, Trash2 } from "lucide-react";
 import {
   Category,
   ColumnVisibility,
-} from "@/types/dashboard/business/owner/category";
+} from "@/types/dashboard/business/category";
 import { format } from "date-fns";
 
 interface CategoryTableRowProps {
@@ -66,7 +66,7 @@ export function CategoryTableRow({
       {columnsVisible.isActive && (
         <TableCell className="w-[100px]">
           <Badge
-            variant={category.isActive ? "success" : "secondary"}
+            variant={category.isActive ? "default" : "secondary"}
             className="w-fit"
           >
             {category.isActive ? "Active" : "Inactive"}
@@ -77,7 +77,7 @@ export function CategoryTableRow({
       {columnsVisible.isHidden && (
         <TableCell className="w-[100px]">
           <Badge
-            variant={category.isHidden ? "warning" : "outline"}
+            variant={category.isHidden ? "destructive" : "outline"}
             className="w-fit"
           >
             {category.isHidden ? "Hidden" : "Visible"}
