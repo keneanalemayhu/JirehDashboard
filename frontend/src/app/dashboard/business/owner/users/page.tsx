@@ -114,7 +114,7 @@ export default function UsersPage() {
           `"${user.email}"`,
           `"${user.phone}"`,
           `"${user.role}"`,
-          `"${user.location}"`,
+          `"${user.location_id}"`,
           `"${user.isActive ? 'Active' : 'Inactive'}"`,
         ].join(",")
       ),
@@ -137,7 +137,7 @@ export default function UsersPage() {
   return (
     <SidebarLayout>
       <div className="flex flex-col h-full">
-        <Header title="Users" subtitle="Manage your users" />
+        <Header />
         <div className="flex-1 space-y-4 p-8 pt-6">
           <div className="flex items-center justify-between space-x-2">
             <div className="flex items-center flex-1 space-x-2">
@@ -204,8 +204,7 @@ export default function UsersPage() {
             pageSize={pageSize}
             currentPage={currentPage}
             onPageChange={handlePageChange}
-            onPageSizeChange={handlePageSizeChange}
-          />
+            onPageSizeChange={handlePageSizeChange} totalPages={0}          />
         </div>
       </div>
 

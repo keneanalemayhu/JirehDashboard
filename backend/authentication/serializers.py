@@ -232,71 +232,51 @@ class RegisterSerializer(serializers.ModelSerializer):
         return attrs
 
     def create(self, validated_data):
+        location_id = validated_data.pop('location_id')
         try:
-            business_profile_data = validated_data.pop('business_profile', None)
-            password = validated_data.pop('password')
-            
-            # Set default role if not provided
-            if 'role' not in validated_data:
-                validated_data['role'] = 'owner'
-            
-            print("Debug - Validated data:", validated_data)  # Debug print
-                
-            # Create user instance
-            user = CustomUser.objects.create(**validated_data)
-            user.set_password(password)
-            user.save()
-
-            # Create business profile if data is provided
-            if business_profile_data:
-                try:
-                    print("Debug - Business profile data:", business_profile_data)  # Debug print
-                    business_profile = BusinessProfile.objects.create(owner=user, **business_profile_data)
-                    
-                    # Generate unique registration number (you can modify this format)
-                    import uuid
-                    registration_number = f"JR-{uuid.uuid4().hex[:8].upper()}"
-                    
-                    # Create store for owner
-                    from store.models import Store
-                    store = Store.objects.create(
-                        name=business_profile.business_name,
-                        address=business_profile.business_address,
-                        contact_number=business_profile.business_phone,
-                        registration_number=registration_number,
-                        owner=user,
-                        admin=user  # Setting owner as admin initially
-                    )
-                    print(f"Debug - Store created: {store.name}")  # Debug print
-                    
-                except Exception as e:
-                    print(f"Debug - Business profile/store creation error: {str(e)}")  # Debug print
-                    # If business profile creation fails, delete the user and raise the error
-                    user.delete()
-                    raise serializers.ValidationError({
-                        'business_profile': f"Failed to create business profile/store: {str(e)}"
-                    })
-
-            return user
-        except IntegrityError as e:
-            print(f"Debug - Integrity error: {str(e)}")  # Debug print
-            if 'phone_number' in str(e):
-                raise serializers.ValidationError({
-                    'phone_number': 'This phone number is already registered. Please use a different phone number.'
-                })
-            elif 'email' in str(e):
-                raise serializers.ValidationError({
-                    'email': 'This email is already registered. Please use a different email.'
-                })
-            else:
-                raise serializers.ValidationError({
-                    'error': f'Registration failed: {str(e)}'
-                })
-        except Exception as e:
-            print(f"Debug - Unexpected error: {str(e)}")  # Debug print
-            raise serializers.ValidationError({
-                'error': f'Registration failed: {str(e)}'
-            })
+            location = Location.objects.get(id=location_id)
+            validated_data['created_by'] = self.context['request'].user  # Set created_by to the current user
+            validated_data['is_active'] = True  # Set is_active to True
+        except Location.DoesNotExist:
+            raise serializers.ValidationError({'location_id': 'Invalid location ID'})
+    
+        # Generate a random password
+        password = get_random_string(length=12)
+        user = CustomUser.objects.create_user(
+            email=validated_data['email'],
+            user_name=validated_data['user_name'],
+            full_name=validated_data['full_name'],
+            phone_number=validated_data['phone_number'],
+            role=validated_data['role'],
+            is_active=validated_data['is_active'],
+            password=password,
+            created_by=self.context['request'].user  # Set created_by to the current user
+        )
+    
+        # Set the location field
+        user.location = location  # Assuming you have a ForeignKey relationship
+        user.save()
+    
+        # Send password to user's email
+        send_mail(
+            'Your Account Password',
+            f'Your password is: {password}',
+            settings.DEFAULT_FROM_EMAIL,
+            [user.email],
+            fail_silently=False,
+        )
+    
+        # Return the user data including the location
+        return {
+            'id': user.id,
+            'user_name': user.user_name,
+            'full_name': user.full_name,
+            'email': user.email,
+            'phone_number': user.phone_number,
+            'role': user.role,
+            'is_active': user.is_active,
+            'location': location.name,  # Include the location name
+        }
 
 class UserRegistrationSerializer(serializers.ModelSerializer):
     location_id = serializers.IntegerField(write_only=True, required=True)
@@ -304,18 +284,34 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
     phone_number = serializers.CharField(required=True)
     full_name = serializers.CharField(required=True)
     user_name = serializers.CharField(required=True)
+    location = serializers.SerializerMethodField()
 
     class Meta:
         model = CustomUser
-        fields = ['user_name', 'full_name', 'email', 'phone_number', 'location_id', 'role', 'is_active']
+        fields = ['user_name', 'full_name', 'email', 'phone_number', 'location_id', 'role', 'is_active', 'location']
+
+    def get_location(self, obj):
+        # Get the location from related store model
+        try:
+            # Assuming you're storing location_id somewhere, maybe in a related model or attribute
+            location = Location.objects.get(id=obj.location_id)
+            return {
+                'id': location.id,
+                'name': location.name,
+                'address': location.address,
+                'contact_number': str(location.contact_number)
+            }
+        except Location.DoesNotExist:
+            return None
 
     def create(self, validated_data):
         location_id = validated_data.pop('location_id')
         try:
             location = Location.objects.get(id=location_id)
-            validated_data['location'] = location
-            validated_data['created_by'] = self.context['request'].user  # Set created_by to the current user
-            validated_data['is_active'] = True  # Set is_active to True
+            # Store location_id as an attribute of the user
+            validated_data['location_id'] = location.id
+            validated_data['created_by'] = self.context['request'].user
+            validated_data['is_active'] = True
         except Location.DoesNotExist:
             raise serializers.ValidationError({'location_id': 'Invalid location ID'})
 
@@ -329,7 +325,8 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
             role=validated_data['role'],
             is_active=validated_data['is_active'],
             password=password,
-            created_by=self.context['request'].user  # Set created_by to the current user
+            created_by=self.context['request'].user,
+            location_id=location.id  # Save location_id with the user
         )
 
         # Send password to user's email
@@ -342,3 +339,51 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
         )
 
         return user
+    
+class AccountSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = CustomUser
+        fields = ['full_name', 'email', 'phone_number']
+        read_only_fields = ['email']
+
+class AccountUpdateSerializer(serializers.ModelSerializer):
+    current_password = serializers.CharField(write_only=True, required=False, allow_blank=True)
+    new_password = serializers.CharField(write_only=True, required=False, allow_blank=True)
+    email = serializers.EmailField(read_only=True)  # Read-only since email updates need verification
+
+    class Meta:
+        model = CustomUser
+        fields = ['full_name', 'email', 'phone_number', 'current_password', 'new_password']
+
+    def update(self, instance, validated_data):
+    # Handle password update if both fields are provided
+        if validated_data.get('new_password') and validated_data.get('current_password'):
+            if not instance.check_password(validated_data['current_password']):
+                raise serializers.ValidationError({"current_password": "Incorrect password"})
+            instance.set_password(validated_data['new_password'])
+            
+        # Update other fields
+        instance.full_name = validated_data.get('full_name', instance.full_name)
+        instance.phone_number = validated_data.get('phone_number', instance.phone_number)
+        
+        instance.save()
+        return instance
+    
+
+class ProfileSerializer(serializers.ModelSerializer):
+    avatar = serializers.ImageField(required=False)
+    username = serializers.CharField(source='user_name')
+
+    class Meta:
+        model = CustomUser
+        fields = ['username', 'avatar']
+
+    def validate_username(self, value):
+        if CustomUser.objects.filter(user_name=value).exclude(id=self.instance.id).exists():
+            raise serializers.ValidationError("Username already taken")
+        return value
+    def get_avatar(self, obj):
+        request = self.context.get('request')
+        if obj.avatar:
+            return request.build_absolute_uri(obj.avatar.url)
+        return None

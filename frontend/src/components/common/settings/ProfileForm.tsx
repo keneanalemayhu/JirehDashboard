@@ -17,56 +17,59 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarImage } from "@/components/ui/avatar";
+import { toast } from "sonner";
+import { fetchProfileData, updateProfileData } from "@/lib/api/profile";
+import { useEffect } from "react";
+import { da } from "date-fns/locale";
 
 const profileFormSchema = z.object({
-  username: z
-    .string()
-    .min(2, {
-      message: "Username must be at least 2 characters.",
-    })
-    .max(30, {
-      message: "Username must not be longer than 30 characters.",
-    }),
-  email: z.string().email(),
-  bio: z.string().max(160).min(4),
-  urls: z
-    .array(
-      z.object({
-        value: z.string().url({ message: "Please enter a valid URL." }),
-      })
-    )
-    .optional(),
+  username: z.string().min(2).max(30),
+  avatar: z.any().optional(),
 });
 
 type ProfileFormValues = z.infer<typeof profileFormSchema>;
 
-const defaultValues: Partial<ProfileFormValues> = {
-  username: "shadcn",
-  email: "abebe@email.com",
-  bio: "I own a computer.",
-  urls: [{ value: "https://shadcn.com" }],
-};
-
 export function ProfileForm() {
+  const [avatar, setAvatar] = useState<string | null>(null);
   const form = useForm<ProfileFormValues>({
     resolver: zodResolver(profileFormSchema),
-    defaultValues,
+    defaultValues: {
+      username: "",
+    },
   });
 
-const [avatar, setAvatar] = useState<string | null>("/avatar/steve.png");
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const data = await fetchProfileData();
+        form.reset(data);
+        setAvatar(data.avatar); // Ensure avatar state is updated
+      } catch (error) {
+        console.error("Error fetching profile:", error);
+        toast.error("Failed to load profile");
+      }
+    };
 
-  function onSubmit(data: ProfileFormValues) {
-    console.log(data);
-  }
+    fetchData();
+  }, [form]);
 
-  function onAvatarChange(event: React.ChangeEvent<HTMLInputElement>) {
-    const file = event.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setAvatar(reader.result as string);
-      };
-      reader.readAsDataURL(file);
+  async function onSubmit(data: ProfileFormValues) {
+    const formData = new FormData();
+    formData.append("username", data.username);
+
+    if (data.avatar?.[0]) {
+      formData.append("avatar", data.avatar[0]);
+    }
+
+    console.log("Submitting data:", Object.fromEntries(formData)); // Debug line
+
+    try {
+      const response = await updateProfileData(formData);
+      toast.success("Profile updated successfully");
+      setAvatar(response.avatar); // Ensure avatar state is updated
+    } catch (error: any) {
+      console.error("Error details:", error.response?.data); // Debug line
+      toast.error("Failed to update profile");
     }
   }
 
@@ -87,15 +90,25 @@ const [avatar, setAvatar] = useState<string | null>("/avatar/steve.png");
                 <div className="flex items-center space-x-4">
                   <Avatar className="w-24 h-24">
                     <AvatarImage
-                      src={avatar || "/avatar/person.png"}
+                      src={avatar || "/avatar/person.png"} // Ensure src is set correctly
                       alt="Profile picture"
                     />
                   </Avatar>
                   <div className="space-y-2">
                     <Input
                       type="file"
-                      accept="image/*"
-                      onChange={onAvatarChange}
+                      accept="image/*" // Correct the accept attribute
+                      onChange={(event) => {
+                        const file = event.target.files?.[0];
+                        if (file) {
+                          form.setValue("avatar", event.target.files);
+                          const reader = new FileReader();
+                          reader.onloadend = () => {
+                            setAvatar(reader.result as string);
+                          };
+                          reader.readAsDataURL(file);
+                        }
+                      }}
                     />
                     {avatar && (
                       <Button
@@ -119,7 +132,7 @@ const [avatar, setAvatar] = useState<string | null>("/avatar/steve.png");
             <FormItem>
               <FormLabel>Username</FormLabel>
               <FormControl>
-                <Input placeholder="abebe.kebede" {...field} />
+                <Input placeholder="Your username" {...field} />
               </FormControl>
               <FormDescription>
                 This is your public display name. It can be your real name or a

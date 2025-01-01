@@ -2,6 +2,7 @@ import axios from 'axios';
 
 const API_URL = '/api/auth/register-user/'; // Adjust the URL based on your API setup
 
+import { UserFormData } from "@/types/dashboard/business/user"; // Ensure this import is present
 export const userApi = {
   getUsers: async (businessId: number) => {
     const response = await axios.get(`${API_URL}?businessId=${businessId}`);

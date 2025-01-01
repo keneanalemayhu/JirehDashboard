@@ -10,7 +10,10 @@ from .views import (
     UserAccountStatusView,
     UserProfileUpdateView,
     CustomTokenRefreshView,
-    UserRegistrationViewSet
+    UserRegistrationViewSet,
+    AccountView,
+    ProfileView
+
 )
 
 router = DefaultRouter()
@@ -26,5 +29,7 @@ urlpatterns = [
     path('profile/update/', UserProfileUpdateView.as_view(), name='profile_update'),
     path('account/status/', UserAccountStatusView.as_view(), name='account_status'),
     path('token/refresh/', CustomTokenRefreshView.as_view(), name='token_refresh'),
+    path('account/', AccountView.as_view(), name='account'),
+    path('profile/', ProfileView.as_view(), name='profile'),
     path('', include(router.urls)),
 ]

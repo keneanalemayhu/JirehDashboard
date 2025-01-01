@@ -4,7 +4,7 @@ export interface User {
   name: string;
   email: string;
   phone: string;
-  location: string;
+  location_id: string;
   role: Role;
   isActive: boolean;
 }
@@ -14,6 +14,7 @@ export enum Role {
   ADMIN = "admin",
   EMPLOYEE = "employee",
   WAREHOUSE_MANAGER = "warehouse_manager",
+  SALES = "sales",
 }
 
 export type UserFormData = Omit<User, "id"> & {
@@ -125,7 +126,7 @@ export const COLUMNS: ColumnConfig[] = [
   { key: "name", label: "Name" },
   { key: "email", label: "Email" },
   { key: "phone", label: "Phone" },
-  { key: "location", label: "Location" },
+  { key: "location_id", label: "Location" },
   { key: "role", label: "Role" },
   { key: "isActive", label: "Status" },
 ];
@@ -151,7 +152,7 @@ export const INITIAL_FORM_DATA: UserFormData = {
   name: "",
   email: "",
   phone: "+251",
-  location: "",
+  location_id: "",
   role: Role.ADMIN,
   isActive: true,
 };

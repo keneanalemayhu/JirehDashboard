@@ -31,8 +31,6 @@ export function UserTableRow({
     switch (role) {
       case Role.ADMIN:
         return "bg-red-100 text-red-800";
-      case Role.MANAGER:
-        return "bg-purple-100 text-purple-800";
       case Role.EMPLOYEE:
         return "bg-blue-100 text-blue-800";
       case Role.SALES:
@@ -59,7 +57,7 @@ export function UserTableRow({
       {columnsVisible.location && (
         <TableCell>
           <span className="inline-flex items-center rounded-md bg-gray-50 px-2 py-1 text-xs font-medium text-gray-600 ring-1 ring-inset ring-gray-500/10">
-            {user.location}
+            {user.location_id}
           </span>
         </TableCell>
       )}

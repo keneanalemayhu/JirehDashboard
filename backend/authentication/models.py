@@ -27,14 +27,17 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
         ('admin', 'Admin'),
         ('employee', 'Employee'),
         ('warehouse_manager', 'Warehouse_Manager'),
+        ('sales', 'Sales'),
     ]
     email = models.EmailField(unique=True)
     full_name = models.CharField(max_length=150, blank=True)
     user_name = models.CharField(max_length=150, blank=True)
     phone_number = PhoneNumberField(blank=True, null=True)
     role = models.CharField(max_length=20, choices=ROLE_CHOICES)  # Added role field
+    avatar = models.ImageField(upload_to='avatars/', null=True, blank=True)
     is_active = models.BooleanField(default=True)
     is_staff = models.BooleanField(default=False)
+    location_id = models.IntegerField(null=True, blank=True)  # Add this field
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     created_by = models.ForeignKey('self', on_delete=models.SET_NULL, null=True, blank=True, related_name='created_users')

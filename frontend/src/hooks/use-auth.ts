@@ -67,6 +67,7 @@ export function useAuth() {
 
       setUser(user);
       setIsAuthenticated(true);
+      
 
       // Redirect based on role
       if (role === 'super_admin') {
@@ -74,6 +75,8 @@ export function useAuth() {
       } else {
         router.push(`/dashboard/business/${role || 'owner'}`);
       }
+      return response.data;  // Add this line
+
     } catch (error: any) {
       console.error('Login Error Details:', {
         message: error.message,
@@ -110,7 +113,7 @@ export function useAuth() {
     }
   };
 
-  const logout = () => {
+  const logout = async () => {
     localStorage.removeItem('access_token');
     localStorage.removeItem('refresh_token');
     localStorage.removeItem('user');

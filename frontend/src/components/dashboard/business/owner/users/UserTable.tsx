@@ -53,9 +53,9 @@ export function UserTable({
         <Table>
           <UserTableHeader columnsVisible={columnsVisible} onSort={onSort} />
           <TableBody>
-            {users.map((user) => (
+            {users.map((user, index) => (
               <UserTableRow
-                key={user.id}
+                key={user.id ?? `user-${index}`} // Fallback to index if id is missing
                 user={user}
                 columnsVisible={columnsVisible}
                 onEdit={onEdit}

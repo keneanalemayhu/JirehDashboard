@@ -20,19 +20,51 @@ import {
 } from "@/components/ui/sidebar";
 import { useLanguage } from "@/components/context/LanguageContext";
 import { translations } from "@/translations/dashboard/business/owner";
+import { useAuth } from "@/hooks/use-auth";
+import { useRouter } from "next/navigation";
+import { fetchProfileData, updateProfileData } from "@/lib/api/profile";
+import { useEffect, useState } from "react";
+import { toast } from "sonner";
 
-export function NavUser({
-  user,
-}: {
-  user: {
-    name: string;
-    email: string;
-    avatar: string;
-  };
-}) {
+export function NavUser() {
   const { isMobile } = useSidebar();
   const { language } = useLanguage();
   const t = translations[language].dashboard.owner.sidebar.userMenu;
+  const { logout } = useAuth();
+  const router = useRouter();
+  const [user, setUser] = useState<{ name: string; email: string; avatar: string | null }>({
+    name: "",
+    email: "",
+    avatar: null,
+  });
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const data = await fetchProfileData();
+        setUser({
+          name: data.username,
+          email: data.email,
+          avatar: data.avatar,
+        });
+      } catch (error) {
+        console.error("Error fetching profile:", error);
+        toast.error("Failed to load profile");
+      }
+    };
+
+    fetchData();
+  }, []);
+
+  const handleLogout = async () => {
+    try {
+      await logout();
+      localStorage.clear(); // Clear tokens and user data
+      router.push("/auth/login"); // Redirect to login page after logout
+    } catch (error) {
+      console.error("Logout error:", error);
+    }
+  };
 
   const defaultAvatar = "/api/placeholder/32/32";
 
@@ -104,7 +136,7 @@ export function NavUser({
               </Link>
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
-            <DropdownMenuItem>
+            <DropdownMenuItem onClick={handleLogout}>
               <LogOut className="mr-2 h-4 w-4" />
               {t.logout}
             </DropdownMenuItem>

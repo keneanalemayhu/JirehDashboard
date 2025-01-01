@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useAuth } from "@/hooks/use-auth";
 import { useRouter } from "next/navigation";
@@ -28,28 +28,39 @@ function LoginFormContent() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState("");
 
+  const { isAuthenticated, user } = useAuth();
+
+  useEffect(() => {
+    // Redirect if user is authenticated
+    if (isAuthenticated) {
+      router.push("/dashboard/business/owner/overview");
+    }
+  }, [isAuthenticated, router]);
   const onSubmit = async (data: LoginFormData) => {
     try {
       setIsSubmitting(true);
       const response = await login(data.identifier, data.password);
       
-      if (response.success) {
+      if (response?.success) {  // Add optional chaining
         // Store tokens and user data
-        localStorage.setItem('access_token', response.access);
-        localStorage.setItem('refresh_token', response.refresh);
-        localStorage.setItem('user', JSON.stringify(response.user));
+        if (response.access) localStorage.setItem('access_token', response.access);
+        if (response.refresh) localStorage.setItem('refresh_token', response.refresh);
+        if (response.user) localStorage.setItem('user', JSON.stringify(response.user));
         
         // Redirect based on role
         const role = response.role;
-        if (role === 'owner' || role === 'admin') {
+        if (role.includes('super_admin')) {
+          router.push('/dashboard/sadmin');
+        }
+        else if (role === 'owner' || role === 'admin') {
           router.push('/dashboard/business/owner');
-        } else if (role === 'employee') {
-          router.push('/dashboard/business/employee');
-        } else {
-          router.push('/dashboard');
+        } else if (role === 'sales') {
+          router.push('/dashboard/business/sales');
+        } else if(role === 'warehouse_manager') {
+          router.push('/dashboard/business/warehouse_manager');
         }
       } else {
-        setError(response.detail || 'Login failed');
+        setError(response?.detail || 'Login failed');
       }
     } catch (error: any) {
       console.error('Login error:', error);

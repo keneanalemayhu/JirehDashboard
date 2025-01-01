@@ -6,7 +6,7 @@ from rest_framework_simplejwt.views import TokenObtainPairView
 from rest_framework_simplejwt.views import TokenRefreshView
 from rest_framework.views import APIView
 from rest_framework.permissions import AllowAny, IsAuthenticated, IsAdminUser
-from .serializers import RegisterSerializer
+from .serializers import ProfileSerializer, RegisterSerializer
 from rest_framework_simplejwt.tokens import RefreshToken
 from .serializers import PasswordResetRequestSerializer, PasswordResetConfirmSerializer
 from django.contrib.auth import authenticate, get_user_model
@@ -22,9 +22,13 @@ from .serializers import (
     PasswordResetRequestSerializer,
     PasswordResetConfirmSerializer,
     BusinessProfileSerializer,
-    UserRegistrationSerializer
+    UserRegistrationSerializer,
+    AccountSerializer, 
+    AccountUpdateSerializer
 )
 from django.core.exceptions import ValidationError
+from rest_framework.parsers import MultiPartParser, FormParser
+
 User = get_user_model()
 
 def format_error_response(message, errors=None, code=None):
@@ -503,3 +507,37 @@ class UserRegistrationViewSet(viewsets.ModelViewSet):
                 'success': False,
                 'errors': str(e)
             }, status=status.HTTP_400_BAD_REQUEST)
+        
+
+class AccountView(APIView):
+    def get(self, request):
+        serializer = AccountSerializer(request.user)
+        return Response(serializer.data)
+
+    def put(self, request):
+        user = request.user
+        # Remove empty fields from request data
+        data = {k: v for k, v in request.data.items() if v}
+        serializer = AccountUpdateSerializer(user, data=data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(AccountSerializer(user).data)
+        return Response(serializer.errors, status=400)
+    
+
+class ProfileView(APIView):
+    parser_classes = (MultiPartParser, FormParser)
+    
+    def get(self, request):
+        serializer = ProfileSerializer(request.user, context={'request': request})
+        return Response(serializer.data)
+
+    def put(self, request):
+        serializer = ProfileSerializer(request.user, data=request.data, partial=True)
+        if serializer.is_valid():
+            if 'avatar' in request.FILES:
+                request.user.avatar = request.FILES['avatar']
+            serializer.save()
+            return Response(serializer.data)
+        print("Validation errors:", serializer.errors)  # Debug line
+        return Response(serializer.errors, status=400)

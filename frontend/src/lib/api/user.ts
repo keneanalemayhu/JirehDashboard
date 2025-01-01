@@ -15,7 +15,8 @@ export const userApi = {
         email: user.email,
         phone: user.phone_number,
         role: user.role,
-        location: user.location, // TODO: Add location name
+        location: user.location?.name, // TODO: Add location name
+        location_id: user.location?.id || '', // Add this
         isActive: user.is_active,
         lastLogin: null, // TODO: Add last login
       }));
@@ -39,7 +40,7 @@ export const userApi = {
         full_name: data.name,
         email: data.email,
         phone_number: data.phone,
-        location_id: data.location,
+        location_id: data.location_id,
         role: data.role,
         is_active: data.isActive,
       });
@@ -52,7 +53,7 @@ export const userApi = {
         email: user.email,
         phone: user.phone_number,
         role: user.role,
-        location: user.location, // TODO: Add location name
+        location_id: user.location_id,
         isActive: user.is_active,
       };
     } catch (error: any) {
@@ -80,7 +81,7 @@ export const userApi = {
         full_name: data.name,
         email: data.email,
         phone_number: data.phone,
-        location_id: data.location,
+        location_id: data.location_id,
         role: data.role,
         is_active: data.isActive,
       });
@@ -93,7 +94,7 @@ export const userApi = {
         email: user.email,
         phone: user.phone_number,
         role: user.role,
-        location: user.location, // TODO: Add location name
+        location_id: user.location, // TODO: Add location name
         isActive: user.is_active,
       };
     } catch (error: any) {

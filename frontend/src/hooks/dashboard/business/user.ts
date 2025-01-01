@@ -53,7 +53,7 @@ export const useUsers = (businessId: number) => {
           user.username.toLowerCase().includes(searchTerm) ||
           user.email.toLowerCase().includes(searchTerm) ||
           user.phone.toLowerCase().includes(searchTerm) ||
-          user.location.toLowerCase().includes(searchTerm) ||
+          user.location_id.toLowerCase().includes(searchTerm) ||
           user.role.toLowerCase().includes(searchTerm)
       );
     }

@@ -82,7 +82,7 @@ const [avatar, setAvatar] = useState<string | null>("/avatar/steve.png");
           name="avatar"
           render={() => (
             <FormItem>
-              <FormLabel>Profile Picture</FormLabel>
+              <FormLabel>Profile Pictur</FormLabel>
               <FormControl>
                 <div className="flex items-center space-x-4">
                   <Avatar className="w-24 h-24">
