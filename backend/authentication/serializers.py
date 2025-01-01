@@ -8,7 +8,6 @@ from .models import CustomUser
 from django.core.mail import send_mail
 from django.conf import settings
 from django.contrib.auth.tokens import default_token_generator
-#import api view
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
@@ -16,8 +15,11 @@ from business_settings.models import BusinessProfile
 from django.core.validators import validate_email
 from phonenumber_field.validators import validate_international_phonenumber
 from django.core.exceptions import ValidationError
-#import is authenticated
 from rest_framework.permissions import IsAuthenticated
+from django.db import IntegrityError
+from django.utils.crypto import get_random_string
+from store.models import Location
+
 User = get_user_model()
 
 class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
@@ -29,8 +31,6 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
         token['full_name'] = user.full_name
         token['user_name'] = user.user_name
         return token
-
-
 
 class UserSerializer(serializers.ModelSerializer):
     full_name = serializers.SerializerMethodField()
@@ -48,14 +48,13 @@ class UserUpdateSerializer(serializers.ModelSerializer):
         fields = ['full_name', 'user_name', 'phone_number', 'business_name']
         
     def update(self, instance, validated_data):
-        # Only update fields that are provided
         for attr, value in validated_data.items():
             setattr(instance, attr, value)
         instance.save()
         return instance
 
 class LoginSerializer(serializers.Serializer):
-    email = serializers.CharField(required=True)  
+    identifier = serializers.CharField(required=True)
     password = serializers.CharField(
         style={'input_type': 'password'},
         trim_whitespace=False,
@@ -64,82 +63,54 @@ class LoginSerializer(serializers.Serializer):
     )
 
     def validate(self, attrs):
-        identifier = attrs.get('email', '').lower()  
+        identifier = attrs.get('identifier')
         password = attrs.get('password')
 
-        if not identifier or not password:
+        if identifier and password:
+            # Try to find user by email or username
+            try:
+                if '@' in identifier:
+                    user = User.objects.get(email=identifier)
+                else:
+                    user = User.objects.get(user_name=identifier)
+                
+                if not user.check_password(password):
+                    raise serializers.ValidationError({
+                        'detail': 'Invalid credentials. Please check your email/username and password.'
+                    })
+            except User.DoesNotExist:
+                raise serializers.ValidationError({
+                    'detail': 'No account found with these credentials.'
+                })
+        else:
             raise serializers.ValidationError({
                 'detail': 'Both email/username and password are required.'
-            })
-
-        # Try to find user by email or username
-        user = CustomUser.objects.filter(email__iexact=identifier).first()
-        if not user:
-            user = CustomUser.objects.filter(user_name__iexact=identifier).first()
-        
-        if not user:
-            raise serializers.ValidationError({
-                'detail': 'No account found with this email or username.'
-            })
-            
-        if not user.check_password(password):
-            raise serializers.ValidationError({
-                'detail': 'Invalid password.'
             })
 
         attrs['user'] = user
         return attrs
 
-
 class PasswordResetRequestSerializer(serializers.Serializer):
     email = serializers.EmailField()
 
     def validate_email(self, value):
-        user = CustomUser.objects.filter(email=value).first()
-        if not user:
+        try:
+            user = User.objects.get(email=value)
+        except User.DoesNotExist:
             raise serializers.ValidationError("No user found with this email address.")
         return value
 
     def send_reset_email(self, user):
-        try:
-            # Generate a password reset token
-            token = default_token_generator.make_token(user)
-            
-            # Construct reset URL
-            reset_url = f"{settings.FRONTEND_URL}/auth/reset-password?token={token}&email={user.email}"
-            
-            # Email content
-            subject = 'Password Reset Request'
-            message = f'''
-            Hello,
-            
-            You have requested to reset your password. Please click the link below to reset your password:
-            
-            {reset_url}
-            
-            If you did not request this password reset, please ignore this email.
-            
-            This link will expire in 24 hours.
-            '''
-            
-            # Send email with detailed error handling
-            try:
-                send_mail(
-                    subject,
-                    message,
-                    settings.DEFAULT_FROM_EMAIL,
-                    [user.email],
-                    fail_silently=False,
-                )
-                print(f"Password reset email sent successfully to {user.email}")
-            except Exception as e:
-                print(f"Error sending password reset email: {str(e)}")
-                raise serializers.ValidationError(f"Failed to send password reset email: {str(e)}")
-                
-        except Exception as e:
-            print(f"Error in send_reset_email: {str(e)}")
-            raise serializers.ValidationError(f"Password reset process failed: {str(e)}")
-
+        token = default_token_generator.make_token(user)
+        reset_url = f"{settings.FRONTEND_URL}/reset-password?token={token}&email={user.email}"
+        
+        send_mail(
+            'Password Reset Request',
+            f'Click the following link to reset your password: {reset_url}',
+            settings.DEFAULT_FROM_EMAIL,
+            [user.email],
+            fail_silently=False,
+        )
 
 class PasswordResetConfirmSerializer(serializers.Serializer):
     email = serializers.EmailField()
@@ -151,30 +122,20 @@ class PasswordResetConfirmSerializer(serializers.Serializer):
     )
 
     def validate(self, attrs):
-        print("Validating password reset data:", attrs)  # Debug log
+        try:
+            user = User.objects.get(email=attrs['email'])
+            if not default_token_generator.check_token(user, attrs['token']):
+                raise serializers.ValidationError("Invalid token")
+        except User.DoesNotExist:
+            raise serializers.ValidationError("Invalid email")
         
-        # Validate email and token
-        user = CustomUser.objects.filter(email=attrs['email']).first()
-        if not user:
-            raise serializers.ValidationError({"email": "Invalid email address"})
-
-        print("Found user:", user.email)  # Debug log
-
-        # Check if token is valid
-        if not default_token_generator.check_token(user, attrs['token']):
-            raise serializers.ValidationError({"token": "Invalid or expired password reset token"})
-
-        print("Token is valid")  # Debug log
         return attrs
 
     def save(self):
-        print("Saving new password")  # Debug log
-        user = CustomUser.objects.get(email=self.validated_data['email'])
+        user = User.objects.get(email=self.validated_data['email'])
         user.set_password(self.validated_data['new_password'])
         user.save()
-        print("Password updated successfully")  # Debug log
         return user
-
 
 class ChangePasswordSerializer(serializers.Serializer):
     old_password = serializers.CharField(
@@ -190,91 +151,58 @@ class ChangePasswordSerializer(serializers.Serializer):
     )
 
     def __init__(self, *args, **kwargs):
-        # Remove context from initialization
         kwargs.pop('context', None)
         super().__init__(*args, **kwargs)
 
     def validate(self, attrs):
-        # Additional validation to ensure new password is different
-        if attrs.get('old_password') == attrs.get('new_password'):
+        if attrs['old_password'] == attrs['new_password']:
             raise serializers.ValidationError({
-                "new_password": "New password must be different from the old password."
+                "new_password": "New password must be different from old password."
             })
         return attrs
 
     def validate_old_password(self, value):
-        # Remove context-based validation
+        user = self.context['request'].user
+        if not user.check_password(value):
+            raise serializers.ValidationError("Old password is incorrect.")
         return value
 
     def save(self, **kwargs):
-        # Get the user from kwargs
-        user = kwargs.get('user')
-        if not user:
-            raise serializers.ValidationError("User is required to change password.")
-        
-        # Verify old password
-        if not user.check_password(self.validated_data['old_password']):
-            raise serializers.ValidationError({
-                "old_password": "Incorrect old password"
-            })
-        
-        # Set and save new password
+        user = self.context['request'].user
         user.set_password(self.validated_data['new_password'])
         user.save()
         return user
-
-
-
-
 
 class UserProfileUpdateSerializer(serializers.ModelSerializer):
     class Meta:
         model = CustomUser
         fields = ['first_name', 'last_name', 'phone_number', 'business_name']
-        
+
     def update(self, instance, validated_data):
-        # Only update fields that are provided
         for attr, value in validated_data.items():
             setattr(instance, attr, value)
         instance.save()
         return instance
 
-
-
 class BusinessProfileSerializer(serializers.ModelSerializer):
-    BUSINESS_TYPES = [
-        ('retail', 'Retail'),
-        ('wholesale', 'Wholesale'),
-        ('service', 'Service'),
-    ]
-
     class Meta:
         model = BusinessProfile
-        fields = ['business_name', 'business_type', 'business_phone', 'business_address']
+        fields = ['business_name', 'business_phone', 'business_address']
         extra_kwargs = {
             'business_name': {'required': True},
-            'business_type': {'required': True},
             'business_phone': {'required': False},
             'business_address': {'required': False},
         }
-
-    def validate_business_type(self, value):
-        if value not in [choice[0] for choice in self.BUSINESS_TYPES]:
-            raise serializers.ValidationError(
-                f"Invalid business type. Choose from {', '.join([choice[0] for choice in self.BUSINESS_TYPES])}"
-            )
-        return value
 
 class RegisterSerializer(serializers.ModelSerializer):
     business_profile = BusinessProfileSerializer(required=False, allow_null=True)
     password1 = serializers.CharField(write_only=True, required=True)
     password2 = serializers.CharField(write_only=True, required=True)
-    name = serializers.CharField(write_only=True, required=False)  # Add this field to handle frontend's name field
 
     class Meta:
         model = CustomUser
-        fields = ['email', 'password1', 'password2', 'name', 'full_name', 'user_name', 
-                  'phone_number', 'business_profile', 'role']
+        fields = ['email', 'password1', 'password2', 'full_name', 'user_name', 
+                 'phone_number', 'business_profile', 'role']
         extra_kwargs = {
             'email': {
                 'required': True,
@@ -287,86 +215,130 @@ class RegisterSerializer(serializers.ModelSerializer):
             },
             'full_name': {'required': False},
             'user_name': {'required': False},
-            'phone_number': {'required': False, 'allow_blank': True, 'allow_null': True},
+            'phone_number': {'required': False, 'allow_blank': True, 'allow_null': True, 'validators': [validate_international_phonenumber]},
             'role': {'required': False}
         }
 
     def validate(self, attrs):
         if attrs['password1'] != attrs['password2']:
-            raise serializers.ValidationError({"password2": "Password fields didn't match."})
+            raise serializers.ValidationError({"password": "Password fields didn't match."})
         
-        # Set full_name from name if provided
-        if 'name' in attrs:
-            attrs['full_name'] = attrs.pop('name')
-            
-        # Clean up phone numbers
-        if 'phone_number' in attrs and attrs['phone_number']:
-            try:
-                phone = attrs['phone_number']
-                # Remove any non-digit characters
-                phone = ''.join(c for c in phone if c.isdigit())
-                
-                # Handle Ethiopian numbers
-                if len(phone) == 9:  # Format: 911234567
-                    phone = '+251' + phone
-                elif len(phone) == 10 and phone.startswith('0'):  # Format: 0911234567
-                    phone = '+251' + phone[1:]
-                elif not phone.startswith('+'):
-                    phone = '+' + phone
-                    
-                attrs['phone_number'] = phone
-            except Exception as e:
-                print(f"Error formatting phone number: {str(e)}")
-                
-        # Clean up business profile phone
-        if 'business_profile' in attrs and attrs['business_profile']:
-            business_data = attrs['business_profile']
-            if 'business_phone' in business_data and business_data['business_phone']:
-                try:
-                    phone = business_data['business_phone']
-                    # Remove any non-digit characters
-                    phone = ''.join(c for c in phone if c.isdigit())
-                    
-                    # Handle Ethiopian numbers
-                    if len(phone) == 9:  # Format: 911234567
-                        phone = '+251' + phone
-                    elif len(phone) == 10 and phone.startswith('0'):  # Format: 0911234567
-                        phone = '+251' + phone[1:]
-                    elif not phone.startswith('+'):
-                        phone = '+' + phone
-                        
-                    business_data['business_phone'] = phone
-                except Exception as e:
-                    print(f"Error formatting business phone: {str(e)}")
-                    
+        # Remove password2 from the attributes as we don't need it anymore
+        attrs.pop('password2', None)
+        
+        # Rename password1 to password for user creation
+        attrs['password'] = attrs.pop('password1')
+        
         return attrs
 
     def create(self, validated_data):
-        business_profile_data = validated_data.pop('business_profile', None)
-        validated_data.pop('password2', None)
-        password = validated_data.pop('password1')
-        
-        # Set default role to owner
-        role = validated_data.pop('role', 'owner')
-        
-        # Create user
-        user = CustomUser.objects.create_user(
-            **validated_data,
-            password=password,
-            role=role
-        )
-        
-        # Create business profile if data provided
-        if business_profile_data:
-            # Remove None or empty string values
-            business_profile_data = {
-                k: v for k, v in business_profile_data.items() 
-                if v is not None and v != ''
-            }
+        try:
+            business_profile_data = validated_data.pop('business_profile', None)
+            password = validated_data.pop('password')
+            
+            # Set default role if not provided
+            if 'role' not in validated_data:
+                validated_data['role'] = 'owner'
+            
+            print("Debug - Validated data:", validated_data)  # Debug print
+                
+            # Create user instance
+            user = CustomUser.objects.create(**validated_data)
+            user.set_password(password)
+            user.save()
+
+            # Create business profile if data is provided
             if business_profile_data:
-                BusinessProfile.objects.create(
-                    user=user,
-                    **business_profile_data
-                )
-        
+                try:
+                    print("Debug - Business profile data:", business_profile_data)  # Debug print
+                    business_profile = BusinessProfile.objects.create(owner=user, **business_profile_data)
+                    
+                    # Generate unique registration number (you can modify this format)
+                    import uuid
+                    registration_number = f"JR-{uuid.uuid4().hex[:8].upper()}"
+                    
+                    # Create store for owner
+                    from store.models import Store
+                    store = Store.objects.create(
+                        name=business_profile.business_name,
+                        address=business_profile.business_address,
+                        contact_number=business_profile.business_phone,
+                        registration_number=registration_number,
+                        owner=user,
+                        admin=user  # Setting owner as admin initially
+                    )
+                    print(f"Debug - Store created: {store.name}")  # Debug print
+                    
+                except Exception as e:
+                    print(f"Debug - Business profile/store creation error: {str(e)}")  # Debug print
+                    # If business profile creation fails, delete the user and raise the error
+                    user.delete()
+                    raise serializers.ValidationError({
+                        'business_profile': f"Failed to create business profile/store: {str(e)}"
+                    })
+
+            return user
+        except IntegrityError as e:
+            print(f"Debug - Integrity error: {str(e)}")  # Debug print
+            if 'phone_number' in str(e):
+                raise serializers.ValidationError({
+                    'phone_number': 'This phone number is already registered. Please use a different phone number.'
+                })
+            elif 'email' in str(e):
+                raise serializers.ValidationError({
+                    'email': 'This email is already registered. Please use a different email.'
+                })
+            else:
+                raise serializers.ValidationError({
+                    'error': f'Registration failed: {str(e)}'
+                })
+        except Exception as e:
+            print(f"Debug - Unexpected error: {str(e)}")  # Debug print
+            raise serializers.ValidationError({
+                'error': f'Registration failed: {str(e)}'
+            })
+
+class UserRegistrationSerializer(serializers.ModelSerializer):
+    location_id = serializers.IntegerField(write_only=True, required=True)
+    role = serializers.ChoiceField(choices=CustomUser.ROLE_CHOICES, required=True)
+    phone_number = serializers.CharField(required=True)
+    full_name = serializers.CharField(required=True)
+    user_name = serializers.CharField(required=True)
+
+    class Meta:
+        model = CustomUser
+        fields = ['user_name', 'full_name', 'email', 'phone_number', 'location_id', 'role', 'is_active']
+
+    def create(self, validated_data):
+        location_id = validated_data.pop('location_id')
+        try:
+            location = Location.objects.get(id=location_id)
+            validated_data['location'] = location
+            validated_data['created_by'] = self.context['request'].user  # Set created_by to the current user
+            validated_data['is_active'] = True  # Set is_active to True
+        except Location.DoesNotExist:
+            raise serializers.ValidationError({'location_id': 'Invalid location ID'})
+
+        # Generate a random password
+        password = get_random_string(length=12)
+        user = User.objects.create_user(
+            email=validated_data['email'],
+            user_name=validated_data['user_name'],
+            full_name=validated_data['full_name'],
+            phone_number=validated_data['phone_number'],
+            role=validated_data['role'],
+            is_active=validated_data['is_active'],
+            password=password,
+            created_by=self.context['request'].user  # Set created_by to the current user
+        )
+
+        # Send password to user's email
+        send_mail(
+            'Your Account Password',
+            f'Your password is: {password}',
+            settings.DEFAULT_FROM_EMAIL,
+            [user.email],
+            fail_silently=False,
+        )
+
         return user

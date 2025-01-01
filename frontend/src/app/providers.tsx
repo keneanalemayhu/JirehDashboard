@@ -3,6 +3,7 @@
 
 import { ThemeProvider } from "next-themes";
 import { LanguageProvider } from "@/components/context/LanguageContext";
+import { Toaster } from "sonner";
 
 export function Providers({ children }: { children: React.ReactNode }) {
   return (
@@ -12,7 +13,10 @@ export function Providers({ children }: { children: React.ReactNode }) {
       enableSystem
       disableTransitionOnChange
     >
-      <LanguageProvider>{children}</LanguageProvider>
+      <LanguageProvider>
+        {children}
+        <Toaster richColors position="top-right" />
+      </LanguageProvider>
     </ThemeProvider>
   );
 }

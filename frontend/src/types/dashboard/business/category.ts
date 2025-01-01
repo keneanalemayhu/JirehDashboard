@@ -5,15 +5,13 @@
  */
 export interface Category {
   id: number;
-  businessId: number;
   locationId: number;
   name: string;
-  description: string;
+  description: string | null;
   isActive: boolean;
   isHidden: boolean;
-  createdBy: number;
-  createdAt: Date;
-  updatedAt: Date;
+  createdAt: string;
+  updatedAt: string;
 }
 
 /**
@@ -34,13 +32,11 @@ export type SortDirection = "asc" | "desc" | null;
 
 export interface ColumnVisibility {
   id: boolean;
-  businessId: boolean;
   locationId: boolean;
   name: boolean;
   description: boolean;
   isActive: boolean;
   isHidden: boolean;
-  createdBy: boolean;
   createdAt: boolean;
   updatedAt: boolean;
 }
@@ -137,25 +133,21 @@ export const DEFAULT_PAGE_SIZE = 10;
 
 export const DEFAULT_COLUMN_VISIBILITY: ColumnVisibility = {
   id: true,
-  businessId: false,
   locationId: true,
   name: true,
   description: true,
   isActive: true,
   isHidden: false,
-  createdBy: false,
   createdAt: true,
   updatedAt: true,
 };
 
-export const INITIAL_FORM_DATA: CategoryFormData = {
-  businessId: 0,
+export const DEFAULT_CATEGORY: CategoryFormData = {
   locationId: 0,
   name: "",
   description: "",
   isActive: true,
   isHidden: false,
-  createdBy: 0,
 };
 
 /**

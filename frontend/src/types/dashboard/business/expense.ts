@@ -20,39 +20,45 @@ export const RECURRING_FREQUENCIES = [
   "yearly",
 ] as const;
 
-export const APPROVAL_STATUSES = ["pending", "approved", "rejected"] as const;
-
 /**
  * Derived types from constants
  */
 export type PaymentMethod = (typeof PAYMENT_METHODS)[number];
 export type RecurringFrequency = (typeof RECURRING_FREQUENCIES)[number];
-export type ApprovalStatus = (typeof APPROVAL_STATUSES)[number];
 export type SortDirection = "asc" | "desc" | null;
 
 /**
  * Core entity interfaces based on DB schema
  */
+export interface ExpenseCategory {
+  id: number;
+  business: number;
+  name: string;
+  description?: string;
+  is_active: boolean;
+  is_recurring: boolean;
+  budget_limit?: number;
+  parent_category?: number;
+  created_at: string;
+  updated_at: string;
+}
+
 export interface Expense {
   id: number;
-  businessId: number;
-  locationId: number;
-  name: string;
+  business: number;
+  category: number;
+  category_name: string;
   amount: number;
   description?: string;
-  expenseDate: Date;
-  paymentMethod: PaymentMethod;
-  receiptNumber?: string;
-  receiptImageUrl?: string | null;
-  isRecurring: boolean;
-  recurringFrequency?: RecurringFrequency | null;
-  recurringEndDate?: Date | null;
-  createdBy: number;
-  approvedBy?: number | null;
-  approvalStatus: ApprovalStatus;
-  approvalDate?: Date | null;
-  createdAt: Date;
-  updatedAt: Date;
+  receipt_number?: string;
+  payment_method: PaymentMethod;
+  receipt_image_url?: string;
+  expense_date: string;
+  is_recurring: boolean;
+  recurring_frequency?: RecurringFrequency;
+  recurring_end_date?: string;
+  created_at: string;
+  updated_at: string;
 }
 
 /**
@@ -60,9 +66,8 @@ export interface Expense {
  */
 export interface ExpenseFilters {
   search: string;
-  locationId: number | null;
+  categoryId: number | null;
   isRecurring: boolean | null;
-  approvalStatus: ApprovalStatus | "";
   dateRange: {
     start: Date | null;
     end: Date | null;
@@ -74,50 +79,37 @@ export interface ExpenseFilters {
 
 export interface ColumnVisibility {
   id: boolean;
-  locationId: boolean;
-  name: boolean;
+  category: boolean;
   amount: boolean;
   description: boolean;
-  expenseDate: boolean;
-  paymentMethod: boolean;
-  receiptNumber: boolean;
-  isRecurring: boolean;
-  recurringFrequency: boolean;
-  recurringEndDate: boolean;
-  recurringStatus: boolean;
-  approvalStatus: boolean;
+  receipt_number: boolean;
+  payment_method: boolean;
+  receipt_image_url: boolean;
+  expense_date: boolean;
+  is_recurring: boolean;
+  recurring_frequency: boolean;
+  recurring_end_date: boolean;
 }
 
 /**
  * Component Props Interfaces
  */
-export interface ExpenseFormData
-  extends Omit<Expense, "id" | "createdAt" | "updatedAt" | "approvalDate"> {
-  paymentMethod: PaymentMethod;
-  recurringFrequency?: RecurringFrequency;
-  approvalStatus: ApprovalStatus;
+export interface ExpenseFormData extends Omit<Expense, 'id' | 'business' | 'created_at' | 'updated_at' | 'category_name'> {
+  category: number;
 }
 
 export interface ExpenseFormProps {
-  initialData?: Partial<Expense>;
-  onSubmit: (data: ExpenseFormData) => void;
-  locations: Array<{ id: number; name: string }>;
+  initialData?: Expense;
+  onSubmit: (data: ExpenseFormData) => Promise<void>;
+  businessId: number;
 }
 
 export interface ExpenseTableProps {
   expenses: Expense[];
   columnsVisible: ColumnVisibility;
-  onSort: (column: keyof Expense) => void;
   onEdit: (expense: Expense) => void;
   onDelete: (expense: Expense) => void;
-  isEditDialogOpen: boolean;
-  setIsEditDialogOpen: (open: boolean) => void;
-  isDeleteDialogOpen: boolean;
-  setIsDeleteDialogOpen: (open: boolean) => void;
-  editingExpense: Expense | null;
-  onEditSubmit: (data: ExpenseFormData) => void;
-  onDeleteConfirm: () => void;
-  getLocationName: (id: number) => string;
+  getCategoryName: (id: number) => string;
 }
 
 /**
@@ -129,6 +121,7 @@ export interface ColumnConfig {
   width: string;
   sortable: boolean;
   icon?: React.ComponentType<{ className?: string }>;
+  className?: string;
 }
 
 export type ColumnKey = keyof ColumnVisibility;
@@ -138,29 +131,14 @@ export type ColumnKey = keyof ColumnVisibility;
  */
 export const DEFAULT_COLUMN_VISIBILITY: ColumnVisibility = {
   id: true,
-  locationId: true,
-  name: true,
+  category: true,
   amount: true,
   description: true,
-  expenseDate: true,
-  paymentMethod: true,
-  receiptNumber: true,
-  isRecurring: true,
-  recurringFrequency: true,
-  recurringEndDate: true,
-  recurringStatus: true,
-  approvalStatus: true,
-};
-
-export const INITIAL_FORM_DATA: ExpenseFormData = {
-  businessId: 0,
-  locationId: 0,
-  name: "",
-  amount: 0,
-  description: "",
-  expenseDate: new Date(),
-  paymentMethod: "Cash",
-  isRecurring: false,
-  createdBy: 0,
-  approvalStatus: "pending",
+  receipt_number: true,
+  payment_method: true,
+  receipt_image_url: true,
+  expense_date: true,
+  is_recurring: true,
+  recurring_frequency: true,
+  recurring_end_date: true,
 };

@@ -10,17 +10,20 @@ export interface User {
 }
 
 export enum Role {
-  OWNER = "Owner",
-  ADMIN = "Admin",
-  SALES = "Sales",
-  WAREHOUSE = "Warehouse",
+  OWNER = "owner",
+  ADMIN = "admin",
+  EMPLOYEE = "employee",
+  WAREHOUSE_MANAGER = "warehouse_manager",
 }
 
-export type UserFormData = Omit<User, "id">;
+export type UserFormData = Omit<User, "id"> & {
+  location_id: string;
+};
 
 export interface UserFormProps {
-  initialData?: Partial<User>;
+  initialData?: User;
   onSubmit: (data: UserFormData) => void;
+  isLoading?: boolean;
 }
 
 export type SortDirection = "asc" | "desc" | null;
@@ -33,6 +36,7 @@ export interface ColumnVisibility {
   phone: boolean;
   location: boolean;
   role: boolean;
+  isActive: boolean;
 }
 
 export interface ColumnConfig {
@@ -123,6 +127,7 @@ export const COLUMNS: ColumnConfig[] = [
   { key: "phone", label: "Phone" },
   { key: "location", label: "Location" },
   { key: "role", label: "Role" },
+  { key: "isActive", label: "Status" },
 ];
 
 export const PAGE_SIZE_OPTIONS = [10, 20, 30, 40, 50] as const;
@@ -138,6 +143,7 @@ export const DEFAULT_COLUMN_VISIBILITY: ColumnVisibility = {
   phone: true,
   location: true,
   role: true,
+  isActive: true,
 };
 
 export const INITIAL_FORM_DATA: UserFormData = {
@@ -146,6 +152,6 @@ export const INITIAL_FORM_DATA: UserFormData = {
   email: "",
   phone: "+251",
   location: "",
-  role: "",
+  role: Role.ADMIN,
   isActive: true,
 };

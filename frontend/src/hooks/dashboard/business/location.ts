@@ -1,55 +1,21 @@
-// src/hooks/dashboard/business/owner/location.ts
+// src/hooks/dashboard/business/location.ts
 
 "use client";
 
-import { useState, useMemo } from "react";
-import {
-  Location,
-  LocationFormData,
-  SortDirection,
-} from "@/types/dashboard/business/location";
+import { useState, useEffect } from "react";
+import { Location, LocationFormData } from "@/types/dashboard/business/location";
+import { locationApi } from "@/lib/api/location";
+import { useOwnerStore } from "./store";
+import { toast } from "sonner";
 
-const initialLocations: Location[] = [
-  {
-    id: 1,
-    businessId: 1,
-    name: "Main Branch",
-    address: "123 Main St, Bole, Addis Ababa",
-    contactNumber: "+251-93-560-9939",
-    isActive: true,
-    createdAt: new Date("2024-03-01").toISOString(),
-    updatedAt: new Date("2024-03-01").toISOString(),
-  },
-  {
-    id: 2,
-    businessId: 1,
-    name: "Airport Branch",
-    address: "456 Airport Rd, Bole, Addis Ababa",
-    contactNumber: "+251-91-234-5678",
-    isActive: true,
-    createdAt: new Date("2024-03-01").toISOString(),
-    updatedAt: new Date("2024-03-01").toISOString(),
-  },
-  {
-    id: 3,
-    businessId: 1,
-    name: "Warehouse",
-    address: "789 Industrial Zone, Addis Ababa",
-    contactNumber: "+251-98-765-4321",
-    isActive: true,
-    createdAt: new Date("2024-03-01").toISOString(),
-    updatedAt: new Date("2024-03-01").toISOString(),
-  },
-];
-
-export function useLocations(defaultLocations: Location[] = initialLocations) {
-  // States
-  const [locations, setLocations] = useState<Location[]>(defaultLocations);
+export function useLocations() {
+  const [locations, setLocations] = useState<Location[]>([]);
   const [filterValue, setFilterValue] = useState("");
-  const [editingLocation, setEditingLocation] = useState<Location | null>(null);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [editingLocation, setEditingLocation] = useState<Location | null>(null);
+  const [deletingLocation, setDeletingLocation] = useState<Location | null>(null);
   const [columnsVisible, setColumnsVisible] = useState({
     id: true,
     name: true,
@@ -58,162 +24,170 @@ export function useLocations(defaultLocations: Location[] = initialLocations) {
     isActive: true,
     updatedAt: true,
   });
-  const [sortColumn, setSortColumn] = useState<keyof Location | null>(null);
-  const [sortDirection, setSortDirection] = useState<SortDirection>(null);
+  const [sortConfig, setSortConfig] = useState<{
+    key: keyof Location;
+    direction: "asc" | "desc";
+  } | null>(null);
   const [pageSize, setPageSize] = useState(10);
   const [currentPage, setCurrentPage] = useState(1);
+  const [isLoading, setIsLoading] = useState(false);
+  const { store, isLoading: isLoadingStore } = useOwnerStore();
 
-  // Filtering and sorting
-  const filteredLocations = useMemo(() => {
-    const locationsToFilter = locations || [];
-
-    const result = locationsToFilter.filter(
-      (location) =>
-        location.name.toLowerCase().includes(filterValue.toLowerCase()) ||
-        location.address.toLowerCase().includes(filterValue.toLowerCase()) ||
-        location.contactNumber.toLowerCase().includes(filterValue.toLowerCase())
-    );
-
-    if (sortColumn) {
-      result.sort((a, b) => {
-        const aValue = a[sortColumn];
-        const bValue = b[sortColumn];
-
-        if (sortDirection === "asc") {
-          return String(aValue).localeCompare(String(bValue));
-        } else if (sortDirection === "desc") {
-          return String(bValue).localeCompare(String(aValue));
-        }
-        return 0;
-      });
+  // Load locations
+  useEffect(() => {
+    if (store) {
+      loadLocations();
     }
+  }, [store]);
 
-    return result;
-  }, [locations, filterValue, sortColumn, sortDirection]);
-
-  // Pagination
-  const paginatedLocations = useMemo(() => {
-    const startIndex = (currentPage - 1) * pageSize;
-    return filteredLocations.slice(startIndex, startIndex + pageSize);
-  }, [filteredLocations, currentPage, pageSize]);
-
-  // Get location name by ID - helper function
-  const getLocationName = (locationId: number) => {
-    const location = locations.find((loc) => loc.id === locationId);
-    return location?.name || "Unknown Location";
+  const loadLocations = async () => {
+    if (!store) {
+      toast.error("No store found. Please contact support.");
+      return;
+    }
+    
+    setIsLoading(true);
+    try {
+      const data = await locationApi.getLocations(store.id);
+      setLocations(data);
+    } catch (err) {
+      console.error("Error loading locations:", err);
+      toast.error("Failed to load locations. Please try again.");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  // Handlers
-  const handleSort = (column: keyof Location) => {
-    if (sortColumn === column) {
-      setSortDirection((prev) => {
-        if (prev === "asc") return "desc";
-        if (prev === "desc") return null;
-        return "asc";
-      });
-      if (sortDirection === null) {
-        setSortColumn(null);
+  // Handle add location
+  const handleAddLocation = async (data: LocationFormData) => {
+    if (!store) {
+      toast.error("No store found. Please contact support.");
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      const location = await locationApi.createLocation(store.id, data);
+      setLocations(prev => [...prev, location]);
+      setIsAddDialogOpen(false);
+      toast.success("Location created successfully!");
+    } catch (err: any) {
+      console.error("Error creating location:", err);
+      toast.error(err.response?.data?.errors || "Failed to create location");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Handle edit location
+  const handleEditLocation = async (data: LocationFormData) => {
+    if (!store || !editingLocation) return;
+
+    setIsLoading(true);
+    try {
+      const updatedLocation = await locationApi.updateLocation(
+        store.id,
+        editingLocation.id,
+        data
+      );
+      setLocations(prev =>
+        prev.map(loc => (loc.id === updatedLocation.id ? updatedLocation : loc))
+      );
+      setIsEditDialogOpen(false);
+      setEditingLocation(null);
+      toast.success("Location updated successfully!");
+    } catch (err: any) {
+      console.error("Error updating location:", err);
+      toast.error(err.response?.data?.errors || "Failed to update location");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Handle delete location
+  const handleDeleteClick = (location: Location) => {
+    setDeletingLocation(location);
+    setIsDeleteDialogOpen(true);
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!store || !deletingLocation) return;
+
+    setIsLoading(true);
+    try {
+      await locationApi.deleteLocation(store.id, deletingLocation.id);
+      setLocations(prev => prev.filter(loc => loc.id !== deletingLocation.id));
+      setIsDeleteDialogOpen(false);
+      setDeletingLocation(null);
+      toast.success("Location deleted successfully!");
+    } catch (err) {
+      console.error("Error deleting location:", err);
+      toast.error("Failed to delete location");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Handle sort
+  const handleSort = (key: keyof Location) => {
+    setSortConfig(current => {
+      if (!current || current.key !== key) {
+        return { key, direction: "asc" };
       }
-    } else {
-      setSortColumn(column);
-      setSortDirection("asc");
-    }
+      if (current.direction === "asc") {
+        return { key, direction: "desc" };
+      }
+      return null;
+    });
   };
 
-  const handleAddLocation = (data: LocationFormData) => {
-    const maxId = Math.max(...locations.map((l) => l.id), 0);
-    const newId = maxId + 1;
+  // Filter and sort locations
+  const filteredLocations = locations
+    .filter(location => {
+      if (!filterValue) return true;
+      const searchValue = filterValue.toLowerCase();
+      return (
+        location.name.toLowerCase().includes(searchValue) ||
+        location.address.toLowerCase().includes(searchValue) ||
+        location.contactNumber.toLowerCase().includes(searchValue)
+      );
+    })
+    .sort((a, b) => {
+      if (!sortConfig) return 0;
+      const { key, direction } = sortConfig;
+      const aValue = a[key];
+      const bValue = b[key];
 
-    const newLocation: Location = {
-      id: newId,
-      businessId: 1, // This should come from context or props
-      ...data,
-      isActive: true,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    };
-
-    setLocations((prev) => [...prev, newLocation]);
-    setIsAddDialogOpen(false);
-  };
-
-  const handleEditLocation = (data: LocationFormData) => {
-    if (!editingLocation) return;
-
-    setLocations((prev) =>
-      prev.map((location) =>
-        location.id === editingLocation.id
-          ? {
-              ...location,
-              ...data,
-              updatedAt: new Date().toISOString(),
-            }
-          : location
-      )
-    );
-
-    setIsEditDialogOpen(false);
-    setEditingLocation(null);
-  };
-
-  const handleDeleteLocation = () => {
-    if (!editingLocation) return;
-
-    setLocations((prev) =>
-      prev.filter((location) => location.id !== editingLocation.id)
-    );
-
-    setIsDeleteDialogOpen(false);
-    setEditingLocation(null);
-  };
-
-  const handlePageChange = (page: number) => {
-    setCurrentPage(page);
-  };
-
-  const handlePageSizeChange = (size: number) => {
-    setPageSize(size);
-    setCurrentPage(1);
-  };
+      if (aValue < bValue) return direction === "asc" ? -1 : 1;
+      if (aValue > bValue) return direction === "asc" ? 1 : -1;
+      return 0;
+    });
 
   return {
-    // Data
     locations,
-    paginatedLocations,
-    filteredLocations,
-    editingLocation,
-
-    // State setters
-    setLocations,
-    setEditingLocation,
-
-    // UI state
     filterValue,
     setFilterValue,
+    handleAddLocation,
+    handleEditLocation,
+    handleDeleteClick,
+    handleDeleteConfirm,
     isAddDialogOpen,
     setIsAddDialogOpen,
     isEditDialogOpen,
     setIsEditDialogOpen,
     isDeleteDialogOpen,
     setIsDeleteDialogOpen,
-
-    // Table state
+    editingLocation,
+    setEditingLocation,
     columnsVisible,
     setColumnsVisible,
-    pageSize,
-    currentPage,
-    sortColumn,
-    sortDirection,
-
-    // Utility functions
-    getLocationName,
-
-    // Handlers
     handleSort,
-    handleAddLocation,
-    handleEditLocation,
-    handleDeleteLocation,
-    handlePageChange,
-    handlePageSizeChange,
+    filteredLocations,
+    pageSize,
+    setPageSize,
+    currentPage,
+    setCurrentPage,
+    isLoading: isLoading || isLoadingStore,
+    store,
   };
 }

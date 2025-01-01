@@ -4,6 +4,10 @@ import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
+import { DialogFooter } from "@/components/ui/dialog";
+import { Item, ItemFormData } from "@/types/dashboard/business/item";
+import { useCategories } from "@/hooks/dashboard/business/category";
 import {
   Select,
   SelectContent,
@@ -11,34 +15,28 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Checkbox } from "@/components/ui/checkbox";
-import { DialogFooter } from "@/components/ui/dialog";
-import { Switch } from "@/components/ui/switch";
-import { Item, ItemFormData } from "@/types/dashboard/business/item";
-import { useCategories } from "@/hooks/dashboard/business/category";
+import { toast } from "sonner";
+import { itemApi } from "@/lib/api/item";
+import debounce from 'lodash/debounce';
 
 interface ItemFormProps {
-  initialData?: Partial<Item>;
-  onSubmit: (data: ItemFormData) => void;
-  defaultTemporary?: boolean;
+  initialData?: Item;
+  onSubmit: (data: ItemFormData) => Promise<void>;
+  locationId: number;
+  categoryId: number;
 }
 
-export function ItemForm({
-  initialData,
-  onSubmit,
-  defaultTemporary = false,
-}: ItemFormProps) {
-  const { categories } = useCategories();
-
+export function ItemForm({ initialData, onSubmit, locationId, categoryId }: ItemFormProps) {
+  const { categories } = useCategories(locationId);
   const [formData, setFormData] = useState<ItemFormData>({
     name: initialData?.name ?? "",
     price: initialData?.price ?? "",
-    categoryId: initialData?.categoryId ?? Number(categories[0]?.id) ?? 0,
+    categoryId: initialData?.categoryId ?? 0,
     barcode: initialData?.barcode ?? "",
     quantity: initialData?.quantity ?? 0,
     isHidden: initialData?.isHidden ?? false,
     isActive: initialData?.isActive ?? true,
-    isTemporary: (defaultTemporary || initialData?.isTemporary) ?? false,
+    isTemporary: initialData?.isTemporary ?? false,
     expiryHours: initialData?.expiryHours ?? null,
     autoResetQuantity: initialData?.autoResetQuantity ?? false,
   });
@@ -46,317 +44,309 @@ export function ItemForm({
   const [errors, setErrors] = useState({
     name: false,
     price: false,
-    categoryId: false,
     quantity: false,
     expiryHours: false,
+    categoryId: false,
+    barcode: false,
+    api: "",
   });
+
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
     if (initialData) {
       setFormData({
-        name: initialData.name ?? "",
-        price: initialData.price ?? "",
-        categoryId: initialData.categoryId ?? 0,
-        barcode: initialData.barcode ?? "",
-        quantity: initialData.quantity ?? 0,
-        isHidden: initialData.isHidden ?? false,
-        isActive: initialData.isActive ?? true,
-        isTemporary: initialData.isTemporary ?? false,
-        expiryHours: initialData.expiryHours ?? null,
-        autoResetQuantity: initialData.autoResetQuantity ?? false,
+        name: initialData.name,
+        price: initialData.price,
+        categoryId: initialData.categoryId,
+        barcode: initialData.barcode,
+        quantity: initialData.quantity,
+        isHidden: initialData.isHidden,
+        isActive: initialData.isActive,
+        isTemporary: initialData.isTemporary,
+        expiryHours: initialData.expiryHours,
+        autoResetQuantity: initialData.autoResetQuantity,
       });
       setErrors({
         name: false,
         price: false,
-        categoryId: false,
         quantity: false,
         expiryHours: false,
+        categoryId: false,
+        barcode: false,
+        api: "",
       });
     }
   }, [initialData]);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  // Debounced barcode check
+  const checkBarcode = debounce(async (barcode: string) => {
+    if (!barcode || barcode === initialData?.barcode) {
+      setErrors(prev => ({ ...prev, barcode: false }));
+      return;
+    }
+
+    const isAvailable = await itemApi.checkBarcode(categoryId, barcode);
+    if (!isAvailable) {
+      setErrors(prev => ({ ...prev, barcode: "This barcode is already in use" }));
+      toast.error("This barcode is already in use");
+    } else {
+      setErrors(prev => ({ ...prev, barcode: false }));
+    }
+  }, 500);
+
+  const handleBarcodeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newBarcode = e.target.value;
+    setFormData(prev => ({ ...prev, barcode: newBarcode }));
+    checkBarcode(newBarcode);
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     const newErrors = {
       name: !formData.name.trim(),
       price: !formData.price || parseFloat(formData.price) <= 0,
-      categoryId: !formData.categoryId,
       quantity: typeof formData.quantity !== "number" || formData.quantity < 0,
       expiryHours:
         formData.isTemporary &&
         (!formData.expiryHours || formData.expiryHours <= 0),
+      categoryId: !formData.categoryId,
     };
 
-    setErrors(newErrors);
+    const hasErrors = Object.entries(newErrors).some(([key, value]) => {
+      if (value) {
+        let errorMessage = "";
+        switch (key) {
+          case "name":
+            errorMessage = "Name is required";
+            break;
+          case "price":
+            errorMessage = "Price must be greater than 0";
+            break;
+          case "quantity":
+            errorMessage = "Quantity must be 0 or greater";
+            break;
+          case "expiryHours":
+            errorMessage = "Expiry hours must be greater than 0";
+            break;
+          case "categoryId":
+            errorMessage = "Category is required";
+            break;
+        }
+        toast.error(errorMessage);
+        return true;
+      }
+      return false;
+    });
 
-    if (Object.values(newErrors).some(Boolean)) {
+    setErrors(prev => ({ ...prev, ...newErrors, api: "" }));
+
+    if (hasErrors) {
       return;
     }
 
-    onSubmit(formData);
-  };
+    // Check barcode one last time before submitting
+    if (formData.barcode && formData.barcode !== initialData?.barcode) {
+      const isAvailable = await itemApi.checkBarcode(categoryId, formData.barcode);
+      if (!isAvailable) {
+        setErrors(prev => ({ ...prev, barcode: "This barcode is already in use" }));
+        return;
+      }
+    }
 
-  const handleQuantityChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value;
-    const numValue = parseInt(value);
-    setFormData({
-      ...formData,
-      quantity: isNaN(numValue) ? 0 : numValue,
-    });
-    setErrors({ ...errors, quantity: false });
-  };
-
-  const handlePriceChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value;
-    setFormData({
-      ...formData,
-      price: value === "" ? "0" : value,
-    });
-    setErrors({ ...errors, price: false });
-  };
-
-  const handleExpiryHoursChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value;
-    const numValue = parseInt(value);
-    setFormData({
-      ...formData,
-      expiryHours: isNaN(numValue) ? null : numValue,
-    });
-    setErrors({ ...errors, expiryHours: false });
+    setIsSubmitting(true);
+    try {
+      await onSubmit(formData);
+    } catch (err: any) {
+      const apiErrors = err.response?.data?.errors || {};
+      setErrors(prev => ({
+        ...prev,
+        api: err.response?.data?.message || err.message,
+      }));
+      
+      toast.error(err.response?.data?.message || "Failed to save item");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
-    <form onSubmit={handleSubmit}>
-      <div className="grid gap-4 py-4">
-        {/* Name Input */}
-        <div className="grid grid-cols-4 items-center gap-4">
-          <Label htmlFor="name" className="text-right">
-            Name <span className="text-red-500">*</span>
-          </Label>
-          <div className="col-span-3">
-            <Input
-              id="name"
-              value={formData.name}
-              onChange={(e) => {
-                setFormData({ ...formData, name: e.target.value });
-                setErrors({ ...errors, name: false });
-              }}
-              className={errors.name ? "border-red-500" : ""}
-              required
-            />
-            {errors.name && (
-              <p className="text-sm text-red-500 mt-1">Name is required</p>
-            )}
-          </div>
+    <form onSubmit={handleSubmit} className="space-y-6">
+      <div className="grid gap-4">
+        <div className="grid gap-2">
+          <Label htmlFor="name">Name</Label>
+          <Input
+            id="name"
+            value={formData.name}
+            onChange={(e) =>
+              setFormData((prev) => ({ ...prev, name: e.target.value }))
+            }
+            className={errors.name ? "border-red-500" : ""}
+          />
+          {errors.name && (
+            <p className="text-sm text-red-500">Name is required</p>
+          )}
         </div>
 
-        {/* Barcode Input */}
-        <div className="grid grid-cols-4 items-center gap-4">
-          <Label htmlFor="barcode" className="text-right">
-            Barcode
-          </Label>
-          <div className="col-span-3">
-            <Input
-              id="barcode"
-              value={formData.barcode}
-              onChange={(e) => {
-                setFormData({ ...formData, barcode: e.target.value });
-              }}
-            />
-          </div>
+        <div className="grid gap-2">
+          <Label htmlFor="category">Category</Label>
+          <Select
+            value={formData.categoryId?.toString() || ""}
+            onValueChange={(value) =>
+              setFormData((prev) => ({ ...prev, categoryId: parseInt(value) }))
+            }
+          >
+            <SelectTrigger className={errors.categoryId ? "border-red-500" : ""}>
+              <SelectValue placeholder="Select a category" />
+            </SelectTrigger>
+            <SelectContent>
+              {categories?.map((category) => (
+                <SelectItem key={category.id} value={category.id.toString()}>
+                  {category.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          {errors.categoryId && (
+            <p className="text-sm text-red-500">Category is required</p>
+          )}
         </div>
 
-        {/* Price Input */}
-        <div className="grid grid-cols-4 items-center gap-4">
-          <Label htmlFor="price" className="text-right">
-            Price <span className="text-red-500">*</span>
-          </Label>
-          <div className="col-span-3">
-            <Input
-              id="price"
-              type="number"
-              step="0.01"
-              min="0"
-              value={formData.price}
-              onChange={handlePriceChange}
-              className={errors.price ? "border-red-500" : ""}
-              required
-            />
-            {errors.price && (
-              <p className="text-sm text-red-500 mt-1">
-                Valid price is required
-              </p>
-            )}
-          </div>
+        <div className="grid gap-2">
+          <Label htmlFor="barcode">Barcode</Label>
+          <Input
+            id="barcode"
+            value={formData.barcode}
+            onChange={handleBarcodeChange}
+            className={errors.barcode ? "border-red-500" : ""}
+          />
+          {errors.barcode && (
+            <p className="text-sm text-red-500">{errors.barcode}</p>
+          )}
         </div>
 
-        {/* Quantity Input */}
-        <div className="grid grid-cols-4 items-center gap-4">
-          <Label htmlFor="quantity" className="text-right">
-            Quantity <span className="text-red-500">*</span>
-          </Label>
-          <div className="col-span-3">
-            <Input
-              id="quantity"
-              type="number"
-              min="0"
-              value={formData.quantity}
-              onChange={handleQuantityChange}
-              className={errors.quantity ? "border-red-500" : ""}
-              required
-            />
-            {errors.quantity && (
-              <p className="text-sm text-red-500 mt-1">
-                Quantity must be 0 or greater
-              </p>
-            )}
-          </div>
+        <div className="grid gap-2">
+          <Label htmlFor="price">Price</Label>
+          <Input
+            id="price"
+            type="number"
+            step="0.01"
+            value={formData.price}
+            onChange={(e) =>
+              setFormData((prev) => ({ ...prev, price: e.target.value }))
+            }
+            className={errors.price ? "border-red-500" : ""}
+          />
+          {errors.price && (
+            <p className="text-sm text-red-500">
+              Price must be greater than 0
+            </p>
+          )}
         </div>
 
-        {/* Category Select */}
-        <div className="grid grid-cols-4 items-center gap-4">
-          <Label htmlFor="categoryId" className="text-right">
-            Category <span className="text-red-500">*</span>
-          </Label>
-          <div className="col-span-3">
-            <Select
-              value={formData.categoryId?.toString()} // Use categoryId
-              onValueChange={(value) => {
-                setFormData({ ...formData, categoryId: parseInt(value, 10) });
-                setErrors({ ...errors, categoryId: false });
-              }}
-              required
-            >
-              <SelectTrigger
-                className={errors.categoryId ? "border-red-500" : ""}
-              >
-                <SelectValue placeholder="Select a category" />
-              </SelectTrigger>
-              <SelectContent>
-                {categories?.map((category) => (
-                  <SelectItem key={category.id} value={category.id.toString()}>
-                    {category.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            {errors.categoryId && (
-              <p className="text-sm text-red-500 mt-1">Category is required</p>
-            )}
-          </div>
+        <div className="grid gap-2">
+          <Label htmlFor="quantity">Quantity</Label>
+          <Input
+            id="quantity"
+            type="number"
+            value={formData.quantity}
+            onChange={(e) =>
+              setFormData((prev) => ({
+                ...prev,
+                quantity: parseInt(e.target.value) || 0,
+              }))
+            }
+            className={errors.quantity ? "border-red-500" : ""}
+          />
+          {errors.quantity && (
+            <p className="text-sm text-red-500">
+              Quantity must be 0 or greater
+            </p>
+          )}
         </div>
 
-        {/* Temporary Item Toggle */}
-        <div className="grid grid-cols-4 items-center gap-4">
-          <Label htmlFor="isTemporary" className="text-right">
-            Temporary Item
-          </Label>
-          <div className="flex items-center space-x-2">
-            <Switch
-              id="isTemporary"
-              checked={formData.isTemporary}
-              onCheckedChange={(checked) => {
-                setFormData({
-                  ...formData,
-                  isTemporary: checked,
-                  expiryHours: checked ? formData.expiryHours : null,
-                  autoResetQuantity: checked
-                    ? formData.autoResetQuantity
-                    : false,
-                });
-              }}
-            />
-            <Label
-              htmlFor="isTemporary"
-              className="text-sm text-muted-foreground"
-            >
-              Enable temporary item settings
-            </Label>
-          </div>
-        </div>
-
-        {/* Expiry Hours Input - Only shown if isTemporary is true */}
-        {formData.isTemporary && (
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="expiryHours" className="text-right">
-              Expiry Hours <span className="text-red-500">*</span>
-            </Label>
-            <div className="col-span-3">
-              <Input
-                id="expiryHours"
-                type="number"
-                min="1"
-                value={formData.expiryHours || ""}
-                onChange={handleExpiryHoursChange}
-                className={errors.expiryHours ? "border-red-500" : ""}
-                required={formData.isTemporary}
-              />
-              {errors.expiryHours && (
-                <p className="text-sm text-red-500 mt-1">
-                  Valid expiry hours required for temporary items
-                </p>
-              )}
-            </div>
-          </div>
-        )}
-
-        {/* Auto Reset Quantity Toggle - Only shown if isTemporary is true */}
-        {formData.isTemporary && (
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="autoResetQuantity" className="text-right">
-              Auto Reset Quantity
-            </Label>
-            <div className="flex items-center space-x-2">
-              <Switch
-                id="autoResetQuantity"
-                checked={formData.autoResetQuantity}
-                onCheckedChange={(checked) => {
-                  setFormData({ ...formData, autoResetQuantity: checked });
-                }}
-              />
-              <Label
-                htmlFor="autoResetQuantity"
-                className="text-sm text-muted-foreground"
-              >
-                Automatically reset quantity after expiry
-              </Label>
-            </div>
-          </div>
-        )}
-
-        {/* Active Checkbox */}
-        <div className="grid grid-cols-4 items-center gap-4">
-          <Label htmlFor="isActive" className="text-right">
-            Active
-          </Label>
-          <Checkbox
+        <div className="flex items-center gap-2">
+          <Switch
             id="isActive"
             checked={formData.isActive}
             onCheckedChange={(checked) =>
-              setFormData({ ...formData, isActive: !!checked })
+              setFormData((prev) => ({ ...prev, isActive: checked }))
             }
           />
+          <Label htmlFor="isActive">Active</Label>
         </div>
 
-        {/* Hidden Checkbox */}
-        <div className="grid grid-cols-4 items-center gap-4">
-          <Label htmlFor="isHidden" className="text-right">
-            Hidden
-          </Label>
-          <Checkbox
+        <div className="flex items-center gap-2">
+          <Switch
             id="isHidden"
             checked={formData.isHidden}
             onCheckedChange={(checked) =>
-              setFormData({ ...formData, isHidden: !!checked })
+              setFormData((prev) => ({ ...prev, isHidden: checked }))
             }
           />
+          <Label htmlFor="isHidden">Hidden</Label>
         </div>
+
+        <div className="flex items-center gap-2">
+          <Switch
+            id="isTemporary"
+            checked={formData.isTemporary}
+            onCheckedChange={(checked) =>
+              setFormData((prev) => ({
+                ...prev,
+                isTemporary: checked,
+                expiryHours: checked ? prev.expiryHours || 24 : null,
+                autoResetQuantity: checked ? prev.autoResetQuantity : false,
+              }))
+            }
+          />
+          <Label htmlFor="isTemporary">Temporary Item</Label>
+        </div>
+
+        {formData.isTemporary && (
+          <>
+            <div className="grid gap-2">
+              <Label htmlFor="expiryHours">Expiry Hours</Label>
+              <Input
+                id="expiryHours"
+                type="number"
+                value={formData.expiryHours || ""}
+                onChange={(e) =>
+                  setFormData((prev) => ({
+                    ...prev,
+                    expiryHours: parseInt(e.target.value) || null,
+                  }))
+                }
+                className={errors.expiryHours ? "border-red-500" : ""}
+              />
+              {errors.expiryHours && (
+                <p className="text-sm text-red-500">
+                  Expiry hours must be greater than 0
+                </p>
+              )}
+            </div>
+
+            <div className="flex items-center gap-2">
+              <Switch
+                id="autoResetQuantity"
+                checked={formData.autoResetQuantity}
+                onCheckedChange={(checked) =>
+                  setFormData((prev) => ({
+                    ...prev,
+                    autoResetQuantity: checked,
+                  }))
+                }
+              />
+              <Label htmlFor="autoResetQuantity">Auto Reset Quantity</Label>
+            </div>
+          </>
+        )}
       </div>
 
       <DialogFooter>
-        <Button type="submit">
-          {initialData ? "Save changes" : "Add Item"}
+        <Button type="submit" disabled={isSubmitting || !!errors.barcode}>
+          {isSubmitting ? "Saving..." : initialData ? "Update" : "Create"} Item
         </Button>
       </DialogFooter>
     </form>

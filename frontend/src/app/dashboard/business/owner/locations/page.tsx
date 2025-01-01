@@ -30,7 +30,8 @@ export default function LocationsPage() {
     setFilterValue,
     handleAddLocation,
     handleEditLocation,
-    handleDeleteLocation,
+    handleDeleteClick,
+    handleDeleteConfirm,
     isAddDialogOpen,
     setIsAddDialogOpen,
     isEditDialogOpen,
@@ -47,6 +48,7 @@ export default function LocationsPage() {
     setPageSize,
     currentPage,
     setCurrentPage,
+    isLoading,
   } = useLocations();
 
   // Handle page changes
@@ -61,8 +63,8 @@ export default function LocationsPage() {
   };
 
   // Handle edit submit
-  const handleEditSubmit = (data: LocationFormData) => {
-    handleEditLocation(data);
+  const handleEditSubmit = async (data: LocationFormData) => {
+    await handleEditLocation(data);
   };
 
   // Export locations
@@ -176,21 +178,18 @@ export default function LocationsPage() {
             locations={filteredLocations}
             columnsVisible={columnsVisible}
             onSort={handleSort}
-            onEdit={(location: Location) => {
+            onEdit={(location) => {
               setEditingLocation(location);
               setIsEditDialogOpen(true);
             }}
-            onDelete={(location: Location) => {
-              setEditingLocation(location);
-              setIsDeleteDialogOpen(true);
-            }}
+            onDelete={handleDeleteClick}
             isEditDialogOpen={isEditDialogOpen}
             setIsEditDialogOpen={setIsEditDialogOpen}
             isDeleteDialogOpen={isDeleteDialogOpen}
             setIsDeleteDialogOpen={setIsDeleteDialogOpen}
             editingLocation={editingLocation}
             onEditSubmit={handleEditSubmit}
-            onDeleteConfirm={handleDeleteLocation}
+            onDeleteConfirm={handleDeleteConfirm}
           />
 
           {/* Pagination */}

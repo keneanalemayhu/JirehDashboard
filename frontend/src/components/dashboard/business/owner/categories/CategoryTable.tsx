@@ -1,151 +1,112 @@
 "use client";
 
-import { Table, TableBody } from "@/components/ui/table";
+import * as React from "react";
 import {
-  Category,
-  CategoryFormData,
-  ColumnVisibility,
-} from "@/types/dashboard/business/category";
-import { CategoryTableHeader } from "./CategoryTableHeader";
-import { CategoryTableRow } from "./CategoryTableRow";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { CategoryForm } from "./CategoryForm";
+import { Edit, Trash2 } from "lucide-react";
+import { Category } from "@/types/dashboard/business/category";
 
 interface CategoryTableProps {
   categories: Category[];
-  columnsVisible: ColumnVisibility;
-  onSort: (column: keyof Category) => void;
   onEdit: (category: Category) => void;
   onDelete: (category: Category) => void;
-  isEditDialogOpen: boolean;
-  setIsEditDialogOpen: (open: boolean) => void;
-  isDeleteDialogOpen: boolean;
-  setIsDeleteDialogOpen: (open: boolean) => void;
-  editingCategory: Category | null;
-  onEditSubmit: (data: CategoryFormData) => void;
-  onDeleteConfirm: () => void;
-  locations: Array<{ id: number; name: string }>;
-  getLocationName: (id: number) => string;
-  businessId: number;
-  userId: number;
 }
 
 export function CategoryTable({
   categories,
-  columnsVisible,
-  onSort,
   onEdit,
   onDelete,
-  isEditDialogOpen,
-  setIsEditDialogOpen,
-  isDeleteDialogOpen,
-  setIsDeleteDialogOpen,
-  editingCategory,
-  onEditSubmit,
-  onDeleteConfirm,
-  locations,
-  getLocationName,
-  businessId,
-  userId,
 }: CategoryTableProps) {
-  // Loading state
-  if (!categories) {
-    return (
-      <div className="rounded-md border p-8">
-        <div className="text-center text-sm text-muted-foreground">
-          Loading categories...
-        </div>
-      </div>
-    );
-  }
-
-  // Empty state
-  if (categories.length === 0) {
-    return (
-      <div className="rounded-md border p-8">
-        <div className="text-center text-sm text-muted-foreground">
-          No categories found.
-        </div>
-      </div>
-    );
-  }
+  const columns = [
+    { key: "name", label: "Name" },
+    { key: "description", label: "Description" },
+    { key: "isActive", label: "Status" },
+    { key: "isHidden", label: "Visibility" },
+    { key: "createdAt", label: "Created" },
+    { key: "updatedAt", label: "Updated" },
+    { key: "actions", label: "Actions" },
+  ];
 
   return (
     <div className="rounded-md border">
-      <div className="relative">
-        <Table>
-          <CategoryTableHeader
-            columnsVisible={columnsVisible}
-            onSort={onSort}
-          />
-          <TableBody>
-            {categories.map((category) => (
-              <CategoryTableRow
-                key={category.id}
-                category={category}
-                columnsVisible={columnsVisible}
-                onEdit={onEdit}
-                onDelete={onDelete}
-                getLocationName={getLocationName}
-              />
+      <Table>
+        <TableHeader>
+          <TableRow>
+            {columns.map((column) => (
+              <TableHead key={column.key}>{column.label}</TableHead>
             ))}
-          </TableBody>
-        </Table>
-      </div>
-
-      {/* Edit Dialog */}
-      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-        <DialogContent className="sm:max-w-[425px]">
-          <DialogHeader>
-            <DialogTitle>Edit Category</DialogTitle>
-            <DialogDescription>
-              Make changes to the category details. Click save when you're done.
-            </DialogDescription>
-          </DialogHeader>
-          {editingCategory && (
-            <CategoryForm
-              initialData={editingCategory}
-              onSubmit={onEditSubmit}
-              locations={locations}
-              businessId={businessId}
-              userId={userId}
-            />
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {categories.length === 0 ? (
+            <TableRow>
+              <TableCell colSpan={columns.length} className="text-center">
+                No categories found
+              </TableCell>
+            </TableRow>
+          ) : (
+            categories.map((category) => (
+              <TableRow key={category.id}>
+                <TableCell>{category.name}</TableCell>
+                <TableCell>{category.description || "-"}</TableCell>
+                <TableCell>
+                  <span
+                    className={`px-2 py-1 rounded-full text-xs font-medium ${
+                      category.isActive
+                        ? "bg-green-100 text-green-800"
+                        : "bg-red-100 text-red-800"
+                    }`}
+                  >
+                    {category.isActive ? "Active" : "Inactive"}
+                  </span>
+                </TableCell>
+                <TableCell>
+                  <span
+                    className={`px-2 py-1 rounded-full text-xs font-medium ${
+                      category.isHidden
+                        ? "bg-gray-100 text-gray-800"
+                        : "bg-blue-100 text-blue-800"
+                    }`}
+                  >
+                    {category.isHidden ? "Hidden" : "Visible"}
+                  </span>
+                </TableCell>
+                <TableCell>
+                  {new Date(category.createdAt).toLocaleDateString()}
+                </TableCell>
+                <TableCell>
+                  {new Date(category.updatedAt).toLocaleDateString()}
+                </TableCell>
+                <TableCell>
+                  <div className="flex items-center gap-2">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => onEdit(category)}
+                    >
+                      <Edit className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => onDelete(category)}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </TableCell>
+              </TableRow>
+            ))
           )}
-        </DialogContent>
-      </Dialog>
-
-      {/* Delete Dialog */}
-      <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
-        <DialogContent className="sm:max-w-[425px]">
-          <DialogHeader>
-            <DialogTitle>Delete Category</DialogTitle>
-            <DialogDescription>
-              Are you sure you want to delete this category? This action cannot
-              be undone and may affect related items.
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => setIsDeleteDialogOpen(false)}
-              className="mr-2"
-            >
-              Cancel
-            </Button>
-            <Button variant="destructive" onClick={onDeleteConfirm}>
-              Delete Category
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+        </TableBody>
+      </Table>
     </div>
   );
 }

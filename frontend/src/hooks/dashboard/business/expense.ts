@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useCallback } from "react";
 import { startOfMonth, endOfMonth } from "date-fns";
 import {
   Expense,
@@ -9,328 +9,179 @@ import {
   ColumnVisibility,
   DEFAULT_COLUMN_VISIBILITY,
   SortDirection,
+  ExpenseCategory,
 } from "@/types/dashboard/business/expense";
-import { useLocations } from "@/hooks/dashboard/business/location";
+import { expenseApi } from "@/lib/api/expense";
+import { toast } from "sonner";
 
-// Enhanced initial expenses with sample data matching new interface
-const initialExpenses: Expense[] = [
-  {
-    id: 1,
-    businessId: 1,
-    locationId: 1,
-    name: "Office Supplies",
-    amount: 150.75,
-    description: "Office Supplies - Q1",
-    expenseDate: new Date("2024-03-15"),
-    paymentMethod: "Credit Card",
-    receiptNumber: "REC-001",
-    receiptImageUrl: null,
-    isRecurring: false,
-    recurringFrequency: "monthly",
-    recurringEndDate: new Date("2024-12-31"),
-    createdBy: 1,
-    approvedBy: 2,
-    approvalStatus: "approved",
-    approvalDate: new Date("2024-03-16"),
-    createdAt: new Date("2024-03-15"),
-    updatedAt: new Date("2024-03-16"),
+const initialFilters: ExpenseFilters = {
+  search: "",
+  categoryId: null,
+  isRecurring: null,
+  dateRange: {
+    start: startOfMonth(new Date()),
+    end: endOfMonth(new Date()),
   },
-  {
-    id: 2,
-    businessId: 1,
-    locationId: 2,
-    name: "Monthly Rent",
-    amount: 2500.0,
-    description: "Office space rental payment - April",
-    expenseDate: new Date("2024-04-01"),
-    paymentMethod: "Bank Transfer",
-    receiptNumber: "REC-002",
-    receiptImageUrl: null,
-    isRecurring: true,
-    recurringFrequency: "monthly",
-    recurringEndDate: new Date("2025-03-31"),
-    createdBy: 1,
-    approvedBy: 2,
-    approvalStatus: "approved",
-    approvalDate: new Date("2024-03-30"),
-    createdAt: new Date("2024-03-30"),
-    updatedAt: new Date("2024-03-30"),
-  },
-  {
-    id: 3,
-    businessId: 1,
-    locationId: 1,
-    name: "Internet Service",
-    amount: 89.99,
-    description: "Monthly internet subscription",
-    expenseDate: new Date("2024-04-05"),
-    paymentMethod: "Credit Card",
-    receiptNumber: "REC-003",
-    receiptImageUrl: null,
-    isRecurring: true,
-    recurringFrequency: "monthly",
-    recurringEndDate: null,
-    createdBy: 1,
-    approvedBy: null,
-    approvalStatus: "pending",
-    approvalDate: null,
-    createdAt: new Date("2024-04-05"),
-    updatedAt: new Date("2024-04-05"),
-  },
-  {
-    id: 4,
-    businessId: 1,
-    locationId: 2,
-    name: "Equipment Repair",
-    amount: 450.0,
-    description: "Printer maintenance and repair",
-    expenseDate: new Date("2024-04-10"),
-    paymentMethod: "Cash",
-    receiptNumber: "REC-004",
-    receiptImageUrl: null,
-    isRecurring: false,
-    recurringFrequency: null,
-    recurringEndDate: null,
-    createdBy: 2,
-    approvedBy: 1,
-    approvalStatus: "approved",
-    approvalDate: new Date("2024-04-10"),
-    createdAt: new Date("2024-04-10"),
-    updatedAt: new Date("2024-04-10"),
-  },
-  {
-    id: 5,
-    businessId: 1,
-    locationId: 1,
-    name: "Software License",
-    amount: 299.99,
-    description: "Annual accounting software subscription",
-    expenseDate: new Date("2024-04-15"),
-    paymentMethod: "Credit Card",
-    receiptNumber: "REC-005",
-    receiptImageUrl: null,
-    isRecurring: true,
-    recurringFrequency: "yearly",
-    recurringEndDate: new Date("2027-04-15"),
-    createdBy: 1,
-    approvedBy: 2,
-    approvalStatus: "approved",
-    approvalDate: new Date("2024-04-15"),
-    createdAt: new Date("2024-04-15"),
-    updatedAt: new Date("2024-04-15"),
-  },
-  {
-    id: 6,
-    businessId: 1,
-    locationId: 2,
-    name: "Office Furniture",
-    amount: 1299.99,
-    description: "New ergonomic chairs for meeting room",
-    expenseDate: new Date("2024-04-18"),
-    paymentMethod: "Debit Card",
-    receiptNumber: "REC-006",
-    receiptImageUrl: null,
-    isRecurring: false,
-    recurringFrequency: null,
-    recurringEndDate: null,
-    createdBy: 2,
-    approvedBy: null,
-    approvalStatus: "rejected",
-    approvalDate: new Date("2024-04-19"),
-    createdAt: new Date("2024-04-18"),
-    updatedAt: new Date("2024-04-19"),
-  },
-];
+  paymentMethod: "",
+  minAmount: null,
+  maxAmount: null,
+};
 
-export function useExpenses(defaultExpenses: Expense[] = initialExpenses) {
-  const { locations, getLocationName } = useLocations();
+export function useExpenses(businessId: number) {
+  const [expenses, setExpenses] = useState<Expense[]>([]);
+  const [categories, setCategories] = useState<ExpenseCategory[]>([]);
+  const [filters, setFilters] = useState<ExpenseFilters>(initialFilters);
+  const [columnsVisible, setColumnsVisible] = useState<ColumnVisibility>(DEFAULT_COLUMN_VISIBILITY);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  const [filters, setFilters] = useState<ExpenseFilters>({
-    search: "",
-    locationId: null,
-    isRecurring: null,
-    approvalStatus: "",
-    dateRange: {
-      start: startOfMonth(new Date()),
-      end: endOfMonth(new Date()),
-    },
-    paymentMethod: "",
-    minAmount: null,
-    maxAmount: null,
-  });
+  // Fetch expenses and categories
+  const fetchData = useCallback(async () => {
+    try {
+      setIsLoading(true);
+      const [expensesData, categoriesData] = await Promise.all([
+        expenseApi.getExpenses(businessId),
+        expenseApi.getExpenseCategories(businessId),
+      ]);
+      setExpenses(expensesData);
+      setCategories(categoriesData);
+      setError(null);
+    } catch (err) {
+      setError("Failed to fetch expenses data");
+      toast.error("Failed to fetch expenses data");
+    } finally {
+      setIsLoading(false);
+    }
+  }, [businessId]);
 
-  const [expenses, setExpenses] = useState<Expense[]>(defaultExpenses);
-  const [editingExpense, setEditingExpense] = useState<Expense | null>(null);
-  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
-  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
-  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-  const [columnsVisible, setColumnsVisible] = useState<ColumnVisibility>(
-    DEFAULT_COLUMN_VISIBILITY
-  );
-  const [sortColumn, setSortColumn] = useState<keyof Expense | null>(null);
-  const [sortDirection, setSortDirection] = useState<SortDirection>(null);
-  const [pageSize, setPageSize] = useState(10);
-  const [currentPage, setCurrentPage] = useState(1);
-
-  // Enhanced filtering
+  // Filter expenses
   const filteredExpenses = useMemo(() => {
-    let result = [...expenses];
+    // If expenses is undefined or null, return an empty array
+    if (!expenses) return [];
 
-    if (filters.search) {
-      const searchTerm = filters.search.toLowerCase();
-      result = result.filter(
-        (expense) =>
-          expense.name.toLowerCase().includes(searchTerm) ||
-          expense.description?.toLowerCase().includes(searchTerm) ||
-          expense.receiptNumber?.toLowerCase().includes(searchTerm) ||
-          expense.amount.toString().includes(searchTerm) ||
-          getLocationName(expense.locationId).toLowerCase().includes(searchTerm)
+    return expenses.filter((expense) => {
+      const matchesSearch =
+        !filters.search ||
+        expense.description?.toLowerCase().includes(filters.search.toLowerCase()) ||
+        expense.receipt_number?.toLowerCase().includes(filters.search.toLowerCase()) ||
+        expense.category_name.toLowerCase().includes(filters.search.toLowerCase());
+
+      const matchesCategory =
+        !filters.categoryId || expense.category === filters.categoryId;
+
+      const matchesRecurring =
+        filters.isRecurring === null || expense.is_recurring === filters.isRecurring;
+
+      const matchesPaymentMethod =
+        !filters.paymentMethod || expense.payment_method === filters.paymentMethod;
+
+      const matchesAmount =
+        (!filters.minAmount || expense.amount >= filters.minAmount) &&
+        (!filters.maxAmount || expense.amount <= filters.maxAmount);
+
+      const expenseDate = new Date(expense.expense_date);
+      const matchesDateRange =
+        (!filters.dateRange.start || expenseDate >= filters.dateRange.start) &&
+        (!filters.dateRange.end || expenseDate <= filters.dateRange.end);
+
+      return (
+        matchesSearch &&
+        matchesCategory &&
+        matchesRecurring &&
+        matchesPaymentMethod &&
+        matchesAmount &&
+        matchesDateRange
       );
-    }
+    });
+  }, [expenses, filters]);
 
-    // Apply other filters...
-    if (filters.locationId !== null) {
-      result = result.filter(
-        (expense) => expense.locationId === filters.locationId
-      );
-    }
-
-    if (filters.isRecurring !== null) {
-      result = result.filter(
-        (expense) => expense.isRecurring === filters.isRecurring
-      );
-    }
-
-    if (filters.approvalStatus) {
-      result = result.filter(
-        (expense) => expense.approvalStatus === filters.approvalStatus
-      );
-    }
-
-    if (filters.dateRange.start && filters.dateRange.end) {
-      result = result.filter((expense) => {
-        const expenseDate = new Date(expense.expenseDate);
-        return (
-          expenseDate >= filters.dateRange.start! &&
-          expenseDate <= filters.dateRange.end!
-        );
-      });
-    }
-
-    // Apply sorting
-    if (sortColumn) {
-      result.sort((a, b) => {
-        let aValue = a[sortColumn];
-        let bValue = b[sortColumn];
-
-        if (sortDirection === "asc") {
-          return String(aValue).localeCompare(String(bValue));
-        } else if (sortDirection === "desc") {
-          return String(bValue).localeCompare(String(aValue));
-        }
-        return 0;
-      });
-    }
-
-    return result;
-  }, [expenses, filters, sortColumn, sortDirection, getLocationName]);
-
-  // Calculate paginated expenses
-  const paginatedExpenses = useMemo(() => {
-    const startIndex = (currentPage - 1) * pageSize;
-    const endIndex = startIndex + pageSize;
-    return filteredExpenses.slice(startIndex, endIndex);
-  }, [filteredExpenses, currentPage, pageSize]);
-
-  // Handlers
-  const handleFilterChange = (newFilters: Partial<ExpenseFilters>) => {
-    setFilters((prev) => ({ ...prev, ...newFilters }));
-    setCurrentPage(1);
-  };
-
-  const handleSort = (column: keyof Expense) => {
-    if (sortColumn === column) {
-      setSortDirection((prev) => {
-        if (prev === "asc") return "desc";
-        if (prev === "desc") return null;
-        return "asc";
-      });
-    } else {
-      setSortColumn(column);
-      setSortDirection("asc");
+  // CRUD operations
+  const createExpense = async (data: ExpenseFormData) => {
+    try {
+      const newExpense = await expenseApi.createExpense(businessId, data);
+      setExpenses((prev) => [...prev, newExpense]);
+      toast.success("Expense created successfully");
+    } catch (err) {
+      toast.error("Failed to create expense");
+      throw err;
     }
   };
 
-  const handleAddExpense = (data: ExpenseFormData) => {
-    const newExpense: Expense = {
-      id: Math.max(...expenses.map((e) => e.id), 0) + 1,
-      ...data,
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    };
-
-    setExpenses((prev) => [...prev, newExpense]);
-    setIsAddDialogOpen(false);
+  const updateExpense = async (expenseId: number, data: Partial<ExpenseFormData>) => {
+    try {
+      const updatedExpense = await expenseApi.updateExpense(businessId, expenseId, data);
+      setExpenses((prev) =>
+        prev.map((expense) => (expense.id === expenseId ? updatedExpense : expense))
+      );
+      toast.success("Expense updated successfully");
+    } catch (err) {
+      toast.error("Failed to update expense");
+      throw err;
+    }
   };
 
-  const handleEditExpense = (data: ExpenseFormData) => {
-    if (!editingExpense) return;
-
-    setExpenses((prev) =>
-      prev.map((expense) =>
-        expense.id === editingExpense.id
-          ? { ...expense, ...data, updatedAt: new Date() }
-          : expense
-      )
-    );
-
-    setIsEditDialogOpen(false);
-    setEditingExpense(null);
+  const deleteExpense = async (expenseId: number) => {
+    try {
+      await expenseApi.deleteExpense(businessId, expenseId);
+      setExpenses((prev) => prev.filter((expense) => expense.id !== expenseId));
+      toast.success("Expense deleted successfully");
+    } catch (err) {
+      toast.error("Failed to delete expense");
+      throw err;
+    }
   };
 
-  const handleDeleteExpense = () => {
-    if (!editingExpense) return;
+  // Category operations
+  const createCategory = async (data: Omit<ExpenseCategory, 'id' | 'business' | 'created_at' | 'updated_at'>) => {
+    try {
+      const newCategory = await expenseApi.createExpenseCategory(businessId, data);
+      setCategories((prev) => [...prev, newCategory]);
+      toast.success("Category created successfully");
+    } catch (err) {
+      toast.error("Failed to create category");
+      throw err;
+    }
+  };
 
-    setExpenses((prev) =>
-      prev.filter((expense) => expense.id !== editingExpense.id)
-    );
+  const updateCategory = async (categoryId: number, data: Partial<ExpenseCategory>) => {
+    try {
+      const updatedCategory = await expenseApi.updateExpenseCategory(businessId, categoryId, data);
+      setCategories((prev) =>
+        prev.map((category) => (category.id === categoryId ? updatedCategory : category))
+      );
+      toast.success("Category updated successfully");
+    } catch (err) {
+      toast.error("Failed to update category");
+      throw err;
+    }
+  };
 
-    setIsDeleteDialogOpen(false);
-    setEditingExpense(null);
+  const deleteCategory = async (categoryId: number) => {
+    try {
+      await expenseApi.deleteExpenseCategory(businessId, categoryId);
+      setCategories((prev) => prev.filter((category) => category.id !== categoryId));
+      toast.success("Category deleted successfully");
+    } catch (err) {
+      toast.error("Failed to delete category");
+      throw err;
+    }
   };
 
   return {
-    // Data
-    expenses,
-    filteredExpenses,
-    paginatedExpenses,
-    editingExpense,
-    locations,
-    getLocationName,
-
-    // State
-    isAddDialogOpen,
-    setIsAddDialogOpen,
-    isEditDialogOpen,
-    setIsEditDialogOpen,
-    isDeleteDialogOpen,
-    setIsDeleteDialogOpen,
+    expenses: filteredExpenses,
+    categories,
+    filters,
+    setFilters,
     columnsVisible,
     setColumnsVisible,
-    pageSize,
-    currentPage,
-
-    // Handlers
-    handleFilterChange,
-    handleSort,
-    handleAddExpense,
-    handleEditExpense,
-    handleDeleteExpense,
-    handlePageChange: (page: number) => setCurrentPage(page),
-    handlePageSizeChange: (size: number) => {
-      setPageSize(size);
-      setCurrentPage(1);
-    },
-    setEditingExpense,
+    isLoading,
+    error,
+    createExpense,
+    updateExpense,
+    deleteExpense,
+    createCategory,
+    updateCategory,
+    deleteCategory,
+    refresh: fetchData,
   };
 }

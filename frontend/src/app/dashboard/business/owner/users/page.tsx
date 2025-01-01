@@ -24,8 +24,12 @@ import {
   UserFormData,
   ColumnVisibility,
 } from "@/types/dashboard/business/user";
+import { toast } from "sonner";
 
 export default function UsersPage() {
+  // Get business ID from context or URL
+  const businessId = 1; // TODO: Get business id from context or URL
+
   // Pagination state
   const [currentPage, setCurrentPage] = React.useState(1);
   const [pageSize, setPageSize] = React.useState(10);
@@ -49,7 +53,14 @@ export default function UsersPage() {
     setColumnsVisible,
     handleSort,
     filteredUsers,
-  } = useUsers();
+    isLoading,
+    fetchUsers,
+  } = useUsers(businessId);
+
+  // Fetch users on component mount
+  React.useEffect(() => {
+    fetchUsers();
+  }, [fetchUsers]);
 
   // Calculate pagination
   const totalUsers = filteredUsers?.length || 0;
@@ -70,14 +81,17 @@ export default function UsersPage() {
 
   const handleEditSubmit = (data: UserFormData) => {
     if (editingUser) {
-      handleEditUser({
-        ...data,
-      });
+      handleEditUser(data);
     }
   };
 
   // Export users
   const handleExport = () => {
+    if (!filteredUsers || filteredUsers.length === 0) {
+      toast.error("No users to export");
+      return;
+    }
+
     const headers = [
       "ID",
       "Full Name",
@@ -95,14 +109,13 @@ export default function UsersPage() {
       ...filteredUsers.map((user) =>
         [
           user.id,
-          `"${user.fullName}"`,
-          `"${user.userName}"`,
+          `"${user.name}"`,
+          `"${user.username}"`,
           `"${user.email}"`,
           `"${user.phone}"`,
           `"${user.role}"`,
           `"${user.location}"`,
-          user.lastLogin ? new Date(user.lastLogin).toLocaleString() : "",
-          user.isActive ? "Active" : "Inactive",
+          `"${user.isActive ? 'Active' : 'Inactive'}"`,
         ].join(",")
       ),
     ].join("\n");
@@ -110,7 +123,6 @@ export default function UsersPage() {
     const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
     const link = document.createElement("a");
     const url = URL.createObjectURL(blob);
-
     link.setAttribute("href", url);
     link.setAttribute(
       "download",
@@ -119,44 +131,51 @@ export default function UsersPage() {
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
+    URL.revokeObjectURL(url);
   };
 
   return (
     <SidebarLayout>
-      <Header />
-      <div className="flex-1 space-y-6 p-8 pt-6">
-        <div className="flex flex-col gap-6">
-          {/* Header with Add Button */}
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-2xl font-bold tracking-tight">
-                Users Management
-              </h1>
-              <p className="text-sm text-muted-foreground">
-                Manage your system users and access control
-              </p>
+      <div className="flex flex-col h-full">
+        <Header title="Users" subtitle="Manage your users" />
+        <div className="flex-1 space-y-4 p-8 pt-6">
+          <div className="flex items-center justify-between space-x-2">
+            <div className="flex items-center flex-1 space-x-2">
+              <Input
+                placeholder="Filter users..."
+                value={filterValue}
+                onChange={(e) => setFilterValue(e.target.value)}
+                className="h-8 w-[150px] lg:w-[250px]"
+              />
+              <UserTableSettings
+                columnsVisible={columnsVisible}
+                onColumnVisibilityChange={(column, visible) =>
+                  setColumnsVisible((prev) => ({ ...prev, [column]: visible }))
+                }
+              />
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center space-x-2">
               <Button
                 variant="outline"
-                size="icon"
+                size="sm"
+                className="h-8 px-2"
                 onClick={handleExport}
-                title="Export Users"
               >
-                <Download className="h-4 w-4" />
+                <Download className="mr-2 h-4 w-4" />
+                Export
               </Button>
               <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
                 <DialogTrigger asChild>
-                  <Button>
-                    <CirclePlus className="w-4 h-4 mr-2" />
+                  <Button size="sm" className="h-8">
+                    <CirclePlus className="mr-2 h-4 w-4" />
                     Add User
                   </Button>
                 </DialogTrigger>
                 <DialogContent>
                   <DialogHeader>
-                    <DialogTitle>Add New User</DialogTitle>
+                    <DialogTitle>Add User</DialogTitle>
                     <DialogDescription>
-                      Enter the details for the new user.
+                      Add a new user to your business
                     </DialogDescription>
                   </DialogHeader>
                   <UserForm onSubmit={handleAddUser} />
@@ -164,53 +183,22 @@ export default function UsersPage() {
               </Dialog>
             </div>
           </div>
-
-          {/* Filter and Settings */}
-          <div className="flex items-center justify-between gap-4">
-            <div className="flex flex-1 items-center gap-2">
-              <Input
-                placeholder="Filter users..."
-                className="max-w-sm"
-                value={filterValue}
-                onChange={(e) => setFilterValue(e.target.value)}
-              />
-              <UserTableSettings
-                columnsVisible={columnsVisible as ColumnVisibility}
-                onColumnVisibilityChange={(column, visible) =>
-                  setColumnsVisible((prev) => ({ ...prev, [column]: visible }))
-                }
-              />
-            </div>
-            <div className="flex items-center gap-2">
-              <div className="text-sm text-muted-foreground">
-                Total: {totalUsers} users
-              </div>
-            </div>
+          <div className="rounded-md border">
+            <UserTable
+              users={paginatedUsers}
+              columnsVisible={columnsVisible}
+              onSort={handleSort}
+              onEdit={(user) => {
+                setEditingUser(user);
+                setIsEditDialogOpen(true);
+              }}
+              onDelete={(user) => {
+                setEditingUser(user);
+                setIsDeleteDialogOpen(true);
+              }}
+              isLoading={isLoading}
+            />
           </div>
-
-          {/* Table */}
-          <UserTable
-            users={paginatedUsers}
-            columnsVisible={columnsVisible}
-            onSort={handleSort}
-            onEdit={(user: User) => {
-              setEditingUser(user);
-              setIsEditDialogOpen(true);
-            }}
-            onDelete={(user: User) => {
-              setEditingUser(user);
-              setIsDeleteDialogOpen(true);
-            }}
-            isEditDialogOpen={isEditDialogOpen}
-            setIsEditDialogOpen={setIsEditDialogOpen}
-            isDeleteDialogOpen={isDeleteDialogOpen}
-            setIsDeleteDialogOpen={setIsDeleteDialogOpen}
-            editingUser={editingUser}
-            onEditSubmit={handleEditSubmit}
-            onDeleteConfirm={handleDeleteUser}
-          />
-
-          {/* Pagination */}
           <UserTablePagination
             totalItems={totalUsers}
             pageSize={pageSize}
@@ -220,6 +208,49 @@ export default function UsersPage() {
           />
         </div>
       </div>
+
+      {/* Edit Dialog */}
+      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Edit User</DialogTitle>
+            <DialogDescription>
+              Edit user information
+            </DialogDescription>
+          </DialogHeader>
+          <UserForm
+            initialData={editingUser || undefined}
+            onSubmit={handleEditSubmit}
+          />
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Dialog */}
+      <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Delete User</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to delete this user? This action cannot be
+              undone.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex justify-end space-x-2">
+            <Button
+              variant="outline"
+              onClick={() => setIsDeleteDialogOpen(false)}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={handleDeleteUser}
+            >
+              Delete
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </SidebarLayout>
   );
 }

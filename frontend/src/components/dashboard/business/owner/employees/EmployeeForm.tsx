@@ -13,48 +13,64 @@ import {
 } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { DialogFooter } from "@/components/ui/dialog";
-import {
-  Employee,
-  EmployeeStatus,
-  locations,
-} from "@/types/dashboard/business/employee";
+import { EmployeeFormData } from "@/types/dashboard/business/employee";
+import { useLocations } from "@/hooks/dashboard/business/location";
 
-export function EmployeeForm({ initialData, onSubmit }: EmployeeFormProps) {
-  const [formData, setFormData] = useState<Omit<Employee, "id">>({
-    name: initialData?.name || "",
+interface EmployeeFormProps {
+  initialData?: EmployeeFormData;
+  onSubmit: (data: EmployeeFormData) => void;
+  isLoading?: boolean;
+}
+
+export function EmployeeForm({ initialData, onSubmit, isLoading = false }: EmployeeFormProps) {
+  const { locations } = useLocations();
+  const [formData, setFormData] = useState<EmployeeFormData>({
+    fullName: initialData?.fullName || "",
+    position: initialData?.position || "",
     phone: initialData?.phone || "+251",
+    email: initialData?.email || "",
+    hireDate: initialData?.hireDate || new Date().toISOString().split("T")[0],
     salary: initialData?.salary || 0,
-    status: initialData?.status || EmployeeStatus.FULL_TIME,
-    location: initialData?.location || "",
-    isActive: initialData?.isActive || true,
+    employmentStatus: initialData?.employmentStatus || "full_time",
+    locationId: initialData?.locationId || 0,
+    isActive: initialData?.isActive ?? true,
   });
 
   const [errors, setErrors] = useState({
-    name: false,
+    fullName: false,
+    position: false,
     phone: false,
+    email: false,
+    hireDate: false,
     salary: false,
-    status: false,
-    location: false,
+    employmentStatus: false,
+    locationId: false,
   });
 
   useEffect(() => {
     if (initialData) {
       setFormData({
-        name: initialData.name,
+        fullName: initialData.fullName,
+        position: initialData.position,
         phone: initialData.phone.startsWith("+251")
           ? initialData.phone
           : "+251" + initialData.phone,
+        email: initialData.email,
+        hireDate: initialData.hireDate,
         salary: initialData.salary,
-        status: initialData.status,
-        location: initialData.location,
+        employmentStatus: initialData.employmentStatus,
+        locationId: initialData.locationId,
         isActive: initialData.isActive,
       });
       setErrors({
-        name: false,
+        fullName: false,
+        position: false,
         phone: false,
+        email: false,
+        hireDate: false,
         salary: false,
-        status: false,
-        location: false,
+        employmentStatus: false,
+        locationId: false,
       });
     }
   }, [initialData]);
@@ -73,16 +89,23 @@ export function EmployeeForm({ initialData, onSubmit }: EmployeeFormProps) {
       numbers = numbers.slice(0, 13);
     }
 
-    // Add hyphens after specific positions (if enough digits)
+    return numbers; // Return just the clean number without hyphens for the backend
+  };
+
+  const formatPhoneNumberForDisplay = (value: string) => {
+    const cleanNumber = formatPhoneNumber(value);
+    if (cleanNumber.length <= 4) return cleanNumber;
+
+    // Format for display with hyphens
+    const digitsAfterPrefix = cleanNumber.slice(4);
     const parts = [];
-    const digitsAfterPrefix = numbers.slice(4); // Get digits after +251
 
     if (digitsAfterPrefix.length > 0) {
-      parts.push(digitsAfterPrefix.slice(0, 2)); // First 2 digits
+      parts.push(digitsAfterPrefix.slice(0, 2));
       if (digitsAfterPrefix.length > 2) {
-        parts.push(digitsAfterPrefix.slice(2, 5)); // Next 3 digits
+        parts.push(digitsAfterPrefix.slice(2, 5));
         if (digitsAfterPrefix.length > 5) {
-          parts.push(digitsAfterPrefix.slice(5)); // Remaining digits
+          parts.push(digitsAfterPrefix.slice(5));
         }
       }
     }
@@ -96,23 +119,18 @@ export function EmployeeForm({ initialData, onSubmit }: EmployeeFormProps) {
     setErrors({ ...errors, phone: false });
   };
 
-  const formatSalary = (value: string) => {
-    // Remove all non-digit characters
-    const numbers = value.replace(/[^\d]/g, "");
-    // Convert to number and format with ETB
-    const amount = Number(numbers);
-    return amount;
-  };
-
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
     const newErrors = {
-      name: !formData.name.trim(),
+      fullName: !formData.fullName.trim(),
+      position: !formData.position.trim(),
       phone: !formData.phone.trim() || formData.phone.length < 13,
+      email: !formData.email.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email),
+      hireDate: !formData.hireDate,
       salary: formData.salary <= 0,
-      status: !formData.status,
-      location: !formData.location,
+      employmentStatus: !formData.employmentStatus,
+      locationId: !formData.locationId,
     };
 
     setErrors(newErrors);
@@ -128,22 +146,45 @@ export function EmployeeForm({ initialData, onSubmit }: EmployeeFormProps) {
     <form onSubmit={handleSubmit}>
       <div className="grid gap-4 py-4">
         <div className="grid grid-cols-4 items-center gap-4">
-          <Label htmlFor="name" className="text-right">
-            Name <span className="text-red-500">*</span>
+          <Label htmlFor="fullName" className="text-right">
+            Full Name <span className="text-red-500">*</span>
           </Label>
           <div className="col-span-3">
             <Input
-              id="name"
-              value={formData.name}
+              id="fullName"
+              value={formData.fullName}
               onChange={(e) => {
-                setFormData({ ...formData, name: e.target.value });
-                setErrors({ ...errors, name: false });
+                setFormData({ ...formData, fullName: e.target.value });
+                setErrors({ ...errors, fullName: false });
               }}
-              className={errors.name ? "border-red-500" : ""}
+              className={errors.fullName ? "border-red-500" : ""}
+              disabled={isLoading}
               required
             />
-            {errors.name && (
-              <p className="text-sm text-red-500 mt-1">Name is required</p>
+            {errors.fullName && (
+              <p className="text-sm text-red-500 mt-1">Full name is required</p>
+            )}
+          </div>
+        </div>
+
+        <div className="grid grid-cols-4 items-center gap-4">
+          <Label htmlFor="position" className="text-right">
+            Position <span className="text-red-500">*</span>
+          </Label>
+          <div className="col-span-3">
+            <Input
+              id="position"
+              value={formData.position}
+              onChange={(e) => {
+                setFormData({ ...formData, position: e.target.value });
+                setErrors({ ...errors, position: false });
+              }}
+              className={errors.position ? "border-red-500" : ""}
+              disabled={isLoading}
+              required
+            />
+            {errors.position && (
+              <p className="text-sm text-red-500 mt-1">Position is required</p>
             )}
           </div>
         </div>
@@ -155,16 +196,65 @@ export function EmployeeForm({ initialData, onSubmit }: EmployeeFormProps) {
           <div className="col-span-3">
             <Input
               id="phone"
-              value={formData.phone}
+              value={formatPhoneNumberForDisplay(formData.phone)}
               onChange={handlePhoneNumberChange}
               className={errors.phone ? "border-red-500" : ""}
               placeholder="+251-xx-xxx-xxxx"
+              disabled={isLoading}
               required
             />
             {errors.phone && (
               <p className="text-sm text-red-500 mt-1">
                 Please enter a valid Ethiopian phone number
               </p>
+            )}
+          </div>
+        </div>
+
+        <div className="grid grid-cols-4 items-center gap-4">
+          <Label htmlFor="email" className="text-right">
+            Email <span className="text-red-500">*</span>
+          </Label>
+          <div className="col-span-3">
+            <Input
+              id="email"
+              type="email"
+              value={formData.email}
+              onChange={(e) => {
+                setFormData({ ...formData, email: e.target.value });
+                setErrors({ ...errors, email: false });
+              }}
+              className={errors.email ? "border-red-500" : ""}
+              disabled={isLoading}
+              required
+            />
+            {errors.email && (
+              <p className="text-sm text-red-500 mt-1">
+                Please enter a valid email address
+              </p>
+            )}
+          </div>
+        </div>
+
+        <div className="grid grid-cols-4 items-center gap-4">
+          <Label htmlFor="hireDate" className="text-right">
+            Hire Date <span className="text-red-500">*</span>
+          </Label>
+          <div className="col-span-3">
+            <Input
+              id="hireDate"
+              type="date"
+              value={formData.hireDate}
+              onChange={(e) => {
+                setFormData({ ...formData, hireDate: e.target.value });
+                setErrors({ ...errors, hireDate: false });
+              }}
+              className={errors.hireDate ? "border-red-500" : ""}
+              disabled={isLoading}
+              required
+            />
+            {errors.hireDate && (
+              <p className="text-sm text-red-500 mt-1">Hire date is required</p>
             )}
           </div>
         </div>
@@ -183,11 +273,12 @@ export function EmployeeForm({ initialData, onSubmit }: EmployeeFormProps) {
                 type="number"
                 value={formData.salary}
                 onChange={(e) => {
-                  const value = formatSalary(e.target.value);
+                  const value = parseFloat(e.target.value);
                   setFormData({ ...formData, salary: value });
                   setErrors({ ...errors, salary: false });
                 }}
                 className={`pl-12 ${errors.salary ? "border-red-500" : ""}`}
+                disabled={isLoading}
                 required
                 min="0"
               />
@@ -201,62 +292,61 @@ export function EmployeeForm({ initialData, onSubmit }: EmployeeFormProps) {
         </div>
 
         <div className="grid grid-cols-4 items-center gap-4">
-          <Label htmlFor="status" className="text-right">
-            Status <span className="text-red-500">*</span>
+          <Label htmlFor="employmentStatus" className="text-right">
+            Employment Status <span className="text-red-500">*</span>
           </Label>
           <div className="col-span-3">
             <Select
-              value={formData.status}
-              onValueChange={(value: EmployeeStatus) => {
-                setFormData({ ...formData, status: value });
-                setErrors({ ...errors, status: false });
+              value={formData.employmentStatus}
+              onValueChange={(value) => {
+                setFormData({ ...formData, employmentStatus: value });
+                setErrors({ ...errors, employmentStatus: false });
               }}
+              disabled={isLoading}
               required
             >
-              <SelectTrigger className={errors.status ? "border-red-500" : ""}>
-                <SelectValue placeholder="Select employee status" />
+              <SelectTrigger className={errors.employmentStatus ? "border-red-500" : ""}>
+                <SelectValue placeholder="Select employment status" />
               </SelectTrigger>
               <SelectContent>
-                {Object.values(EmployeeStatus).map((status) => (
-                  <SelectItem key={status} value={status}>
-                    {status}
-                  </SelectItem>
-                ))}
+                <SelectItem value="full_time">Full Time</SelectItem>
+                <SelectItem value="part">Part Time</SelectItem>
+                <SelectItem value="contract">Contract</SelectItem>
+                <SelectItem value="intern">Intern</SelectItem>
               </SelectContent>
             </Select>
-            {errors.status && (
-              <p className="text-sm text-red-500 mt-1">Status is required</p>
+            {errors.employmentStatus && (
+              <p className="text-sm text-red-500 mt-1">Employment status is required</p>
             )}
           </div>
         </div>
 
         <div className="grid grid-cols-4 items-center gap-4">
-          <Label htmlFor="location" className="text-right">
+          <Label htmlFor="locationId" className="text-right">
             Location <span className="text-red-500">*</span>
           </Label>
           <div className="col-span-3">
             <Select
-              value={formData.location}
+              value={formData.locationId.toString()}
               onValueChange={(value) => {
-                setFormData({ ...formData, location: value });
-                setErrors({ ...errors, location: false });
+                setFormData({ ...formData, locationId: parseInt(value) });
+                setErrors({ ...errors, locationId: false });
               }}
+              disabled={isLoading}
               required
             >
-              <SelectTrigger
-                className={errors.location ? "border-red-500" : ""}
-              >
+              <SelectTrigger className={errors.locationId ? "border-red-500" : ""}>
                 <SelectValue placeholder="Select a location" />
               </SelectTrigger>
               <SelectContent>
                 {locations.map((location) => (
-                  <SelectItem key={location} value={location}>
-                    {location}
+                  <SelectItem key={location.id} value={location.id.toString()}>
+                    {location.name}
                   </SelectItem>
                 ))}
               </SelectContent>
             </Select>
-            {errors.location && (
+            {errors.locationId && (
               <p className="text-sm text-red-500 mt-1">Location is required</p>
             )}
           </div>
@@ -272,13 +362,14 @@ export function EmployeeForm({ initialData, onSubmit }: EmployeeFormProps) {
             onCheckedChange={(checked) =>
               setFormData({ ...formData, isActive: checked as boolean })
             }
+            disabled={isLoading}
           />
         </div>
       </div>
 
       <DialogFooter>
-        <Button type="submit">
-          {initialData ? "Save changes" : "Add Employee"}
+        <Button type="submit" disabled={isLoading}>
+          {isLoading ? "Saving..." : (initialData ? "Save changes" : "Add Employee")}
         </Button>
       </DialogFooter>
     </form>

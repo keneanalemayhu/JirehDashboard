@@ -13,7 +13,8 @@ import {
 } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { DialogFooter } from "@/components/ui/dialog";
-import { locations, Role } from "@/types/dashboard/business/user";
+import { Role } from "@/types/dashboard/business/user";
+import { useLocations } from "@/hooks/dashboard/business/location";
 
 interface User {
   id?: string;
@@ -21,25 +22,27 @@ interface User {
   name: string;
   email: string;
   phone: string;
-  location: string;
+  location_id: string;
   role: Role;
-  isActive: boolean; // Add this
+  isActive: boolean;
 }
 
 interface UserFormProps {
   initialData?: User;
   onSubmit: (data: Omit<User, "id">) => void;
+  isLoading?: boolean;
 }
 
-export function UserForm({ initialData, onSubmit }: UserFormProps) {
+export function UserForm({ initialData, onSubmit, isLoading = false }: UserFormProps) {
+  const { locations, isLoading: isLoadingLocations } = useLocations();
   const [formData, setFormData] = useState<Omit<User, "id">>({
     username: initialData?.username || "",
     name: initialData?.name || "",
     email: initialData?.email || "",
     phone: initialData?.phone || "+251",
-    location: initialData?.location || "",
-    role: initialData?.role || Role.EMPLOYEE,
-    isActive: initialData?.isActive ?? true, // Add this
+    location_id: initialData?.location_id || "",
+    role: initialData?.role || Role.ADMIN,
+    isActive: initialData?.isActive ?? true,
   });
 
   const [errors, setErrors] = useState({
@@ -47,7 +50,7 @@ export function UserForm({ initialData, onSubmit }: UserFormProps) {
     name: false,
     email: false,
     phone: false,
-    location: false,
+    location_id: false,
     role: false,
   });
 
@@ -60,16 +63,16 @@ export function UserForm({ initialData, onSubmit }: UserFormProps) {
         phone: initialData.phone.startsWith("+251")
           ? initialData.phone
           : "+251" + initialData.phone,
-        location: initialData.location,
+        location_id: initialData.location_id,
         role: initialData.role,
-        isActive: initialData.isActive ?? true, // Add this
+        isActive: initialData.isActive ?? true,
       });
       setErrors({
         username: false,
         name: false,
         email: false,
         phone: false,
-        location: false,
+        location_id: false,
         role: false,
       });
     }
@@ -83,223 +86,165 @@ export function UserForm({ initialData, onSubmit }: UserFormProps) {
     if (numbers.length > 13) {
       numbers = numbers.slice(0, 13);
     }
-    const parts = [];
-    const digitsAfterPrefix = numbers.slice(4);
-
-    if (digitsAfterPrefix.length > 0) {
-      parts.push(digitsAfterPrefix.slice(0, 2));
-      if (digitsAfterPrefix.length > 2) {
-        parts.push(digitsAfterPrefix.slice(2, 5));
-        if (digitsAfterPrefix.length > 5) {
-          parts.push(digitsAfterPrefix.slice(5));
-        }
-      }
-    }
-    return "+251" + (parts.length > 0 ? "-" + parts.join("-") : "");
+    return numbers;
   };
 
   const validateEmail = (email: string) => {
     return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-
+  const validateForm = () => {
     const newErrors = {
-      username: !formData.username.trim(),
-      name: !formData.name.trim(),
-      email: !formData.email.trim() || !validateEmail(formData.email),
-      phone: !formData.phone.trim() || formData.phone.length < 13,
-      location: !formData.location,
+      username: !formData.username,
+      name: !formData.name,
+      email: !validateEmail(formData.email),
+      phone: formData.phone.length !== 13,
+      location_id: !formData.location_id,
       role: !formData.role,
     };
 
     setErrors(newErrors);
+    return !Object.values(newErrors).some((error) => error);
+  };
 
-    if (Object.values(newErrors).some(Boolean)) {
-      return;
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (validateForm()) {
+      onSubmit(formData);
     }
-
-    onSubmit(formData);
   };
 
   return (
-    <form onSubmit={handleSubmit}>
-      <div className="grid gap-4 py-4">
-        <div className="grid grid-cols-4 items-center gap-4">
-          <Label htmlFor="username" className="text-right">
-            Username <span className="text-red-500">*</span>
-          </Label>
-          <div className="col-span-3">
-            <Input
-              id="username"
-              value={formData.username}
-              onChange={(e) => {
-                setFormData({ ...formData, username: e.target.value });
-                setErrors({ ...errors, username: false });
-              }}
-              className={errors.username ? "border-red-500" : ""}
-              required
-            />
-            {errors.username && (
-              <p className="text-sm text-red-500 mt-1">Username is required</p>
-            )}
-          </div>
+    <form onSubmit={handleSubmit} className="space-y-4">
+      <div className="grid grid-cols-2 gap-4">
+        <div className="space-y-2">
+          <Label htmlFor="username">Username</Label>
+          <Input
+            id="username"
+            value={formData.username}
+            onChange={(e) =>
+              setFormData({ ...formData, username: e.target.value })
+            }
+            className={errors.username ? "border-red-500" : ""}
+          />
+          {errors.username && (
+            <p className="text-red-500 text-sm">Username is required</p>
+          )}
         </div>
 
-        <div className="grid grid-cols-4 items-center gap-4">
-          <Label htmlFor="name" className="text-right">
-            Name <span className="text-red-500">*</span>
-          </Label>
-          <div className="col-span-3">
-            <Input
-              id="name"
-              value={formData.name}
-              onChange={(e) => {
-                setFormData({ ...formData, name: e.target.value });
-                setErrors({ ...errors, name: false });
-              }}
-              className={errors.name ? "border-red-500" : ""}
-              required
-            />
-            {errors.name && (
-              <p className="text-sm text-red-500 mt-1">Name is required</p>
-            )}
-          </div>
+        <div className="space-y-2">
+          <Label htmlFor="name">Full Name</Label>
+          <Input
+            id="name"
+            value={formData.name}
+            onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+            className={errors.name ? "border-red-500" : ""}
+          />
+          {errors.name && (
+            <p className="text-red-500 text-sm">Full name is required</p>
+          )}
         </div>
 
-        <div className="grid grid-cols-4 items-center gap-4">
-          <Label htmlFor="email" className="text-right">
-            Email <span className="text-red-500">*</span>
-          </Label>
-          <div className="col-span-3">
-            <Input
-              id="email"
-              type="email"
-              value={formData.email}
-              onChange={(e) => {
-                setFormData({ ...formData, email: e.target.value });
-                setErrors({ ...errors, email: false });
-              }}
-              className={errors.email ? "border-red-500" : ""}
-              required
-            />
-            {errors.email && (
-              <p className="text-sm text-red-500 mt-1">
-                Please enter a valid email address
-              </p>
-            )}
-          </div>
+        <div className="space-y-2">
+          <Label htmlFor="email">Email</Label>
+          <Input
+            id="email"
+            type="email"
+            value={formData.email}
+            onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+            className={errors.email ? "border-red-500" : ""}
+          />
+          {errors.email && (
+            <p className="text-red-500 text-sm">Valid email is required</p>
+          )}
         </div>
 
-        <div className="grid grid-cols-4 items-center gap-4">
-          <Label htmlFor="phone" className="text-right">
-            Phone <span className="text-red-500">*</span>
-          </Label>
-          <div className="col-span-3">
-            <Input
-              id="phone"
-              value={formData.phone}
-              onChange={(e) => {
-                const formattedNumber = formatPhoneNumber(e.target.value);
-                setFormData({ ...formData, phone: formattedNumber });
-                setErrors({ ...errors, phone: false });
-              }}
-              className={errors.phone ? "border-red-500" : ""}
-              placeholder="+251-xx-xxx-xxxx"
-              required
-            />
-            {errors.phone && (
-              <p className="text-sm text-red-500 mt-1">
-                Please enter a valid Ethiopian phone number
-              </p>
-            )}
-          </div>
+        <div className="space-y-2">
+          <Label htmlFor="phone">Phone</Label>
+          <Input
+            id="phone"
+            value={formData.phone}
+            onChange={(e) =>
+              setFormData({
+                ...formData,
+                phone: formatPhoneNumber(e.target.value),
+              })
+            }
+            className={errors.phone ? "border-red-500" : ""}
+          />
+          {errors.phone && (
+            <p className="text-red-500 text-sm">Valid phone number is required</p>
+          )}
         </div>
 
-        <div className="grid grid-cols-4 items-center gap-4">
-          <Label htmlFor="location" className="text-right">
-            Location <span className="text-red-500">*</span>
-          </Label>
-          <div className="col-span-3">
-            <Select
-              value={formData.location}
-              onValueChange={(value) => {
-                setFormData({ ...formData, location: value });
-                setErrors({ ...errors, location: false });
-              }}
-              required
-            >
-              <SelectTrigger
-                className={errors.location ? "border-red-500" : ""}
-              >
-                <SelectValue placeholder="Select a location" />
-              </SelectTrigger>
-              <SelectContent>
-                {locations.map((location) => (
-                  <SelectItem key={location} value={location}>
-                    {location}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            {errors.location && (
-              <p className="text-sm text-red-500 mt-1">Location is required</p>
-            )}
-          </div>
+        <div className="space-y-2">
+          <Label htmlFor="location">Location</Label>
+          <Select
+  value={formData.location_id}
+  onValueChange={(value) =>
+    setFormData({ ...formData, location_id: value })
+  }
+>
+  <SelectTrigger className={errors.location_id ? "border-red-500" : ""}>
+    <SelectValue placeholder="Select location" />
+  </SelectTrigger>
+  <SelectContent>
+    {isLoadingLocations ? (
+      <SelectItem value="loading" disabled>
+        Loading locations...
+      </SelectItem>
+    ) : (
+      locations.map((location) => (
+        <SelectItem key={location.id} value={location.id.toString()}>
+          {location.name}
+        </SelectItem>
+      ))
+    )}
+  </SelectContent>
+</Select>
+{errors.location_id && (
+  <p className="text-red-500 text-sm">Location is required</p>
+)}
         </div>
 
-        <div className="grid grid-cols-4 items-center gap-4">
-          <Label htmlFor="role" className="text-right">
-            Role <span className="text-red-500">*</span>
-          </Label>
-          <div className="col-span-3">
-            <Select
-              value={formData.role}
-              onValueChange={(value: Role) => {
-                setFormData({ ...formData, role: value });
-                setErrors({ ...errors, role: false });
-              }}
-              required
-            >
-              <SelectTrigger className={errors.role ? "border-red-500" : ""}>
-                <SelectValue placeholder="Select user role" />
-              </SelectTrigger>
-              <SelectContent>
-                {Object.values(Role).map((role) => (
-                  <SelectItem key={role} value={role}>
-                    {role}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            {errors.role && (
-              <p className="text-sm text-red-500 mt-1">Role is required</p>
-            )}
-          </div>
-        </div>
-        <div className="grid grid-cols-4 items-center gap-4">
-          <Label htmlFor="isActive" className="text-right">
-            Active
-          </Label>
-          <div className="col-span-3">
-            <Checkbox
-              id="isActive"
-              checked={formData.isActive}
-              onCheckedChange={(checked: boolean) => {
-                setFormData((prev) => ({
-                  ...prev,
-                  isActive: checked,
-                }));
-              }}
-            />
-          </div>
+        <div className="space-y-2">
+          <Label htmlFor="role">Role</Label>
+          <Select
+            value={formData.role}
+            onValueChange={(value) =>
+              setFormData({ ...formData, role: value as Role })
+            }
+          >
+            <SelectTrigger className={errors.role ? "border-red-500" : ""}>
+              <SelectValue placeholder="Select role" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value={Role.OWNER}>Owner</SelectItem>
+              <SelectItem value={Role.ADMIN}>Admin</SelectItem>
+              <SelectItem value={Role.EMPLOYEE}>Employee</SelectItem>
+              <SelectItem value={Role.WAREHOUSE_MANAGER}>Warehouse Manager</SelectItem>
+            </SelectContent>
+          </Select>
+          {errors.role && (
+            <p className="text-red-500 text-sm">Role is required</p>
+          )}
         </div>
       </div>
 
+      <div className="flex items-center space-x-2">
+        <Checkbox
+          id="isActive"
+          checked={formData.isActive}
+          onCheckedChange={(checked) =>
+            setFormData({ ...formData, isActive: checked as boolean })
+          }
+        />
+        <Label htmlFor="isActive">Active</Label>
+      </div>
+
       <DialogFooter>
-        <Button type="submit">
-          {initialData ? "Save changes" : "Add User"}
+        <Button type="submit" disabled={isLoading}>
+          {isLoading ? "Saving..." : "Save"}
         </Button>
       </DialogFooter>
     </form>

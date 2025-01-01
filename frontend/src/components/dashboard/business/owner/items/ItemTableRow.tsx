@@ -3,31 +3,26 @@
 import { TableCell, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Edit, Trash2, Clock, RotateCcw, AlertCircle } from "lucide-react";
-import { Item, ColumnVisibility } from "@/types/dashboard/business/item";
+import { Item } from "@/types/dashboard/business/item";
 import { Badge } from "@/components/ui/badge";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
 import { useCategories } from "@/hooks/dashboard/business/category";
 
 interface ItemTableRowProps {
   item: Item;
-  columnsVisible: ColumnVisibility;
   onEdit: (item: Item) => void;
   onDelete: (item: Item) => void;
   temporaryStatus?: string;
+  locationId: number;
 }
 
 export function ItemTableRow({
   item,
-  columnsVisible,
   onEdit,
   onDelete,
   temporaryStatus,
+  locationId,
 }: ItemTableRowProps) {
-  const { categories } = useCategories();
+  const { categories } = useCategories(locationId);
 
   const getCategoryName = (categoryId: number) => {
     if (!categories?.length) return "No categories found";
@@ -99,130 +94,45 @@ export function ItemTableRow({
     );
   };
 
-  const getQuantityStatus = (quantity: number) => {
-    if (quantity <= 0)
-      return { color: "text-red-500", tooltip: "Out of stock" };
-    if (quantity <= 10)
-      return { color: "text-yellow-500", tooltip: "Low stock" };
-    return { color: "text-green-500", tooltip: "In stock" };
-  };
-
-  if (!item) return null;
-
-  const quantityStatus = getQuantityStatus(item.quantity);
-
   return (
-    <TableRow className={item.isHidden ? "opacity-50" : ""}>
-      {columnsVisible.id && (
-        <TableCell className="font-mono text-sm">
-          {item.id.toString().padStart(3, "0")}
-        </TableCell>
-      )}
-
-      {columnsVisible.name && (
-        <TableCell className="font-medium">
-          <div className="flex items-center gap-2">
-            {item.name}
-            {item.isTemporary && (
-              <Tooltip>
-                <TooltipTrigger>
-                  <Clock className="w-4 h-4 text-muted-foreground" />
-                </TooltipTrigger>
-                <TooltipContent>
-                  <p>Temporary Item</p>
-                </TooltipContent>
-              </Tooltip>
-            )}
+    <TableRow>
+      <TableCell>{item.id}</TableCell>
+      <TableCell>{item.name}</TableCell>
+      <TableCell>{item.barcode}</TableCell>
+      <TableCell>{formatPrice(item.price)}</TableCell>
+      <TableCell>{item.quantity}</TableCell>
+      <TableCell>{getCategoryName(item.categoryId)}</TableCell>
+      <TableCell>{getStatusBadge(item.isActive)}</TableCell>
+      <TableCell>{getVisibilityBadge(item.isHidden)}</TableCell>
+      <TableCell>
+        {item.isTemporary && (
+          <div className="flex items-center gap-1">
+            <Clock className="w-4 h-4" />
+            <span>{item.expiryHours}h</span>
           </div>
-        </TableCell>
-      )}
-
-      {columnsVisible.barcode && (
-        <TableCell className="font-mono text-sm">
-          {item.barcode || "—"}
-        </TableCell>
-      )}
-
-      {columnsVisible.price && (
-        <TableCell className="font-medium">{formatPrice(item.price)}</TableCell>
-      )}
-
-      {columnsVisible.quantity && (
-        <TableCell>
-          <Tooltip>
-            <TooltipTrigger>
-              <span className={`font-medium ${quantityStatus.color}`}>
-                {item.quantity}
-              </span>
-            </TooltipTrigger>
-            <TooltipContent>
-              <p>{quantityStatus.tooltip}</p>
-            </TooltipContent>
-          </Tooltip>
-        </TableCell>
-      )}
-
-      {columnsVisible.categoryId && (
-        <TableCell>
-          <div className="flex items-center gap-2">
-            {getCategoryName(item.categoryId)}
-          </div>
-        </TableCell>
-      )}
-
-      {columnsVisible.isActive && (
-        <TableCell className="text-center">
-          {getStatusBadge(item.isActive)}
-        </TableCell>
-      )}
-
-      {columnsVisible.isHidden && (
-        <TableCell className="text-center">
-          {getVisibilityBadge(item.isHidden)}
-        </TableCell>
-      )}
-
-      {/* Temporary Item specific columns */}
-      {columnsVisible.expiryHours && item.isTemporary && (
-        <TableCell className="text-center">
-          <Badge variant="outline" className="flex items-center gap-1">
-            <Clock className="w-3 h-3" />
-            <span>{item.expiryHours || 0}h</span>
-          </Badge>
-        </TableCell>
-      )}
-
-      {columnsVisible.autoResetQuantity && item.isTemporary && (
-        <TableCell className="text-center">
-          {getAutoResetBadge(item.autoResetQuantity)}
-        </TableCell>
-      )}
-
-      {columnsVisible.temporaryStatus && item.isTemporary && (
-        <TableCell className="text-center">
-          {getTemporaryStatusBadge(temporaryStatus)}
-        </TableCell>
-      )}
-
-      <TableCell className="text-right">
-        <div className="flex justify-end space-x-2">
+        )}
+      </TableCell>
+      <TableCell>
+        {item.isTemporary && getAutoResetBadge(item.autoResetQuantity)}
+      </TableCell>
+      <TableCell>
+        {item.isTemporary && getTemporaryStatusBadge(temporaryStatus)}
+      </TableCell>
+      <TableCell>
+        <div className="flex items-center gap-2">
           <Button
             variant="ghost"
             size="icon"
             onClick={() => onEdit(item)}
-            className="hover:text-primary"
           >
             <Edit className="w-4 h-4" />
-            <span className="sr-only">Edit {item.name}</span>
           </Button>
           <Button
             variant="ghost"
             size="icon"
-            className="hover:text-destructive"
             onClick={() => onDelete(item)}
           >
             <Trash2 className="w-4 h-4" />
-            <span className="sr-only">Delete {item.name}</span>
           </Button>
         </div>
       </TableCell>

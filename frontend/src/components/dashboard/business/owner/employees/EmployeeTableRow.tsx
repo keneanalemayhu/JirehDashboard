@@ -10,11 +10,18 @@ interface EmployeeTableRowProps {
   employee: Employee;
   columnsVisible: {
     id: boolean;
-    name: boolean;
+    storeId: boolean;
+    locationId: boolean;
+    fullName: boolean;
+    position: boolean;
     phone: boolean;
+    email: boolean;
+    hireDate: boolean;
+    isActive: boolean;
     salary: boolean;
-    status: boolean;
-    location: boolean;
+    employmentStatus: boolean;
+    createdAt: boolean;
+    updatedAt: boolean;
   };
   onEdit: (employee: Employee) => void;
   onDelete: (employee: Employee) => void;
@@ -44,37 +51,40 @@ export function EmployeeTableRow({
   return (
     <TableRow className={!employee.isActive ? "opacity-50" : ""}>
       {columnsVisible.id && <TableCell>{employee.id}</TableCell>}
-      {columnsVisible.name && <TableCell>{employee.name}</TableCell>}
+      {columnsVisible.storeId && <TableCell>{employee.storeId}</TableCell>}
+      {columnsVisible.locationId && <TableCell>{employee.locationId}</TableCell>}
+      {columnsVisible.fullName && <TableCell>{employee.fullName}</TableCell>}
+      {columnsVisible.position && <TableCell>{employee.position}</TableCell>}
       {columnsVisible.phone && <TableCell>{employee.phone}</TableCell>}
+      {columnsVisible.email && <TableCell>{employee.email}</TableCell>}
+      {columnsVisible.hireDate && <TableCell>{employee.hireDate}</TableCell>}
       {columnsVisible.salary && (
         <TableCell className="text-right">
-          {employee.salary.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ",")}
+          {typeof employee.salary === 'number' 
+            ? employee.salary.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ",")
+            : '0.00'
+          }
         </TableCell>
       )}
-      {columnsVisible.status && (
+      {columnsVisible.employmentStatus && (
         <TableCell>
           <span
             className={cn(
               "px-2 py-1 rounded-full text-xs font-medium",
-              getStatusColor(employee.status)
+              getStatusColor(employee.employmentStatus)
             )}
           >
-            {employee.status}
+            {employee.employmentStatus}
           </span>
         </TableCell>
       )}
-      {columnsVisible.location && (
-        <TableCell>
-          <span className="inline-flex items-center rounded-md bg-gray-50 px-2 py-1 text-xs font-medium text-gray-600 ring-1 ring-inset ring-gray-500/10">
-            {employee.location}
-          </span>
-        </TableCell>
-      )}
+      {columnsVisible.createdAt && <TableCell>{employee.createdAt}</TableCell>}
+      {columnsVisible.updatedAt && <TableCell>{employee.updatedAt}</TableCell>}
       <TableCell>
         <div className="flex space-x-2">
           <Button variant="ghost" size="icon" onClick={() => onEdit(employee)}>
             <Edit className="w-4 h-4" />
-            <span className="sr-only">Edit {employee.name}</span>
+            <span className="sr-only">Edit {employee.fullName}</span>
           </Button>
           <Button
             variant="ghost"
@@ -83,7 +93,7 @@ export function EmployeeTableRow({
             onClick={() => onDelete(employee)}
           >
             <Trash2 className="w-4 h-4" />
-            <span className="sr-only">Delete {employee.name}</span>
+            <span className="sr-only">Delete {employee.fullName}</span>
           </Button>
         </div>
       </TableCell>

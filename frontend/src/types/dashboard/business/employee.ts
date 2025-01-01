@@ -4,21 +4,27 @@
  * Core entity interfaces
  */
 export interface Employee {
-  id: string;
-  name: string;
+  id: number;
+  storeId: number;
+  locationId: number;
+  fullName: string;
+  position: string;
   phone: string;
-  salary: number;
-  status: EmployeeStatus;
-  location: string;
+  email: string;
+  hireDate: string;
   isActive: boolean;
+  salary: number;
+  employmentStatus: EmployeeStatus;
+  createdAt: string;
+  updatedAt: string;
 }
 
 // Added helpful enums for employee status
 export enum EmployeeStatus {
-  FULL_TIME = "Full Time",
-  PART_TIME = "Part Time",
-  CONTRACT = "Contract",
-  INTERN = "Intern",
+  FULL_TIME = "full_time",
+  PART_TIME = "part",
+  CONTRACT = "contract",
+  INTERN = "intern",
 }
 
 /**
@@ -38,11 +44,18 @@ export type SortDirection = "asc" | "desc" | null;
 
 export interface ColumnVisibility {
   id: boolean;
-  name: boolean;
+  storeId: boolean;
+  locationId: boolean;
+  fullName: boolean;
+  position: boolean;
   phone: boolean;
+  email: boolean;
+  hireDate: boolean;
+  isActive: boolean;
   salary: boolean;
-  status: boolean;
-  location: boolean;
+  employmentStatus: boolean;
+  createdAt: boolean;
+  updatedAt: boolean;
 }
 
 export interface ColumnConfig {
@@ -51,7 +64,7 @@ export interface ColumnConfig {
   width?: string;
 }
 
-export type ColumnKey = keyof Omit<Employee, "isActive">;
+export type ColumnKey = keyof Employee;
 
 export interface EmployeeTableProps {
   employees: Employee[];
@@ -142,58 +155,81 @@ export interface UseEmployeesReturn {
  */
 export const COLUMNS: ColumnConfig[] = [
   { key: "id", label: "ID", width: "w-[100px]" },
-  { key: "name", label: "Name" },
+  { key: "storeId", label: "Store ID" },
+  { key: "locationId", label: "Location ID" },
+  { key: "fullName", label: "Full Name" },
+  { key: "position", label: "Position" },
   { key: "phone", label: "Phone" },
+  { key: "email", label: "Email" },
+  { key: "hireDate", label: "Hire Date" },
+  { key: "isActive", label: "Is Active" },
   { key: "salary", label: "Salary" },
-  { key: "status", label: "Status" },
-  { key: "location", label: "Location" },
+  { key: "employmentStatus", label: "Employment Status" },
+  { key: "createdAt", label: "Created At" },
+  { key: "updatedAt", label: "Updated At" },
 ];
 
 export const PAGE_SIZE_OPTIONS = [10, 20, 30, 40, 50] as const;
-
-// Updated locations to be more comprehensive
-export const locations = ["Location 1", "Location 2", "Location 3"] as const;
-
-export type LocationType = (typeof locations)[number];
 
 /**
  * Initial/Default Values
  */
 export const DEFAULT_COLUMN_VISIBILITY: ColumnVisibility = {
   id: true,
-  name: true,
+  storeId: true,
+  locationId: true,
+  fullName: true,
+  position: true,
   phone: true,
+  email: true,
+  hireDate: true,
+  isActive: true,
   salary: true,
-  status: true,
-  location: true,
+  employmentStatus: true,
+  createdAt: true,
+  updatedAt: true,
 };
 
 export const INITIAL_FORM_DATA: EmployeeFormData = {
-  name: "",
+  fullName: "",
+  position: "",
   phone: "",
-  salary: 0,
-  status: EmployeeStatus.FULL_TIME,
-  location: "",
+  email: "",
+  hireDate: "",
   isActive: true,
+  salary: 0,
+  employmentStatus: EmployeeStatus.FULL_TIME,
 };
 
 export const initialEmployees: Employee[] = [
   {
-    id: "EMP-001",
-    name: "John Doe",
+    id: 1,
+    storeId: 1,
+    locationId: 1,
+    fullName: "John Doe",
+    position: "Software Engineer",
     phone: "+1 (555) 123-4567",
-    salary: 75000,
-    status: EmployeeStatus.FULL_TIME,
-    location: "New York",
+    email: "john.doe@example.com",
+    hireDate: "2020-01-01",
     isActive: true,
+    salary: 75000,
+    employmentStatus: EmployeeStatus.FULL_TIME,
+    createdAt: "2020-01-01T12:00:00.000Z",
+    updatedAt: "2020-01-01T12:00:00.000Z",
   },
   {
-    id: "EMP-002",
-    name: "Jane Smith",
+    id: 2,
+    storeId: 2,
+    locationId: 2,
+    fullName: "Jane Smith",
+    position: "Software Engineer",
     phone: "+1 (555) 987-6543",
-    salary: 82000,
-    status: EmployeeStatus.FULL_TIME,
-    location: "Remote",
+    email: "jane.smith@example.com",
+    hireDate: "2020-01-01",
     isActive: true,
+    salary: 82000,
+    employmentStatus: EmployeeStatus.FULL_TIME,
+    createdAt: "2020-01-01T12:00:00.000Z",
+    updatedAt: "2020-01-01T12:00:00.000Z",
   },
 ];

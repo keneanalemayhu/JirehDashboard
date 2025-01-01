@@ -1,268 +1,197 @@
 "use client";
 
-import { useState, useMemo } from "react";
-import {
-  Employee,
-  EmployeeFormData,
-  SortDirection,
-} from "@/types/dashboard/business/admin/employee";
+import { useState, useEffect } from "react";
+import { Employee, EmployeeFormData } from "@/types/dashboard/business/employee";
+import { employeeApi } from "@/lib/api/employee";
+import { useOwnerStore } from "./store";
+import { toast } from "sonner";
 
-const initialEmployees: Employee[] = [
-  {
-    id: "1",
-    name: "John Doe",
-    phone: "+251-91-112-1314",
-    salary: 75000,
-    status: "Full Time",
-    location: "Location 1",
-    isActive: true,
-  },
-  {
-    id: "2",
-    name: "Jane Smith",
-    phone: "+251-92-223-2425",
-    salary: 60000,
-    status: "Part Time",
-    location: "Location 2",
-    isActive: false,
-  },
-  {
-    id: "3",
-    name: "Michael Johnson",
-    phone: "+251-93-334-3536",
-    salary: 80000,
-    status: "Contract",
-    location: "Location 3",
-    isActive: true,
-  },
-  {
-    id: "4",
-    name: "Emily Brown",
-    phone: "+251-94-445-4647",
-    salary: 55000,
-    status: "Full Time",
-    location: "Location 1",
-    isActive: false,
-  },
-  {
-    id: "5",
-    name: "David Lee",
-    phone: "+251-95-556-5758",
-    salary: 70000,
-    status: "Part Time",
-    location: "Location 2",
-    isActive: true,
-  },
-  {
-    id: "6",
-    name: "Sarah Kim",
-    phone: "+251-96-667-6869",
-    salary: 90000,
-    status: "Contract",
-    location: "Location 3",
-    isActive: false,
-  },
-  {
-    id: "7",
-    name: "Thomas Wilson",
-    phone: "+251-97-778-7980",
-    salary: 65000,
-    status: "Full Time",
-    location: "Location 1",
-    isActive: true,
-  },
-  {
-    id: "8",
-    name: "Olivia Taylor",
-    phone: "+251-98-889-9091",
-    salary: 50000,
-    status: "Part Time",
-    location: "Location 2",
-    isActive: false,
-  },
-  {
-    id: "9",
-    name: "Benjamin Clark",
-    phone: "+251-91-123-4567",
-    salary: 85000,
-    status: "Contract",
-    location: "Location 3",
-    isActive: true,
-  },
-  {
-    id: "EMP-010",
-    name: "Sophia Harris",
-    phone: "+251-92-456-7890",
-    salary: 70000,
-    status: "Full Time",
-    location: "Location 1",
-    isActive: false,
-  },
-];
-
-export function useEmployees(defaultEmployees: Employee[] = initialEmployees) {
-  // States
-  const [employees, setEmployees] = useState<Employee[]>(defaultEmployees);
+export function useEmployees() {
+  const [employees, setEmployees] = useState<Employee[]>([]);
   const [filterValue, setFilterValue] = useState("");
-  const [editingEmployee, setEditingEmployee] = useState<Employee | null>(null);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [editingEmployee, setEditingEmployee] = useState<Employee | null>(null);
+  const [deletingEmployee, setDeletingEmployee] = useState<Employee | null>(null);
   const [columnsVisible, setColumnsVisible] = useState({
     id: true,
-    name: true,
+    fullName: true,
+    position: true,
     phone: true,
+    email: true,
+    hireDate: true,
+    isActive: true,
     salary: true,
-    status: true,
-    location: true,
+    employmentStatus: true,
+    updatedAt: true,
   });
-  const [sortColumn, setSortColumn] = useState<keyof Employee | null>(null);
-  const [sortDirection, setSortDirection] = useState<SortDirection>(null);
+  const [sortConfig, setSortConfig] = useState<{
+    key: keyof Employee;
+    direction: "asc" | "desc";
+  } | null>(null);
   const [pageSize, setPageSize] = useState(10);
   const [currentPage, setCurrentPage] = useState(1);
+  const [isLoading, setIsLoading] = useState(false);
+  const { store, isLoading: isLoadingStore } = useOwnerStore();
 
-  // Filtering and sorting
-  const filteredEmployees = useMemo(() => {
-    const employeesToFilter = employees || [];
-    const searchTerm = filterValue.toLowerCase();
+  // Load employees
+  useEffect(() => {
+    if (store) {
+      loadEmployees();
+    }
+  }, [store]);
 
-    const result = employeesToFilter.filter((employee) => {
-      const searchableFields = [
-        employee.name || "",
-        employee.phone || "",
-        employee.status || "",
-        employee.location || "",
-        employee.salary?.toString() || "",
-      ];
+  const loadEmployees = async () => {
+    if (!store) {
+      toast.error("No store found. Please contact support.");
+      return;
+    }
+    
+    setIsLoading(true);
+    try {
+      const data = await employeeApi.getEmployees(store.id);
+      setEmployees(data);
+    } catch (err) {
+      console.error("Error loading employees:", err);
+      toast.error("Failed to load employees. Please try again.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
-      return searchableFields.some((field) =>
-        field.toLowerCase().includes(searchTerm)
+  // Handle add employee
+  const handleAddEmployee = async (data: EmployeeFormData) => {
+    if (!store) {
+      toast.error("No store found. Please contact support.");
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      const employee = await employeeApi.createEmployee(store.id, data);
+      setEmployees(prev => [...prev, employee]);
+      setIsAddDialogOpen(false);
+      toast.success("Employee created successfully!");
+    } catch (err: any) {
+      console.error("Error creating employee:", err);
+      toast.error(err.response?.data?.errors || "Failed to create employee");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Handle edit employee
+  const handleEditEmployee = async (data: EmployeeFormData) => {
+    if (!store || !editingEmployee) return;
+
+    setIsLoading(true);
+    try {
+      const updatedEmployee = await employeeApi.updateEmployee(
+        store.id,
+        editingEmployee.id,
+        data
       );
+      setEmployees(prev =>
+        prev.map(emp => (emp.id === updatedEmployee.id ? updatedEmployee : emp))
+      );
+      setIsEditDialogOpen(false);
+      setEditingEmployee(null);
+      toast.success("Employee updated successfully!");
+    } catch (err: any) {
+      console.error("Error updating employee:", err);
+      toast.error(err.response?.data?.errors || "Failed to update employee");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Handle delete employee
+  const handleDeleteClick = (employee: Employee) => {
+    setDeletingEmployee(employee);
+    setIsDeleteDialogOpen(true);
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!store || !deletingEmployee) return;
+
+    setIsLoading(true);
+    try {
+      await employeeApi.deleteEmployee(store.id, deletingEmployee.id);
+      setEmployees(prev => prev.filter(emp => emp.id !== deletingEmployee.id));
+      setIsDeleteDialogOpen(false);
+      setDeletingEmployee(null);
+      toast.success("Employee deleted successfully!");
+    } catch (err) {
+      console.error("Error deleting employee:", err);
+      toast.error("Failed to delete employee");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Handle sort
+  const handleSort = (key: keyof Employee) => {
+    setSortConfig(current => {
+      if (!current || current.key !== key) {
+        return { key, direction: "asc" };
+      }
+      if (current.direction === "asc") {
+        return { key, direction: "desc" };
+      }
+      return null;
+    });
+  };
+
+  // Filter and sort employees
+  const filteredEmployees = employees
+    .filter(employee => {
+      if (!filterValue) return true;
+      const searchValue = filterValue.toLowerCase();
+      return (
+        employee.fullName.toLowerCase().includes(searchValue) ||
+        employee.position.toLowerCase().includes(searchValue) ||
+        employee.email.toLowerCase().includes(searchValue) ||
+        employee.phone.toLowerCase().includes(searchValue) ||
+        employee.employmentStatus.toLowerCase().includes(searchValue)
+      );
+    })
+    .sort((a, b) => {
+      if (!sortConfig) return 0;
+      const { key, direction } = sortConfig;
+      const aValue = a[key];
+      const bValue = b[key];
+
+      if (aValue < bValue) return direction === "asc" ? -1 : 1;
+      if (aValue > bValue) return direction === "asc" ? 1 : -1;
+      return 0;
     });
 
-    if (sortColumn) {
-      result.sort((a, b) => {
-        const aValue = a[sortColumn];
-        const bValue = b[sortColumn];
-
-        // Handle number type specifically for salary
-        if (typeof aValue === "number" && typeof bValue === "number") {
-          return sortDirection === "asc" ? aValue - bValue : bValue - aValue;
-        }
-
-        // Convert to strings for other comparisons
-        const aString = String(aValue || "");
-        const bString = String(bValue || "");
-
-        if (sortDirection === "asc") {
-          return aString.localeCompare(bString);
-        } else if (sortDirection === "desc") {
-          return bString.localeCompare(aString);
-        }
-        return 0;
-      });
-    }
-
-    return result;
-  }, [employees, filterValue, sortColumn, sortDirection]);
-
-  // Pagination
-  const paginatedEmployees = useMemo(() => {
-    const startIndex = (currentPage - 1) * pageSize;
-    return filteredEmployees.slice(startIndex, startIndex + pageSize);
-  }, [filteredEmployees, currentPage, pageSize]);
-
-  // Fixed handlers
-  const handleSort = (column: keyof Employee) => {
-    if (sortColumn === column) {
-      setSortDirection((prev) => {
-        if (prev === "asc") return "desc";
-        if (prev === "desc") return null;
-        return "asc";
-      });
-      if (sortDirection === null) {
-        setSortColumn(null);
-      }
-    } else {
-      setSortColumn(column);
-      setSortDirection("asc");
-    }
-  };
-
-  const handleAddEmployee = (data: EmployeeFormData) => {
-    const newId = `EMP-${String(employees.length + 1).padStart(3, "0")}`;
-    const newEmployee: Employee = {
-      id: newId,
-      ...data,
-    };
-    setEmployees((prev) => [...prev, newEmployee]);
-    setIsAddDialogOpen(false);
-  };
-
-  const handleEditEmployee = (data: EmployeeFormData) => {
-    if (!editingEmployee) return;
-    setEmployees((prev) =>
-      prev.map((employee) =>
-        employee.id === editingEmployee.id ? { ...employee, ...data } : employee
-      )
-    );
-    setIsEditDialogOpen(false);
-    setEditingEmployee(null);
-  };
-
-  const handleDeleteEmployee = () => {
-    if (!editingEmployee) return;
-    setEmployees((prev) =>
-      prev.filter((employee) => employee.id !== editingEmployee.id)
-    );
-    setIsDeleteDialogOpen(false);
-    setEditingEmployee(null);
-  };
-
-  const handlePageChange = (page: number) => {
-    setCurrentPage(page);
-  };
-
-  const handlePageSizeChange = (size: number) => {
-    setPageSize(size);
-    setCurrentPage(1);
-  };
-
   return {
-    // Data
     employees,
-    paginatedEmployees,
-    filteredEmployees,
-    editingEmployee,
-
-    // State setters
-    setEmployees,
-    setEditingEmployee,
-
-    // UI state
     filterValue,
     setFilterValue,
+    handleAddEmployee,
+    handleEditEmployee,
+    handleDeleteClick,
+    handleDeleteConfirm,
     isAddDialogOpen,
     setIsAddDialogOpen,
     isEditDialogOpen,
     setIsEditDialogOpen,
     isDeleteDialogOpen,
     setIsDeleteDialogOpen,
-
-    // Table state
+    editingEmployee,
+    setEditingEmployee,
     columnsVisible,
     setColumnsVisible,
-    pageSize,
-    currentPage,
-    sortColumn,
-    sortDirection,
-
-    // Handlers
     handleSort,
-    handleAddEmployee,
-    handleEditEmployee,
-    handleDeleteEmployee,
-    handlePageChange,
-    handlePageSizeChange,
+    filteredEmployees,
+    pageSize,
+    setPageSize,
+    currentPage,
+    setCurrentPage,
+    isLoading: isLoading || isLoadingStore,
+    store,
   };
 }

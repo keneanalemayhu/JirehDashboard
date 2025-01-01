@@ -4,12 +4,11 @@ import * as React from "react";
 import { Header } from "@/components/common/dashboard/business/owner/Header";
 import { SidebarLayout } from "@/components/common/dashboard/business/owner/Sidebar";
 import { ItemTable } from "@/components/dashboard/business/owner/items/ItemTable";
-import { ItemTableSettings } from "@/components/dashboard/business/owner/items/ItemTableSettings";
-import { ItemTablePagination } from "@/components/dashboard/business/owner/items/ItemTablePagination";
 import { useItems } from "@/hooks/dashboard/business/item";
+import { useCategories } from "@/hooks/dashboard/business/category";
+import { useLocations } from "@/hooks/dashboard/business/location";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { CirclePlus, Download } from "lucide-react";
+import { CirclePlus, Download, Search } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -19,64 +18,49 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { ItemForm } from "@/components/dashboard/business/owner/items/ItemForm";
-import { useCategories } from "@/hooks/dashboard/business/category";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Toaster } from "sonner";
+import { Input } from "@/components/ui/input";
 
 export default function ItemsPage() {
-  const { categories } = useCategories();
-  const [currentPage, setCurrentPage] = React.useState(1);
-  const [pageSize, setPageSize] = React.useState(10);
-  const [activeTab, setActiveTab] = React.useState<"regular" | "temporary">(
-    "regular"
-  );
-
+  const [selectedLocationId, setSelectedLocationId] = React.useState<number | null>(null);
+  const [selectedCategoryId, setSelectedCategoryId] = React.useState<number | null>(null);
+  const [searchQuery, setSearchQuery] = React.useState("");
+  
+  const { locations } = useLocations();
+  const { categories } = useCategories(selectedLocationId || 0);
   const {
-    filterValue,
-    setFilterValue,
-    handleAddItem,
-    handleEditItem,
-    handleDeleteItem,
+    items,
+    loading,
+    error,
+    editingItem,
+    activeTab,
     isAddDialogOpen,
     setIsAddDialogOpen,
     isEditDialogOpen,
     setIsEditDialogOpen,
     isDeleteDialogOpen,
     setIsDeleteDialogOpen,
-    editingItem,
+    handleAddItem,
+    handleEditItem,
+    handleDeleteItem,
+    handleTabChange,
     setEditingItem,
-    columnsVisible,
-    setColumnsVisible,
-    handleSort,
-    filteredItems,
-    handleTabChange: hookHandleTabChange,
-  } = useItems();
+  } = useItems(selectedCategoryId || 0);
 
-  // Separate regular and temporary items
-  const regularItems = filteredItems.filter((item) => !item.isTemporary);
-  const temporaryItems = filteredItems.filter((item) => item.isTemporary);
+  React.useEffect(() => {
+    if (locations && locations.length > 0 && !selectedLocationId) {
+      setSelectedLocationId(locations[0].id);
+    }
+  }, [locations]);
 
-  // Get current items based on active tab
-  const currentItems = activeTab === "regular" ? regularItems : temporaryItems;
-
-  // Calculate pagination
-  const totalItems = currentItems.length;
-  const startIndex = (currentPage - 1) * pageSize;
-  const endIndex = startIndex + pageSize;
-  const paginatedItems = currentItems.slice(startIndex, endIndex);
-
-  const handlePageChange = (page: number) => {
-    setCurrentPage(page);
-  };
-
-  const handlePageSizeChange = (size: number) => {
-    setPageSize(size);
-    setCurrentPage(1);
-  };
-
-  const handleTabChange = (value: string) => {
-    setActiveTab(value as "regular" | "temporary");
-    hookHandleTabChange(value as "regular" | "temporary");
-    setCurrentPage(1);
-  };
+  React.useEffect(() => {
+    if (categories && categories.length > 0 && !selectedCategoryId) {
+      setSelectedCategoryId(categories[0].id);
+    } else if (categories && categories.length === 0) {
+      setSelectedCategoryId(null);
+    }
+  }, [categories]);
 
   const handleExport = () => {
     const headers = [
@@ -94,150 +78,194 @@ export default function ItemsPage() {
       "Last Reset",
     ];
 
-    const csv = [
-      headers,
-      ...currentItems.map((item) => {
-        const category =
-          categories?.find((c) => c.id === item.categoryId)?.name || "";
+    const csvContent = [
+      headers.join(","),
+      ...items.map((item) => {
+        const category = categories?.find((c) => c.id === item.categoryId)?.name || "";
         return [
           item.id,
-          item.name,
-          item.barcode || "",
+          `"${item.name}"`,
+          `"${item.barcode}"`,
           item.price,
           item.quantity,
-          category,
+          `"${category}"`,
           item.isActive ? "Active" : "Inactive",
           item.isHidden ? "Hidden" : "Visible",
           item.isTemporary ? "Yes" : "No",
           item.expiryHours || "",
           item.autoResetQuantity ? "Yes" : "No",
           item.lastQuantityReset
-            ? new Date(item.lastQuantityReset).toISOString()
+            ? new Date(item.lastQuantityReset).toLocaleDateString()
             : "",
-        ];
+        ].join(",");
       }),
-    ]
-      .map((row) => row.join(","))
-      .join("\n");
+    ].join("\n");
 
-    const blob = new Blob([csv], { type: "text/csv" });
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `${activeTab}-items.csv`;
-    a.click();
-    window.URL.revokeObjectURL(url);
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const link = document.createElement("a");
+    const url = URL.createObjectURL(blob);
+    link.setAttribute("href", url);
+    link.setAttribute(
+      "download",
+      `items-export-${new Date().toISOString().split("T")[0]}.csv`
+    );
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
   };
+
+  // Filter items based on search query
+  const filteredItems = React.useMemo(() => {
+    if (!searchQuery.trim()) return items;
+
+    const query = searchQuery.toLowerCase();
+    return items.filter((item) => {
+      const categoryName = categories?.find((c) => c.id === item.categoryId)?.name.toLowerCase() || "";
+      return (
+        item.name.toLowerCase().includes(query) ||
+        item.barcode.toLowerCase().includes(query) ||
+        categoryName.includes(query)
+      );
+    });
+  }, [items, searchQuery, categories]);
+
+  if (loading) return <div>Loading...</div>;
+  if (error) return <div>Error: {error}</div>;
+  if (!selectedLocationId) return <div>Please select a location</div>;
+  if (!selectedCategoryId) return <div>Please select a category</div>;
 
   return (
     <SidebarLayout>
+      <Toaster 
+        position="top-right"
+        richColors 
+        closeButton
+      />
       <Header />
-      <div className="flex-1 space-y-6 p-8 pt-6">
-        <div className="flex flex-col gap-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-2xl font-bold tracking-tight">
-                Items Management
-              </h1>
-              <p className="text-sm text-muted-foreground">
-                Manage your inventory items, including regular and temporary
-                items
-              </p>
+      <div className="flex flex-col gap-8 p-8">
+        <div className="flex justify-between items-center">
+          <div className="flex items-center gap-4 flex-1">
+            <div className="relative flex-1 max-w-sm">
+              <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Search items by name, barcode, or category..."
+                className="pl-8"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
             </div>
-            <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              className="gap-2"
+              onClick={handleExport}
+            >
+              <Download className="h-4 w-4" />
+              Export
+            </Button>
+          </div>
+          <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
+            <DialogTrigger asChild>
+              <Button className="gap-2">
+                <CirclePlus className="h-4 w-4" />
+                Add Item
+              </Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Add Item</DialogTitle>
+                <DialogDescription>
+                  Add a new item to your inventory
+                </DialogDescription>
+              </DialogHeader>
+              <ItemForm
+                locationId={selectedLocationId}
+                categoryId={selectedCategoryId}
+                onSubmit={async (data) => {
+                  return handleAddItem({ ...data });
+                }}
+              />
+            </DialogContent>
+          </Dialog>
+        </div>
+
+        <Tabs value={activeTab} onValueChange={handleTabChange}>
+          <TabsList>
+            <TabsTrigger value="regular">Regular Items</TabsTrigger>
+            <TabsTrigger value="temporary">Temporary Items</TabsTrigger>
+          </TabsList>
+          <TabsContent value="regular">
+            <ItemTable
+              items={filteredItems.filter(item => !item.isTemporary)}
+              locationId={selectedLocationId}
+              onEdit={(item) => {
+                setEditingItem(item);
+                setIsEditDialogOpen(true);
+              }}
+              onDelete={(item) => {
+                setEditingItem(item);
+                setIsDeleteDialogOpen(true);
+              }}
+            />
+          </TabsContent>
+          <TabsContent value="temporary">
+            <ItemTable
+              items={filteredItems.filter((item) => item.isTemporary)}
+              locationId={selectedLocationId}
+              onEdit={(item) => {
+                setEditingItem(item);
+                setIsEditDialogOpen(true);
+              }}
+              onDelete={(item) => {
+                setEditingItem(item);
+                setIsDeleteDialogOpen(true);
+              }}
+            />
+          </TabsContent>
+        </Tabs>
+
+        <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Edit Item</DialogTitle>
+              <DialogDescription>
+                Edit the selected item
+              </DialogDescription>
+            </DialogHeader>
+            {editingItem && (
+              <ItemForm
+                locationId={selectedLocationId}
+                initialData={editingItem}
+                onSubmit={handleEditItem}
+              />
+            )}
+          </DialogContent>
+        </Dialog>
+
+        <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Delete Item</DialogTitle>
+              <DialogDescription>
+                Are you sure you want to delete this item?
+              </DialogDescription>
+            </DialogHeader>
+            <div className="flex justify-end gap-4">
               <Button
                 variant="outline"
-                size="icon"
-                onClick={handleExport}
-                title="Export Items"
+                onClick={() => setIsDeleteDialogOpen(false)}
               >
-                <Download className="h-4 w-4" />
+                Cancel
               </Button>
-              <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
-                <DialogTrigger asChild>
-                  <Button>
-                    <CirclePlus className="w-4 h-4 mr-2" />
-                    Add {activeTab === "temporary" ? "Temporary " : ""}Item
-                  </Button>
-                </DialogTrigger>
-                <DialogContent>
-                  <DialogHeader>
-                    <DialogTitle>
-                      Add New {activeTab === "temporary" ? "Temporary " : ""}
-                      Item
-                    </DialogTitle>
-                    <DialogDescription>
-                      Enter the details for the new{" "}
-                      {activeTab === "temporary" ? "temporary " : ""}item.
-                    </DialogDescription>
-                  </DialogHeader>
-                  <ItemForm
-                    onSubmit={handleAddItem}
-                    defaultTemporary={activeTab === "temporary"}
-                  />
-                </DialogContent>
-              </Dialog>
+              <Button
+                variant="destructive"
+                onClick={() => handleDeleteItem()}
+              >
+                Delete
+              </Button>
             </div>
-          </div>
-
-          {/* Filter and Settings */}
-          <div className="flex items-center justify-between gap-4">
-            <div className="flex flex-1 items-center gap-2">
-              <Input
-                placeholder="Filter items..."
-                className="max-w-sm"
-                value={filterValue}
-                onChange={(e) => setFilterValue(e.target.value)}
-              />
-              <ItemTableSettings
-                columnsVisible={columnsVisible}
-                onColumnVisibilityChange={(column, visible) =>
-                  setColumnsVisible((prev) => ({ ...prev, [column]: visible }))
-                }
-                showTemporaryColumns={activeTab === "temporary"}
-              />
-            </div>
-            <div className="flex items-center gap-2">
-              <div className="text-sm text-muted-foreground">
-                Total: {totalItems} items
-              </div>
-            </div>
-          </div>
-
-          <ItemTable
-            items={paginatedItems}
-            columnsVisible={columnsVisible}
-            onSort={handleSort}
-            onEdit={(item) => {
-              setEditingItem(item);
-              setIsEditDialogOpen(true);
-            }}
-            onDelete={(item) => {
-              setEditingItem(item);
-              setIsDeleteDialogOpen(true);
-            }}
-            isEditDialogOpen={isEditDialogOpen}
-            setIsEditDialogOpen={setIsEditDialogOpen}
-            isDeleteDialogOpen={isDeleteDialogOpen}
-            setIsDeleteDialogOpen={setIsDeleteDialogOpen}
-            editingItem={editingItem}
-            onEditSubmit={handleEditItem}
-            onDeleteConfirm={handleDeleteItem}
-            activeTab={activeTab}
-            onTabChange={handleTabChange}
-          />
-
-          <ItemTablePagination
-            totalItems={totalItems}
-            pageSize={pageSize}
-            currentPage={currentPage}
-            onPageChange={handlePageChange}
-            onPageSizeChange={handlePageSizeChange}
-            itemType={activeTab}
-            totalRegularItems={regularItems.length}
-            totalTemporaryItems={temporaryItems.length}
-          />
-        </div>
+          </DialogContent>
+        </Dialog>
       </div>
     </SidebarLayout>
   );

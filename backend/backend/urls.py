@@ -21,7 +21,9 @@ urlpatterns = [
     path('api/docs/', schema_view.with_ui('swagger', cache_timeout=0), name='schema-swagger-ui'),
     path('api/redoc/', schema_view.with_ui('redoc', cache_timeout=0), name='schema-redoc'),
     path('api/auth/', include('authentication.urls')),
-
+    path('api/', include('store.urls')),
+    path('api/', include('business_settings.urls')),  
+    path('api/inventory/', include('inventory.urls')),
 ]
 
 # Serve media files in development

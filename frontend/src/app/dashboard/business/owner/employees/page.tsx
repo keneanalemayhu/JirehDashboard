@@ -22,21 +22,16 @@ import {
 import {
   Employee,
   EmployeeFormData,
-  ColumnVisibility,
 } from "@/types/dashboard/business/employee";
 
 export default function EmployeesPage() {
-  // Pagination state
-  const [currentPage, setCurrentPage] = React.useState(1);
-  const [pageSize, setPageSize] = React.useState(10);
-
   const {
-    employees,
     filterValue,
     setFilterValue,
     handleAddEmployee,
     handleEditEmployee,
-    handleDeleteEmployee,
+    handleDeleteClick,
+    handleDeleteConfirm,
     isAddDialogOpen,
     setIsAddDialogOpen,
     isEditDialogOpen,
@@ -49,76 +44,45 @@ export default function EmployeesPage() {
     setColumnsVisible,
     handleSort,
     filteredEmployees,
+    pageSize,
+    setPageSize,
+    currentPage,
+    setCurrentPage,
+    isLoading,
   } = useEmployees();
 
-  // Calculate pagination
-  const totalEmployees = filteredEmployees?.length || 0;
-  const startIndex = (currentPage - 1) * pageSize;
-  const endIndex = startIndex + pageSize;
-  const paginatedEmployees =
-    filteredEmployees?.slice(startIndex, endIndex) || [];
-
-  // Handle page changes
-  const handlePageChange = (page: number) => {
-    setCurrentPage(page);
+  const handleEditSubmit = async (data: EmployeeFormData) => {
+    await handleEditEmployee(data);
   };
 
-  // Handle page size changes
-  const handlePageSizeChange = (size: number) => {
-    setPageSize(size);
-    setCurrentPage(1);
-  };
-
-  // Handle edit submit
-  const handleEditSubmit = (data: EmployeeFormData) => {
-    if (editingEmployee) {
-      handleEditEmployee({
-        ...data,
-        id: editingEmployee.id,
-      });
-    }
-  };
-
-  // Export employees
-  const handleExport = () => {
-    const headers = [
-      "ID",
-      "Full Name",
-      "Position",
-      "Phone",
-      "Email",
-      "Hire Date",
-      "Salary",
-      "Status",
-      "Location",
-    ];
-
+  // Export to CSV
+  const exportToCSV = () => {
+    // Create CSV content
+    const headers = ["Name", "Position", "Phone", "Email", "Hire Date", "Status", "Salary", "Employment Status", "Last Updated"];
     const csvContent = [
       headers.join(","),
       ...filteredEmployees.map((employee) =>
         [
-          employee.id,
-          `"${employee.fullName}"`,
-          `"${employee.position}"`,
-          `"${employee.phone}"`,
-          `"${employee.email}"`,
+          employee.fullName,
+          employee.position,
+          employee.phone,
+          employee.email,
           employee.hireDate,
-          employee.salary,
           employee.isActive ? "Active" : "Inactive",
-          `"${employee.location}"`,
+          employee.salary,
+          employee.employmentStatus,
+          new Date(employee.updatedAt).toLocaleDateString(),
         ].join(",")
       ),
     ].join("\n");
 
+    // Create blob and download
     const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
     const link = document.createElement("a");
     const url = URL.createObjectURL(blob);
-
     link.setAttribute("href", url);
-    link.setAttribute(
-      "download",
-      `employees-export-${new Date().toISOString().split("T")[0]}.csv`
-    );
+    link.setAttribute("download", "employees.csv");
+    link.style.visibility = "hidden";
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -127,106 +91,98 @@ export default function EmployeesPage() {
   return (
     <SidebarLayout>
       <Header />
-      <div className="flex-1 space-y-6 p-8 pt-6">
-        <div className="flex flex-col gap-6">
-          {/* Header with Add Button */}
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-2xl font-bold tracking-tight">
-                Employees Management
-              </h1>
-              <p className="text-sm text-muted-foreground">
-                Manage your staff and team members
-              </p>
-            </div>
-            <div className="flex items-center gap-2">
-              <Button
-                variant="outline"
-                size="icon"
-                onClick={handleExport}
-                title="Export Employees"
-              >
-                <Download className="h-4 w-4" />
-              </Button>
-              <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
-                <DialogTrigger asChild>
-                  <Button>
-                    <CirclePlus className="w-4 h-4 mr-2" />
-                    Add Employee
-                  </Button>
-                </DialogTrigger>
-                <DialogContent>
-                  <DialogHeader>
-                    <DialogTitle>Add New Employee</DialogTitle>
-                    <DialogDescription>
-                      Enter the details for the new employee.
-                    </DialogDescription>
-                  </DialogHeader>
-                  <EmployeeForm onSubmit={handleAddEmployee} />
-                </DialogContent>
-              </Dialog>
-            </div>
+      <div className="container mx-auto py-10">
+        <div className="flex justify-between items-center mb-8">
+          <div className="space-y-1">
+            <h2 className="text-2xl font-semibold tracking-tight">Employees</h2>
+            <p className="text-sm text-muted-foreground">
+              Manage your business employees here
+            </p>
           </div>
-
-          {/* Filter and Settings */}
-          <div className="flex items-center justify-between gap-4">
-            <div className="flex flex-1 items-center gap-2">
-              <Input
-                placeholder="Filter employees..."
-                className="max-w-sm"
-                value={filterValue}
-                onChange={(e) => setFilterValue(e.target.value)}
-              />
-              <EmployeeTableSettings
-                columnsVisible={columnsVisible as ColumnVisibility}
-                onColumnVisibilityChange={(column, visible) =>
-                  setColumnsVisible((prev) => ({ ...prev, [column]: visible }))
-                }
-              />
-            </div>
-            <div className="flex items-center gap-2">
-              <div className="text-sm text-muted-foreground">
-                Total: {totalEmployees} employees
-              </div>
-            </div>
+          <div className="flex items-center gap-4">
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-8 w-8 p-0"
+              onClick={exportToCSV}
+            >
+              <Download className="h-4 w-4" />
+            </Button>
+            <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
+              <DialogTrigger asChild>
+                <Button size="sm" className="h-8">
+                  <CirclePlus className="mr-2 h-4 w-4" />
+                  Add Employee
+                </Button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Add New Employee</DialogTitle>
+                  <DialogDescription>
+                    Add a new employee to your business
+                  </DialogDescription>
+                </DialogHeader>
+                <EmployeeForm onSubmit={handleAddEmployee} isLoading={isLoading} />
+              </DialogContent>
+            </Dialog>
           </div>
+        </div>
 
-          {/* Table */}
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex flex-1 items-center space-x-2">
+            <Input
+              placeholder="Filter employees..."
+              value={filterValue}
+              onChange={(e) => setFilterValue(e.target.value)}
+              className="h-8 w-[150px] lg:w-[250px]"
+            />
+          </div>
+          <EmployeeTableSettings
+            columnsVisible={columnsVisible}
+            setColumnsVisible={setColumnsVisible}
+          />
+        </div>
+
+        <div className="space-y-4">
           <EmployeeTable
-            employees={paginatedEmployees}
+            employees={filteredEmployees}
             columnsVisible={columnsVisible}
             onSort={handleSort}
-            onEdit={(employee: Employee) => {
-              setEditingEmployee({
-                ...employee,
-                isActive: employee.isActive ?? true,
-              });
+            onEdit={(employee) => {
+              setEditingEmployee(employee);
               setIsEditDialogOpen(true);
             }}
-            onDelete={(employee: Employee) => {
-              setEditingEmployee({
-                ...employee,
-                isActive: employee.isActive ?? true,
-              });
-              setIsDeleteDialogOpen(true);
-            }}
+            onDelete={handleDeleteClick}
             isEditDialogOpen={isEditDialogOpen}
             setIsEditDialogOpen={setIsEditDialogOpen}
             isDeleteDialogOpen={isDeleteDialogOpen}
             setIsDeleteDialogOpen={setIsDeleteDialogOpen}
             editingEmployee={editingEmployee}
             onEditSubmit={handleEditSubmit}
-            onDeleteConfirm={handleDeleteEmployee}
+            onDeleteConfirm={handleDeleteConfirm}
           />
 
           {/* Pagination */}
-          <EmployeeTablePagination
-            totalItems={totalEmployees}
-            pageSize={pageSize}
-            currentPage={currentPage}
-            onPageChange={handlePageChange}
-            onPageSizeChange={handlePageSizeChange}
-          />
+          <div className="flex items-center justify-between">
+            <p className="text-sm text-muted-foreground">
+              Showing{" "}
+              <strong>
+                {Math.min((currentPage - 1) * pageSize + 1, filteredEmployees.length)}
+              </strong>{" "}
+              to{" "}
+              <strong>
+                {Math.min(currentPage * pageSize, filteredEmployees.length)}
+              </strong>{" "}
+              of <strong>{filteredEmployees.length}</strong> employees
+            </p>
+            <EmployeeTablePagination
+              totalItems={filteredEmployees.length}
+              pageSize={pageSize}
+              currentPage={currentPage}
+              onPageChange={setCurrentPage}
+              onPageSizeChange={setPageSize}
+            />
+          </div>
         </div>
       </div>
     </SidebarLayout>
