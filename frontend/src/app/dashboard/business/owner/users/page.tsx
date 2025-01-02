@@ -67,6 +67,7 @@ export default function UsersPage() {
   const startIndex = (currentPage - 1) * pageSize;
   const endIndex = startIndex + pageSize;
   const paginatedUsers = filteredUsers?.slice(startIndex, endIndex) || [];
+  const totalPages = Math.ceil(totalUsers / pageSize);
 
   // Handle page changes
   const handlePageChange = (page: number) => {
@@ -204,7 +205,9 @@ export default function UsersPage() {
             pageSize={pageSize}
             currentPage={currentPage}
             onPageChange={handlePageChange}
-            onPageSizeChange={handlePageSizeChange} totalPages={0}          />
+            onPageSizeChange={handlePageSizeChange} 
+            totalPages={totalPages}
+                      />
         </div>
       </div>
 

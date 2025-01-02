@@ -4,6 +4,7 @@ from django.utils import timezone
 from phonenumber_field.modelfields import PhoneNumberField
 from django.conf import settings
 from authentication.models import CustomUser
+from business_settings.models import BusinessProfile
 # Create your models here.
 
 class Store(models.Model):
@@ -22,6 +23,7 @@ class Store(models.Model):
 
 class Location(models.Model):
     store = models.ForeignKey(Store, on_delete=models.CASCADE, related_name='locations')
+    business = models.ForeignKey(BusinessProfile, on_delete=models.CASCADE, null=True, blank=True)
     name = models.CharField(max_length=100)
     address = models.TextField()
     contact_number = PhoneNumberField()

@@ -18,7 +18,7 @@ from django.core.exceptions import ValidationError
 from rest_framework.permissions import IsAuthenticated
 from django.db import IntegrityError
 from django.utils.crypto import get_random_string
-from store.models import Location
+from store.models import Location, Store
 
 User = get_user_model()
 
@@ -232,51 +232,64 @@ class RegisterSerializer(serializers.ModelSerializer):
         return attrs
 
     def create(self, validated_data):
-        location_id = validated_data.pop('location_id')
-        try:
-            location = Location.objects.get(id=location_id)
-            validated_data['created_by'] = self.context['request'].user  # Set created_by to the current user
-            validated_data['is_active'] = True  # Set is_active to True
-        except Location.DoesNotExist:
-            raise serializers.ValidationError({'location_id': 'Invalid location ID'})
-    
-        # Generate a random password
-        password = get_random_string(length=12)
+        business_profile_data = validated_data.pop('business_profile', None)
+        password = validated_data.pop('password')
+        
+        # Create the user first
         user = CustomUser.objects.create_user(
             email=validated_data['email'],
-            user_name=validated_data['user_name'],
-            full_name=validated_data['full_name'],
-            phone_number=validated_data['phone_number'],
-            role=validated_data['role'],
-            is_active=validated_data['is_active'],
             password=password,
-            created_by=self.context['request'].user  # Set created_by to the current user
+            user_name=validated_data.get('user_name', ''),
+            full_name=validated_data.get('name', ''),
+            phone_number=validated_data.get('phone_number', ''),
+            role='owner',
+            is_active=True
         )
-    
-        # Set the location field
-        user.location = location  # Assuming you have a ForeignKey relationship
-        user.save()
-    
-        # Send password to user's email
-        send_mail(
-            'Your Account Password',
-            f'Your password is: {password}',
-            settings.DEFAULT_FROM_EMAIL,
-            [user.email],
-            fail_silently=False,
-        )
-    
-        # Return the user data including the location
-        return {
-            'id': user.id,
-            'user_name': user.user_name,
-            'full_name': user.full_name,
-            'email': user.email,
-            'phone_number': user.phone_number,
-            'role': user.role,
-            'is_active': user.is_active,
-            'location': location.name,  # Include the location name
-        }
+
+        if business_profile_data:
+            try:
+                # Create the business profile
+                business = BusinessProfile.objects.create(
+                    owner=user,
+                    business_name=business_profile_data.get('business_name', ''),
+                    business_phone=business_profile_data.get('business_phone', ''),
+                    business_address=business_profile_data.get('business_address', '')
+                )
+
+                # Create a store first
+                store = Store.objects.create(
+                    name=business_profile_data.get('business_name', ''),
+                    address=business_profile_data.get('business_address', ''),
+                    contact_number=business_profile_data.get('business_phone', ''),
+                    registration_number=f"STR-{user.id}-{business.id}",
+                    owner=user,
+                    admin=user
+                )
+
+                # Now create the location with both store and business references
+                location = Location.objects.create(
+                    store=store,
+                    business=business,
+                    name="Main Location",
+                    address=business_profile_data.get('business_address', ''),
+                    contact_number=business_profile_data.get('business_phone', ''),
+                    is_active=True
+                )
+
+                # Update user with location
+                user.location_id = location.id
+                user.save()
+            except Exception as e:
+                # Rollback if anything fails
+                if 'store' in locals():
+                    store.delete()
+                if 'business' in locals():
+                    business.delete()
+                user.delete()
+                raise serializers.ValidationError(f"Failed to create business profile: {str(e)}")
+
+        # Return the user object instead of a dictionary
+        return user
 
 class UserRegistrationSerializer(serializers.ModelSerializer):
     location_id = serializers.IntegerField(write_only=True, required=True)

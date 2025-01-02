@@ -28,7 +28,16 @@ from .serializers import (
 )
 from django.core.exceptions import ValidationError
 from rest_framework.parsers import MultiPartParser, FormParser
+from rest_framework import viewsets, permissions, status
+from rest_framework.response import Response
+from .models import CustomUser
+from .serializers import UserRegistrationSerializer
+from rest_framework.decorators import action
+from rest_framework.permissions import IsAuthenticated, AllowAny
+from django.core.exceptions import ValidationError
+import logging
 
+logger = logging.getLogger(__name__)
 User = get_user_model()
 
 def format_error_response(message, errors=None, code=None):
@@ -404,16 +413,7 @@ class CustomTokenRefreshView(TokenRefreshView):
                 status=status.HTTP_401_UNAUTHORIZED
             )
 
-from rest_framework import viewsets, permissions, status
-from rest_framework.response import Response
-from .models import CustomUser
-from .serializers import UserRegistrationSerializer
-from rest_framework.decorators import action
-from rest_framework.permissions import IsAuthenticated, AllowAny
-from django.core.exceptions import ValidationError
-import logging
 
-logger = logging.getLogger(__name__)
 
 class UserRegistrationViewSet(viewsets.ModelViewSet):
     queryset = CustomUser.objects.all()

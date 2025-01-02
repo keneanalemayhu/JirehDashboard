@@ -307,7 +307,13 @@ export function RegisterForm() {
       console.log("Detailed Registration Error:", error.response?.data);
 
       // Handle specific error cases
-      if (error.response?.data?.errors?.phone_number) {
+      if (error.response?.data?.errors === "'location_id'") {
+        // Handle missing location specifically
+        toast.error("Registration Failed", {
+          description: "Unable to set up business location. Please try again.",
+        });
+      }
+      else if (error.response?.data?.errors?.phone_number) {
         const phoneError = error.response?.data?.errors?.phone_number;
         setErrors(prev => ({ ...prev, phone: phoneError }));
         toast.error("Registration Failed", {

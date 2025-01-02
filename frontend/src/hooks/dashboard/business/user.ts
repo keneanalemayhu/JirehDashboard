@@ -99,7 +99,11 @@ export const useUsers = (businessId: number) => {
   };
 
   const handleEditUser = async (data: UserFormData) => {
-    if (!editingUser) return;
+    if (!editingUser?.id) {
+      toast.error("Invalid user ID");
+      return;
+    }
+    
     try {
       const updatedUser = await userApi.updateUser(businessId, editingUser.id, data);
       setUsers((prev) =>
@@ -108,9 +112,9 @@ export const useUsers = (businessId: number) => {
       setIsEditDialogOpen(false);
       setEditingUser(null);
       toast.success("User updated successfully");
-    } catch (error) {
+    } catch (error: any) {
       console.error("Failed to update user:", error);
-      toast.error("Failed to update user");
+      toast.error(error.response?.data?.detail || "Failed to update user");
     }
   };
 

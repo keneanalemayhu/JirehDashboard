@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { memo } from 'react';
 import { ChevronsUpDown, User, LogOut } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {

@@ -12,7 +12,8 @@ from .views import (
     CustomTokenRefreshView,
     UserRegistrationViewSet,
     AccountView,
-    ProfileView
+    ProfileView,
+    UserRegistrationViewSet
 
 )
 
@@ -31,5 +32,6 @@ urlpatterns = [
     path('token/refresh/', CustomTokenRefreshView.as_view(), name='token_refresh'),
     path('account/', AccountView.as_view(), name='account'),
     path('profile/', ProfileView.as_view(), name='profile'),
+    
     path('', include(router.urls)),
 ]

@@ -26,6 +26,7 @@ export interface RegisterData {
   user_name?: string;
   phone_number?: string;
   business_profile?: BusinessProfileData;
+  location_id?: BigInteger;
 }
 
 export function useAuth() {
