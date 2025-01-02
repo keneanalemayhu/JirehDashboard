@@ -10,7 +10,7 @@ import {
   DropdownMenuItem,
 } from "@/components/ui/dropdown-menu";
 import { Settings2 } from "lucide-react";
-import { PaymentStatus } from "@/types/dashboard/business/order";
+import { Order, PaymentStatus, PaymentStatuses } from "@/types/dashboard/business/order";
 
 interface OrderTableSettingsProps {
   settings: {
@@ -95,7 +95,7 @@ export function OrderTableSettings({
         <DropdownMenuLabel className="text-xs">
           Payment Status
         </DropdownMenuLabel>
-        {Object.values(PaymentStatus).map((status) => (
+        {Object.values(PaymentStatuses).map((status) => (
           <DropdownMenuCheckboxItem
             key={status}
             checked={statusFilter.includes(status)}

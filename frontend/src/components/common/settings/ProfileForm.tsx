@@ -3,7 +3,7 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
-import { useState } from "react";
+import { useState, useCallback } from "react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -20,7 +20,6 @@ import { Avatar, AvatarImage } from "@/components/ui/avatar";
 import { toast } from "sonner";
 import { fetchProfileData, updateProfileData } from "@/lib/api/profile";
 import { useEffect } from "react";
-import { da } from "date-fns/locale";
 
 const profileFormSchema = z.object({
   username: z.string().min(2).max(30),
@@ -31,6 +30,7 @@ type ProfileFormValues = z.infer<typeof profileFormSchema>;
 
 export function ProfileForm() {
   const [avatar, setAvatar] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
   const form = useForm<ProfileFormValues>({
     resolver: zodResolver(profileFormSchema),
     defaultValues: {
@@ -38,22 +38,35 @@ export function ProfileForm() {
     },
   });
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const data = await fetchProfileData();
-        form.reset(data);
-        setAvatar(data.avatar); // Ensure avatar state is updated
-      } catch (error) {
-        console.error("Error fetching profile:", error);
-        toast.error("Failed to load profile");
-      }
-    };
-
-    fetchData();
+  const fetchData = useCallback(async () => {
+    try {
+      const data = await fetchProfileData();
+      form.reset({
+        username: data.username || "",
+      });
+      setAvatar(data.avatar);
+    } catch (error) {
+      console.error("Error fetching profile:", error);
+      toast.error("Failed to load profile");
+    } finally {
+      setIsLoading(false);
+    }
   }, [form]);
 
+  useEffect(() => {
+    let mounted = true;
+
+    if (mounted && isLoading) {
+      fetchData();
+    }
+
+    return () => {
+      mounted = false;
+    };
+  }, [fetchData, isLoading]);
+
   async function onSubmit(data: ProfileFormValues) {
+    setIsLoading(true);
     const formData = new FormData();
     formData.append("username", data.username);
 
@@ -61,20 +74,24 @@ export function ProfileForm() {
       formData.append("avatar", data.avatar[0]);
     }
 
-    console.log("Submitting data:", Object.fromEntries(formData)); // Debug line
-
     try {
       const response = await updateProfileData(formData);
       toast.success("Profile updated successfully");
-      setAvatar(response.avatar); // Ensure avatar state is updated
+      setAvatar(response.avatar);
     } catch (error: any) {
-      console.error("Error details:", error.response?.data); // Debug line
+      console.error("Error details:", error.response?.data);
       toast.error("Failed to update profile");
+    } finally {
+      setIsLoading(false);
     }
   }
 
   function removeAvatar() {
     setAvatar(null);
+  }
+
+  if (isLoading) {
+    return <div>Loading...</div>;
   }
 
   return (
@@ -90,14 +107,14 @@ export function ProfileForm() {
                 <div className="flex items-center space-x-4">
                   <Avatar className="w-24 h-24">
                     <AvatarImage
-                      src={avatar || "/avatar/person.png"} // Ensure src is set correctly
+                      src={avatar || "/avatar/person.png"}
                       alt="Profile picture"
                     />
                   </Avatar>
                   <div className="space-y-2">
                     <Input
                       type="file"
-                      accept="image/*" // Correct the accept attribute
+                      accept="image/*"
                       onChange={(event) => {
                         const file = event.target.files?.[0];
                         if (file) {
@@ -142,7 +159,9 @@ export function ProfileForm() {
             </FormItem>
           )}
         />
-        <Button type="submit">Update profile</Button>
+        <Button type="submit" disabled={isLoading}>
+          {isLoading ? "Updating..." : "Update profile"}
+        </Button>
       </form>
     </Form>
   );

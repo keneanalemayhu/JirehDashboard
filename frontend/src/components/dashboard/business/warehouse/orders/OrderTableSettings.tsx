@@ -10,12 +10,13 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { PaymentStatus, PaymentStatuses } from "@/types/dashboard/business/order";
 
 interface OrderTableSettingsProps {
   showCurrency: boolean;
   onShowCurrencyChange: (show: boolean) => void;
-  statusFilter: string[];
-  onStatusFilterChange: (status: string) => void;
+  statusFilter: PaymentStatus[];
+  onStatusFilterChange: (status: PaymentStatus) => void;
 }
 
 export function OrderTableSettings({
@@ -24,7 +25,11 @@ export function OrderTableSettings({
   statusFilter,
   onStatusFilterChange,
 }: OrderTableSettingsProps) {
-  const paymentStatuses = ["PAID", "PENDING", "CANCELLED"];
+  const paymentStatuses: PaymentStatus[] = [
+    PaymentStatuses.PAID,
+    PaymentStatuses.PENDING,
+    PaymentStatuses.CANCELLED
+  ];
 
   return (
     <DropdownMenu>
@@ -52,7 +57,7 @@ export function OrderTableSettings({
             checked={statusFilter.includes(status)}
             onCheckedChange={() => onStatusFilterChange(status)}
           >
-            {status.charAt(0) + status.slice(1).toLowerCase()}
+            {status.charAt(0).toUpperCase() + status.slice(1)}
           </DropdownMenuCheckboxItem>
         ))}
       </DropdownMenuContent>

@@ -1,4 +1,5 @@
-import { useState } from "react";
+//orderPage
+import { useCallback, useMemo, useState } from "react";
 import {
   Accordion,
   AccordionContent,
@@ -21,96 +22,132 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Toaster } from "@/components/ui/toaster";
 import { useToast } from "@/hooks/use-toast";
-import { Item, OrderItem } from "@/types/dashboard/business/new-order";
+import { OrderItem } from "@/types/dashboard/business/order";
 import { CategoryAccordion } from "./CategoryAccordion";
 import { OrderForm } from "./OrderForm";
 import { CartSummary } from "./CartSummary";
-import { QRCodeDialog } from "./QRCodeDialog";
+import { InvoiceDialog } from "./QRCodeDialog";
+import { useOrder } from "@/hooks/dashboard/business/order";
+import { useItems } from "@/hooks/dashboard/business/item";
+import { useCategories } from "@/hooks/dashboard/business/category";
+import { Item } from "@/types/dashboard/business/item";
+import { Toast } from "@radix-ui/react-toast";
+import { useLocation } from "@/hooks/LocationContext";
 
-const categories = [
-  {
-    name: "Electronics",
-    items: [
-      { id: "e1", name: "Smartphone", price: 699 },
-      { id: "e2", name: "Laptop", price: 999 },
-      { id: "e3", name: "Tablet", price: 399 },
-    ],
-  },
-  {
-    name: "Clothing",
-    items: [
-      { id: "c1", name: "T-Shirt", price: 19.99 },
-      { id: "c2", name: "Jeans", price: 49.99 },
-      { id: "c3", name: "Jacket", price: 89.99 },
-    ],
-  },
-  {
-    name: "Books",
-    items: [
-      { id: "b1", name: "Fiction Novel", price: 14.99 },
-      { id: "b2", name: "Cookbook", price: 24.99 },
-      { id: "b3", name: "Biography", price: 19.99 },
-    ],
-  },
-];
-
-export default function OrderPage() {
+export default function OwnerPage() {
+  const { locationId } = useLocation();
+  const { toast } = useToast();
   const [cart, setCart] = useState<OrderItem[]>([]);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [pendingOrder, setPendingOrder] = useState<{
     buyerDetails: { name: string; phone: string; email: string };
   } | null>(null);
-  const { toast } = useToast();
-  const [isQRCodeDialogOpen, setIsQRCodeDialogOpen] = useState(false);
-
-  const addToCart = (item: Item, quantity: number) => {
-    setCart((prevCart) => {
-      const existingItem = prevCart.find((cartItem) => cartItem.id === item.id);
+ 
+  const { 
+    isLoading: orderLoading, 
+    isQRCodeDialogOpen, 
+    setIsQRCodeDialogOpen,
+    currentOrderId,
+    createOrder,
+    getInvoice 
+  } = useOrder(locationId);
+ 
+  const { categories, loading: categoriesLoading } = useCategories(locationId);
+  const { items, loading: itemsLoading, checkItemAvailability } = useItems(locationId);
+ 
+  const organizedCategories = useMemo(() => {
+    if (!categories?.length || !items?.length) return [];
+    
+    return categories.map(category => ({
+      id: category.id,
+      name: category.name,
+      items: items
+        .filter(item => item.categoryId === category.id)
+        .map(item => ({
+          item_id: item.id.toString(),
+          name: item.name,
+          unit_price: Number(item.price),
+          quantity: item.quantity
+        }))
+    }));
+  }, [categories, items]);
+ 
+  const addToCart = useCallback((item: OrderItem, quantity: number) => {
+    if (!checkItemAvailability(item.item_id, quantity)) {
+      toast({ 
+        description: "Item not available in requested quantity",
+        variant: "destructive" 
+      });
+      return;
+    }
+ 
+    setCart(prevCart => {
+      const existingItem = prevCart.find(cartItem => cartItem.item_id === item.item_id);
       if (existingItem) {
-        return prevCart.map((cartItem) =>
-          cartItem.id === item.id
+        if (!checkItemAvailability(item.item_id, existingItem.quantity + quantity)) {
+          toast({ description: "Cannot add more of this item", variant: "destructive" });
+          return prevCart;
+        }
+        return prevCart.map(cartItem =>
+          cartItem.item_id === item.item_id
             ? { ...cartItem, quantity: cartItem.quantity + quantity }
             : cartItem
         );
       }
       return [...prevCart, { ...item, quantity }];
     });
-  };
-
-  const removeFromCart = (itemId: string) => {
-    setCart((prevCart) => prevCart.filter((item) => item.id !== itemId));
-  };
-
-  const updateQuantity = (itemId: string, newQuantity: number) => {
-    setCart((prevCart) =>
-      prevCart.map((item) =>
-        item.id === itemId ? { ...item, quantity: newQuantity } : item
+  }, [checkItemAvailability, toast]);
+ 
+  const removeFromCart = useCallback((itemId: string) => {
+    setCart(prevCart => prevCart.filter(item => item.item_id !== itemId));
+  }, []);
+ 
+  const updateQuantity = useCallback((itemId: string, newQuantity: number) => {
+    setCart(prevCart =>
+      prevCart.map(item =>
+        item.item_id === itemId ? { ...item, quantity: newQuantity } : item
       )
     );
-  };
-
-  const handleSubmitOrder = (buyerDetails: {
+  }, []);
+ 
+  const handleSubmitOrder = useCallback((buyerDetails: {
     name: string;
     phone: string;
     email: string;
   }) => {
     setPendingOrder({ buyerDetails });
     setIsDialogOpen(true);
-  };
-
-  const confirmOrder = () => {
-    if (pendingOrder) {
-      console.log("Order submitted:", { ...pendingOrder, items: cart });
-      toast({
-        title: "Order Submitted",
-        description: `Order for ${pendingOrder.buyerDetails.name} has been placed successfully.`,
-      });
-      setIsQRCodeDialogOpen(true);
+  }, []);
+ 
+  const confirmOrder = useCallback(async () => {
+    if (!pendingOrder) return;
+ 
+    try {
+      const orderData = {
+        location: locationId,
+        customer_name: pendingOrder.buyerDetails.name,
+        customer_phone: pendingOrder.buyerDetails.phone,
+        customer_email: pendingOrder.buyerDetails.email,
+        items: cart.map(item => ({
+          item_id: item.item_id,
+          name: item.item_name,
+          quantity: item.quantity,
+          unit_price: item.unit_price
+        }))
+      };
+ 
+      await createOrder(orderData);
       setCart([]);
       setPendingOrder(null);
+      setIsDialogOpen(false);
+    } catch (error) {
+      console.error('Failed to create order:', error);
+      toast({ 
+        description: "Failed to create order", 
+        variant: "destructive" 
+      });
     }
-    setIsDialogOpen(false);
-  };
+  }, [pendingOrder, locationId, cart, createOrder, toast]);
 
   return (
     <div className="mx-auto max-w-5xl p-4">
@@ -127,7 +164,7 @@ export default function OrderPage() {
           <CardContent>
             <ScrollArea className="h-[400px] pr-4">
               <CategoryAccordion
-                categories={categories}
+                categories={organizedCategories}
                 addToCart={addToCart}
               />
             </ScrollArea>
@@ -176,12 +213,12 @@ export default function OrderPage() {
         </AlertDialogContent>
       </AlertDialog>
 
-      <QRCodeDialog
+     <InvoiceDialog
         open={isQRCodeDialogOpen}
         onOpenChange={setIsQRCodeDialogOpen}
-        onGetInvoice={() => {
-          console.log("Downloading invoice...");
-        }}
+        onGetInvoice={getInvoice}
+        orderId={currentOrderId}
+        locationId={locationId}
       />
 
       <Toaster />

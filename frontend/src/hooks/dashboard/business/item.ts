@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import {
   Item,
   ItemFormData,
@@ -135,6 +135,17 @@ export function useItems(categoryId: number) {
   const handleTabChange = (tab: "regular" | "temporary") => {
     setActiveTab(tab);
   };
+  // Add these new functions
+  const getItemById = useCallback((itemId: string | number) => {
+    return items.find(item => item.id.toString() === itemId.toString());
+  }, [items]);
+
+  const checkItemAvailability = useCallback((itemId: string | number, quantity: number) => {
+    const item = getItemById(itemId);
+    if (!item) return false;
+    return item.quantity >= quantity && item.isActive;
+  }, [getItemById]);
+
 
   return {
     // Data
@@ -163,5 +174,11 @@ export function useItems(categoryId: number) {
     handleEditItem,
     handleDeleteItem,
     handleTabChange,
+
+    //helper functions
+    getItemById,
+    checkItemAvailability,
+    categoryId,
+    isLoading: loading,
   };
 }

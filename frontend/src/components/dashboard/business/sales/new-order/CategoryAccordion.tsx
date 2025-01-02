@@ -8,32 +8,42 @@ import {
 } from "@/components/ui/accordion";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Item } from "@/types/order";
+import { OrderItem } from "@/types/dashboard/business/order";
 
 interface CategoryAccordionProps {
   categories: {
     name: string;
-    items: Item[];
+    items: OrderItem[];
   }[];
-  addToCart: (item: Item, quantity: number) => void;
+  addToCart: (item: OrderItem, quantity: number) => void;
+  isLoading?: boolean;
 }
 
 export function CategoryAccordion({
   categories,
   addToCart,
+  isLoading = false,
 }: CategoryAccordionProps) {
   const [quantities, setQuantities] = useState<{ [key: string]: number }>({});
+
+  if (isLoading) {
+    return (
+      <div className="flex justify-center items-center h-64">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
 
   const handleQuantityChange = (itemId: string, value: string) => {
     const quantity = parseInt(value, 10) || 0;
     setQuantities((prev) => ({ ...prev, [itemId]: quantity }));
   };
 
-  const handleAddToCart = (item: Item) => {
-    const quantity = quantities[item.id] || 0;
+  const handleAddToCart = (item: OrderItem) => {
+    const quantity = quantities[item.item_id] || 0;
     if (quantity > 0) {
       addToCart(item, quantity);
-      setQuantities((prev) => ({ ...prev, [item.id]: 0 }));
+      setQuantities((prev) => ({ ...prev, [item.item_id]: 0 }));
     }
   };
 
@@ -48,13 +58,13 @@ export function CategoryAccordion({
             <ul className="space-y-4">
               {category.items.map((item) => (
                 <li
-                  key={item.id}
+                  key={item.item_id}
                   className="flex items-center justify-between bg-muted p-3 rounded-md"
                 >
                   <div>
                     <h3 className="font-medium">{item.name}</h3>
                     <p className="text-sm text-muted-foreground">
-                      ${item.price.toFixed(2)}
+                      ${item.unit_price.toFixed(2)}
                     </p>
                   </div>
                   <div className="flex items-center space-x-2">
@@ -63,8 +73,8 @@ export function CategoryAccordion({
                       variant="outline"
                       onClick={() =>
                         handleQuantityChange(
-                          item.id,
-                          String(Math.max(0, (quantities[item.id] || 0) - 1))
+                          item.item_id,
+                          String(Math.max(0, (quantities[item.quantity] || 0) - 1))
                         )
                       }
                     >
@@ -73,9 +83,9 @@ export function CategoryAccordion({
                     <Input
                       type="number"
                       min="0"
-                      value={quantities[item.id] || ""}
+                      value={quantities[item.item_id] || ""}
                       onChange={(e) =>
-                        handleQuantityChange(item.id, e.target.value)
+                        handleQuantityChange(item.item_id, e.target.value)
                       }
                       className="w-16 text-center"
                     />
@@ -84,8 +94,8 @@ export function CategoryAccordion({
                       variant="outline"
                       onClick={() =>
                         handleQuantityChange(
-                          item.id,
-                          String((quantities[item.id] || 0) + 1)
+                          item.item_id,
+                          String((quantities[item.item_id] || 0) + 1)
                         )
                       }
                     >

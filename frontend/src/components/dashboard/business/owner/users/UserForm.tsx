@@ -23,15 +23,19 @@ interface User {
   email: string;
   phone: string;
   location_id: string;
+  location: string;
   role: Role;
   isActive: boolean;
+  
 }
 
 interface UserFormProps {
   initialData?: User;
-  onSubmit: (data: Omit<User, "id">) => void;
+  onSubmit: (data: User) => void;
   isLoading?: boolean;
 }
+
+
 
 export function UserForm({ initialData, onSubmit, isLoading = false }: UserFormProps) {
   const { locations, isLoading: isLoadingLocations } = useLocations();
@@ -41,6 +45,7 @@ export function UserForm({ initialData, onSubmit, isLoading = false }: UserFormP
     email: initialData?.email || "",
     phone: initialData?.phone || "+251",
     location_id: initialData?.location_id || "",
+    location :initialData?.location || "",
     role: initialData?.role || Role.ADMIN,
     isActive: initialData?.isActive ?? true,
   });
@@ -64,6 +69,7 @@ export function UserForm({ initialData, onSubmit, isLoading = false }: UserFormP
           ? initialData.phone
           : "+251" + initialData.phone,
         location_id: initialData.location_id,
+        location: initialData.location,
         role: initialData.role,
         isActive: initialData.isActive ?? true,
       });
@@ -219,9 +225,8 @@ export function UserForm({ initialData, onSubmit, isLoading = false }: UserFormP
               <SelectValue placeholder="Select role" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value={Role.OWNER}>Owner</SelectItem>
               <SelectItem value={Role.ADMIN}>Admin</SelectItem>
-              <SelectItem value={Role.EMPLOYEE}>Employee</SelectItem>
+              <SelectItem value={Role.SALES}>Sales</SelectItem>
               <SelectItem value={Role.WAREHOUSE_MANAGER}>Warehouse Manager</SelectItem>
             </SelectContent>
           </Select>

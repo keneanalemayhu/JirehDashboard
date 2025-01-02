@@ -11,34 +11,24 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { DialogFooter } from "@/components/ui/dialog";
-
-interface OrderDetails {
-  order_id: string;
-  item_name: string;
-  quantity: number;
-  unit_price: number;
-  subtotal: number;
-  employee_name: string;
-  user_name: string;
-  total_amount: number;
-  payment_status: "PENDING" | "PAID" | "CANCELLED";
-}
+import { Order, PaymentStatus, PaymentStatuses } from "@/types/dashboard/business/order";
 
 interface OrderFormProps {
-  initialData: OrderDetails;
-  onSubmit: (data: OrderDetails) => void;
+  order: Order;
+  onStatusUpdate: (order: Order) => void;
+  onClose: () => void;
 }
 
-export function OrderForm({ initialData, onSubmit }: OrderFormProps) {
-  const [formData, setFormData] = useState<OrderDetails>(initialData);
+export function OrderForm({ order, onStatusUpdate, onClose }: OrderFormProps) {
+  const [formData, setFormData] = useState<Order>(order);
   const [error, setError] = useState(false);
 
   useEffect(() => {
-    if (initialData) {
-      setFormData(initialData);
+    if (order) {
+      setFormData(order);
       setError(false);
     }
-  }, [initialData]);
+  }, [order]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -48,102 +38,58 @@ export function OrderForm({ initialData, onSubmit }: OrderFormProps) {
       return;
     }
 
-    onSubmit(formData);
+    onStatusUpdate(formData);
+    onClose();
   };
 
   return (
-    <form onSubmit={handleSubmit}>
-      <div className="grid gap-4 py-4">
-        {/* Read-only Fields */}
-        <div className="grid grid-cols-4 items-center gap-4">
-          <Label className="text-right">Order ID</Label>
-          <div className="col-span-3">
-            <p>{formData.order_id}</p>
-          </div>
+    <form onSubmit={handleSubmit} className="space-y-6">
+      <div className="grid grid-cols-2 gap-4">
+        <div>
+          <Label>Order ID</Label>
+          <div className="mt-1 text-sm">{formData.id}</div>
         </div>
-
-        <div className="grid grid-cols-4 items-center gap-4">
-          <Label className="text-right">Item</Label>
-          <div className="col-span-3">
-            <p>{formData.item_name}</p>
-          </div>
+        <div>
+          <Label>Customer</Label>
+          <div className="mt-1 text-sm">{formData.customer_name || 'N/A'}</div>
         </div>
-
-        <div className="grid grid-cols-4 items-center gap-4">
-          <Label className="text-right">Quantity</Label>
-          <div className="col-span-3">
-            <p>{formData.quantity}</p>
-          </div>
+        <div>
+          <Label>Total Amount</Label>
+          <div className="mt-1 text-sm">ETB {formData.total_amount.toLocaleString()}</div>
         </div>
-
-        <div className="grid grid-cols-4 items-center gap-4">
-          <Label className="text-right">Unit Price</Label>
-          <div className="col-span-3">
-            <p>ETB {formData.unit_price.toLocaleString()}</p>
-          </div>
+        <div>
+          <Label>Employee</Label>
+          <div className="mt-1 text-sm">{formData.employee_name || 'N/A'}</div>
         </div>
-
-        <div className="grid grid-cols-4 items-center gap-4">
-          <Label className="text-right">Subtotal</Label>
-          <div className="col-span-3">
-            <p>ETB {formData.subtotal.toLocaleString()}</p>
-          </div>
-        </div>
-
-        <div className="grid grid-cols-4 items-center gap-4">
-          <Label className="text-right">Employee</Label>
-          <div className="col-span-3">
-            <p>{formData.employee_name}</p>
-          </div>
-        </div>
-
-        <div className="grid grid-cols-4 items-center gap-4">
-          <Label className="text-right">Seller</Label>
-          <div className="col-span-3">
-            <p>{formData.user_name}</p>
-          </div>
-        </div>
-
-        <div className="grid grid-cols-4 items-center gap-4">
-          <Label className="text-right">Total Amount</Label>
-          <div className="col-span-3">
-            <p>ETB {formData.total_amount.toLocaleString()}</p>
-          </div>
-        </div>
-
-        {/* Editable Payment Status */}
-        <div className="grid grid-cols-4 items-center gap-4">
-          <Label htmlFor="payment_status" className="text-right">
-            Payment Status <span className="text-red-500">*</span>
-          </Label>
-          <div className="col-span-3">
-            <Select
-              value={formData.payment_status}
-              onValueChange={(value: OrderDetails["payment_status"]) => {
-                setFormData({ ...formData, payment_status: value });
-                setError(false);
-              }}
-            >
-              <SelectTrigger className={error ? "border-red-500" : ""}>
-                <SelectValue placeholder="Select payment status" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="PENDING">Pending</SelectItem>
-                <SelectItem value="PAID">Completed</SelectItem>
-                <SelectItem value="CANCELLED">Cancelled</SelectItem>
-              </SelectContent>
-            </Select>
-            {error && (
-              <p className="text-sm text-red-500 mt-1">
-                Payment status is required
-              </p>
-            )}
-          </div>
+        <div className="col-span-2">
+          <Label>Payment Status</Label>
+          <Select
+            value={formData.payment_status}
+            onValueChange={(value: PaymentStatus) =>
+              setFormData({ ...formData, payment_status: value })
+            }
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="Select payment status" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value={PaymentStatuses.PENDING}>Pending</SelectItem>
+              <SelectItem value={PaymentStatuses.PAID}>Paid</SelectItem>
+              <SelectItem value={PaymentStatuses.CANCELLED}>Cancelled</SelectItem>
+            </SelectContent>
+          </Select>
+          {error && (
+            <p className="mt-1 text-sm text-red-600">
+              Please select a payment status
+            </p>
+          )}
         </div>
       </div>
-
       <DialogFooter>
-        <Button type="submit">Update Status</Button>
+        <Button variant="outline" type="button" onClick={onClose}>
+          Cancel
+        </Button>
+        <Button type="submit">Update Order</Button>
       </DialogFooter>
     </form>
   );

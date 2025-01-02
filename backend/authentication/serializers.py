@@ -301,7 +301,9 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = CustomUser
-        fields = ['user_name', 'full_name', 'email', 'phone_number', 'location_id', 'role', 'is_active', 'location']
+        fields = ['id','user_name', 'full_name', 'email', 'phone_number', 'location_id', 'role', 'is_active', 'location']
+        read_only_fields = ['id']  # Make id read-only
+
 
     def get_location(self, obj):
         # Get the location from related store model

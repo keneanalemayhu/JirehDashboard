@@ -12,20 +12,22 @@ import {
 } from "@/components/ui/dropdown-menu";
 
 interface OrderTableSettingsProps {
-  showCurrency: boolean;
-  onShowCurrencyChange: (show: boolean) => void;
-  statusFilter: string[];
-  onStatusFilterChange: (status: string) => void;
+  showAmounts: boolean;
+  showEmployeeInfo: boolean;
+  showCustomerInfo: boolean;
+  onShowAmountsChange: (show: boolean) => void;
+  onShowEmployeeInfoChange: (show: boolean) => void;
+  onShowCustomerInfoChange: (show: boolean) => void;
 }
 
 export function OrderTableSettings({
-  showCurrency,
-  onShowCurrencyChange,
-  statusFilter,
-  onStatusFilterChange,
+  showAmounts,
+  showEmployeeInfo,
+  showCustomerInfo,
+  onShowAmountsChange,
+  onShowEmployeeInfoChange,
+  onShowCustomerInfoChange,
 }: OrderTableSettingsProps) {
-  const paymentStatuses = ["PAID", "PENDING", "CANCELLED"];
-
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -38,23 +40,23 @@ export function OrderTableSettings({
         <DropdownMenuLabel>Display Options</DropdownMenuLabel>
         <DropdownMenuSeparator />
         <DropdownMenuCheckboxItem
-          checked={showCurrency}
-          onCheckedChange={onShowCurrencyChange}
+          checked={showAmounts}
+          onCheckedChange={onShowAmountsChange}
         >
-          Show Currency Symbol
+          Show Amounts
         </DropdownMenuCheckboxItem>
-
-        <DropdownMenuSeparator />
-        <DropdownMenuLabel>Filter by Status</DropdownMenuLabel>
-        {paymentStatuses.map((status) => (
-          <DropdownMenuCheckboxItem
-            key={status}
-            checked={statusFilter.includes(status)}
-            onCheckedChange={() => onStatusFilterChange(status)}
-          >
-            {status.charAt(0) + status.slice(1).toLowerCase()}
-          </DropdownMenuCheckboxItem>
-        ))}
+        <DropdownMenuCheckboxItem
+          checked={showEmployeeInfo}
+          onCheckedChange={onShowEmployeeInfoChange}
+        >
+          Show Employee Info
+        </DropdownMenuCheckboxItem>
+        <DropdownMenuCheckboxItem
+          checked={showCustomerInfo}
+          onCheckedChange={onShowCustomerInfoChange}
+        >
+          Show Customer Info
+        </DropdownMenuCheckboxItem>
       </DropdownMenuContent>
     </DropdownMenu>
   );

@@ -1,873 +1,182 @@
-"use client";
+// hooks/dashboard/business/order.ts
+import { useState, useEffect, useCallback } from 'react';
+import { orderApi } from '@/lib/api/order';
+import { toast } from 'sonner';
+import { CreateOrderData, Order, OrderFilters } from '@/types/dashboard/business/order';
 
-import { useState, useMemo, useCallback } from "react";
-import {
-  Order,
-  OrderFilters,
-  PaymentStatus,
-  OrderStatus,
-  PaymentMethod,
-  CategoryAnalytics,
-  ItemSalesAnalytics,
-  CustomerAnalytics,
-  UseOrdersReturn,
-} from "@/types/dashboard/business/order";
-
-export const getDateRangeForTimeframe = (timeframe: string) => {
-  const now = new Date();
-  const startDate = new Date(now);
-
-  switch (timeframe) {
-    case "today":
-      startDate.setHours(0, 0, 0, 0);
-      return { start: startDate, end: now };
-
-    case "week":
-      const day = startDate.getDay();
-      startDate.setDate(startDate.getDate() - day);
-      startDate.setHours(0, 0, 0, 0);
-      return { start: startDate, end: now };
-
-    case "month":
-      startDate.setDate(1);
-      startDate.setHours(0, 0, 0, 0);
-      return { start: startDate, end: now };
-
-    case "quarter":
-      const currentMonth = startDate.getMonth();
-      const quarterStartMonth = Math.floor(currentMonth / 3) * 3;
-      startDate.setMonth(quarterStartMonth, 1);
-      startDate.setHours(0, 0, 0, 0);
-      return { start: startDate, end: now };
-
-    case "year":
-      startDate.setMonth(0, 1);
-      startDate.setHours(0, 0, 0, 0);
-      return { start: startDate, end: now };
-
-    default:
+export const useOrder = (locationId: number) => {
+  const [isLoading, setIsLoading] = useState(false);
+  const [isQRCodeDialogOpen, setIsQRCodeDialogOpen] = useState(false);
+  const [currentOrderId, setCurrentOrderId] = useState<string | null>(null);
+ 
+  const createOrder = async (orderData: CreateOrderData) => {
+    setIsLoading(true);
+    try {
+      const response = await orderApi.createOrder(locationId, orderData);
+      setCurrentOrderId(response.id);
+      setIsQRCodeDialogOpen(true);
+      toast.success('Order created successfully');
+      return response.id;
+    } catch (error: any) {
+      console.error("[useOrder.createOrder] Error:", error);
+      const errorMessage = error.response?.data?.message || 'Failed to create order';
+      toast.error(errorMessage);
+      throw error;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+ 
+  const getInvoice = async () => {
+    if (!currentOrderId) {
+      toast.error('No order selected');
       return null;
-  }
+    }
+    try {
+      const response = await orderApi.getOrderDetails(locationId, currentOrderId);
+      console.log('[useOrder.getInvoice] Invoice data:', response);
+      return response;
+    } catch (error) {
+      console.error("[useOrder.getInvoice] Error:", error);
+      toast.error('Failed to get invoice');
+      return null;
+    }
+  };
+ 
+  return {
+    isLoading,
+    isQRCodeDialogOpen, 
+    setIsQRCodeDialogOpen,
+    currentOrderId,
+    createOrder,
+    getInvoice,
+  };
 };
 
-export const initialOrders: Order[] = [
-  {
-    order_id: "ORD-001",
-    store_id: 1,
-    location_id: 1,
-    user_id: 1,
-    employee_id: 1,
-    order_number: "ORD/2024/001",
-    status: OrderStatus.PENDING,
-    payment_status: PaymentStatus.PENDING,
-    payment_method: PaymentMethod.CASH,
-    customer: {
-      name: "John Doe",
-      phone: "+251911234567",
-      email: "john.doe@example.com",
-    },
-    items: [
-      {
-        item_id: 1,
-        category_id: 1,
-        item_name: "Item 1",
-        category_name: "Category 1",
-        quantity: 2,
-        unit_price: 1000,
-        subtotal: 2000,
-      },
-    ],
-    total_amount: 2000,
-    employee_name: "Abebe Kebede",
-    user_name: "abebe.kebede",
-    order_date: "2024-07-26T10:00:00.000Z",
-    created_at: "2024-07-26T10:00:00.000Z",
-    updated_at: "2024-07-26T10:00:00.000Z",
-  },
-  {
-    order_id: "ORD-002",
-    store_id: 2,
-    location_id: 2,
-    user_id: 2,
-    employee_id: 2,
-    order_number: "ORD/2024/002",
-    status: OrderStatus.COMPLETED,
-    payment_status: PaymentStatus.PAID,
-    payment_method: PaymentMethod.BANK_TRANSFER,
-    customer: {
-      name: "Jane Smith",
-      phone: "+251922345678",
-      email: "jane.smith@example.com",
-    },
-    items: [
-      {
-        item_id: 2,
-        category_id: 2,
-        item_name: "Item 2",
-        category_name: "Category 2",
-        quantity: 1,
-        unit_price: 1500,
-        subtotal: 1500,
-      },
-    ],
-    total_amount: 1500,
-    employee_name: "Kebede Abebe",
-    user_name: "kebede.abebe",
-    order_date: "2024-07-27T11:00:00.000Z",
-    created_at: "2024-07-27T11:00:00.000Z",
-    updated_at: "2024-07-27T11:00:00.000Z",
-  },
-  {
-    order_id: "ORD-003",
-    store_id: 3,
-    location_id: 3,
-    user_id: 3,
-    employee_id: 3,
-    order_number: "ORD/2024/003",
-    status: OrderStatus.CANCELLED,
-    payment_status: PaymentStatus.PAID,
-    payment_method: PaymentMethod.TELEBIRR,
-    customer: {
-      name: "Musa Ali",
-      phone: "+251933456789",
-      email: "musa.ali@example.com",
-    },
-    items: [
-      {
-        item_id: 3,
-        category_id: 3,
-        item_name: "Item 3",
-        category_name: "Category 3",
-        quantity: 5,
-        unit_price: 500,
-        subtotal: 2500,
-      },
-    ],
-    total_amount: 2500,
-    employee_name: "Tesfaye Alemu",
-    user_name: "tesfaye.alemu",
-    order_date: "2024-07-28T09:30:00.000Z",
-    created_at: "2024-07-28T09:30:00.000Z",
-    updated_at: "2024-07-28T09:30:00.000Z",
-  },
-  {
-    order_id: "ORD-004",
-    store_id: 4,
-    location_id: 4,
-    user_id: 4,
-    employee_id: 4,
-    order_number: "ORD/2024/004",
-    status: OrderStatus.CANCELLED,
-    payment_status: PaymentStatus.PAID,
-    payment_method: PaymentMethod.CASH,
-    customer: {
-      name: "Selamawit Bekele",
-      phone: "+251944567890",
-      email: "selamawit.bekele@example.com",
-    },
-    items: [
-      {
-        item_id: 4,
-        category_id: 4,
-        item_name: "Item 4",
-        category_name: "Category 4",
-        quantity: 3,
-        unit_price: 750,
-        subtotal: 2250,
-      },
-    ],
-    total_amount: 2250,
-    employee_name: "Mulugeta Demeke",
-    user_name: "mulugeta.demeke",
-    order_date: "2024-07-29T12:00:00.000Z",
-    created_at: "2024-07-29T12:00:00.000Z",
-    updated_at: "2024-07-29T12:00:00.000Z",
-  },
-  {
-    order_id: "ORD-005",
-    store_id: 5,
-    location_id: 5,
-    user_id: 5,
-    employee_id: 5,
-    order_number: "ORD/2024/005",
-    status: OrderStatus.PENDING,
-    payment_status: PaymentStatus.PENDING,
-    payment_method: PaymentMethod.TELEBIRR,
-    customer: {
-      name: "Biniam Solomon",
-      phone: "+251955678901",
-      email: "biniam.solomon@example.com",
-    },
-    items: [
-      {
-        item_id: 5,
-        category_id: 5,
-        item_name: "Item 5",
-        category_name: "Category 5",
-        quantity: 2,
-        unit_price: 1200,
-        subtotal: 2400,
-      },
-    ],
-    total_amount: 2400,
-    employee_name: "Fitsum Tadesse",
-    user_name: "fitsum.tadesse",
-    order_date: "2024-07-30T13:45:00.000Z",
-    created_at: "2024-07-30T13:45:00.000Z",
-    updated_at: "2024-07-30T13:45:00.000Z",
-  },
-  {
-    order_id: "ORD-006",
-    store_id: 6,
-    location_id: 6,
-    user_id: 6,
-    employee_id: 6,
-    order_number: "ORD/2024/006",
-    status: OrderStatus.COMPLETED,
-    payment_status: PaymentStatus.PAID,
-    payment_method: PaymentMethod.BANK_TRANSFER,
-    customer: {
-      name: "Liya Amanuel",
-      phone: "+251966789012",
-      email: "liya.amanuel@example.com",
-    },
-    items: [
-      {
-        item_id: 6,
-        category_id: 6,
-        item_name: "Item 6",
-        category_name: "Category 6",
-        quantity: 1,
-        unit_price: 3500,
-        subtotal: 3500,
-      },
-    ],
-    total_amount: 3500,
-    employee_name: "Hana Getachew",
-    user_name: "hana.getachew",
-    order_date: "2024-07-31T10:30:00.000Z",
-    created_at: "2024-07-31T10:30:00.000Z",
-    updated_at: "2024-07-31T10:30:00.000Z",
-  },
-  {
-    order_id: "ORD-007",
-    store_id: 7,
-    location_id: 7,
-    user_id: 7,
-    employee_id: 7,
-    order_number: "ORD/2024/007",
-    status: OrderStatus.PENDING,
-    payment_status: PaymentStatus.PENDING,
-    payment_method: PaymentMethod.BANK_TRANSFER,
-    customer: {
-      name: "Mikias Yohannes",
-      phone: "+251977890123",
-      email: "mikias.yohannes@example.com",
-    },
-    items: [
-      {
-        item_id: 7,
-        category_id: 7,
-        item_name: "Item 7",
-        category_name: "Category 7",
-        quantity: 4,
-        unit_price: 1800,
-        subtotal: 7200,
-      },
-    ],
-    total_amount: 7200,
-    employee_name: "Samuel Worku",
-    user_name: "samuel.worku",
-    order_date: "2024-08-01T09:00:00.000Z",
-    created_at: "2024-08-01T09:00:00.000Z",
-    updated_at: "2024-08-01T09:00:00.000Z",
-  },
-  {
-    order_id: "ORD-008",
-    store_id: 8,
-    location_id: 8,
-    user_id: 8,
-    employee_id: 8,
-    order_number: "ORD/2024/008",
-    status: OrderStatus.COMPLETED,
-    payment_status: PaymentStatus.PAID,
-    payment_method: PaymentMethod.CASH,
-    customer: {
-      name: "Hana Desta",
-      phone: "+251988901234",
-      email: "hana.desta@example.com",
-    },
-    items: [
-      {
-        item_id: 8,
-        category_id: 8,
-        item_name: "Item 8",
-        category_name: "Category 8",
-        quantity: 2,
-        unit_price: 2500,
-        subtotal: 5000,
-      },
-    ],
-    total_amount: 5000,
-    employee_name: "Woineshet Tadesse",
-    user_name: "woineshet.tadesse",
-    order_date: "2024-08-02T14:15:00.000Z",
-    created_at: "2024-08-02T14:15:00.000Z",
-    updated_at: "2024-08-02T14:15:00.000Z",
-  },
-  {
-    order_id: "ORD-009",
-    store_id: 9,
-    location_id: 9,
-    user_id: 9,
-    employee_id: 9,
-    order_number: "ORD/2024/009",
-    status: OrderStatus.PENDING,
-    payment_status: PaymentStatus.PENDING,
-    payment_method: PaymentMethod.CREDIT,
-    customer: {
-      name: "Berhanu Zewdu",
-      phone: "+251999012345",
-      email: "berhanu.zewdu@example.com",
-    },
-    items: [
-      {
-        item_id: 9,
-        category_id: 9,
-        item_name: "Item 9",
-        category_name: "Category 9",
-        quantity: 3,
-        unit_price: 1500,
-        subtotal: 4500,
-      },
-    ],
-    total_amount: 4500,
-    employee_name: "Eyerus Gizaw",
-    user_name: "eyerus.gizaw",
-    order_date: "2024-08-03T16:30:00.000Z",
-    created_at: "2024-08-03T16:30:00.000Z",
-    updated_at: "2024-08-03T16:30:00.000Z",
-  },
-  {
-    order_id: "ORD-010",
-    store_id: 10,
-    location_id: 10,
-    user_id: 10,
-    employee_id: 10,
-    order_number: "ORD/2024/010",
-    status: OrderStatus.CANCELLED,
-    payment_status: PaymentStatus.PAID,
-    payment_method: PaymentMethod.CREDIT,
-    customer: {
-      name: "Kidist Aklilu",
-      phone: "+251910123456",
-      email: "kidist.aklilu@example.com",
-    },
-    items: [
-      {
-        item_id: 10,
-        category_id: 10,
-        item_name: "Item 10",
-        category_name: "Category 10",
-        quantity: 6,
-        unit_price: 900,
-        subtotal: 5400,
-      },
-    ],
-    total_amount: 5400,
-    employee_name: "Dereje Fikadu",
-    user_name: "dereje.fikadu",
-    order_date: "2024-08-04T18:45:00.000Z",
-    created_at: "2024-08-04T18:45:00.000Z",
-    updated_at: "2024-08-04T18:45:00.000Z",
-  },
-  // Today's orders (December 25, 2024)
-  {
-    order_id: "ORD-011",
-    store_id: 11,
-    location_id: 11,
-    user_id: 11,
-    employee_id: 11,
-    order_number: "ORD/2024/011",
-    status: OrderStatus.COMPLETED,
-    payment_status: PaymentStatus.PAID,
-    payment_method: PaymentMethod.CASH,
-    customer: {
-      name: "Tigist Haile",
-      phone: "+251911111111",
-      email: "tigist.haile@example.com",
-    },
-    items: [
-      {
-        item_id: 11,
-        category_id: 1,
-        item_name: "Item 11",
-        category_name: "Category 1",
-        quantity: 3,
-        unit_price: 800,
-        subtotal: 2400,
-      },
-    ],
-    total_amount: 2400,
-    employee_name: "Yonas Tadesse",
-    user_name: "yonas.tadesse",
-    order_date: "2024-12-25T09:30:00.000Z",
-    created_at: "2024-12-25T09:30:00.000Z",
-    updated_at: "2024-12-25T09:30:00.000Z",
-  },
-
-  // This week (December 23, 2024)
-  {
-    order_id: "ORD-012",
-    store_id: 12,
-    location_id: 12,
-    user_id: 12,
-    employee_id: 12,
-    order_number: "ORD/2024/012",
-    status: OrderStatus.COMPLETED,
-    payment_status: PaymentStatus.PAID,
-    payment_method: PaymentMethod.TELEBIRR,
-    customer: {
-      name: "Dawit Mekonnen",
-      phone: "+251922222222",
-      email: "dawit.mekonnen@example.com",
-    },
-    items: [
-      {
-        item_id: 12,
-        category_id: 2,
-        item_name: "Item 12",
-        category_name: "Category 2",
-        quantity: 2,
-        unit_price: 1200,
-        subtotal: 2400,
-      },
-    ],
-    total_amount: 2400,
-    employee_name: "Helen Abebe",
-    user_name: "helen.abebe",
-    order_date: "2024-12-23T14:15:00.000Z",
-    created_at: "2024-12-23T14:15:00.000Z",
-    updated_at: "2024-12-23T14:15:00.000Z",
-  },
-
-  // This month (December 15, 2024)
-  {
-    order_id: "ORD-013",
-    store_id: 13,
-    location_id: 13,
-    user_id: 13,
-    employee_id: 13,
-    order_number: "ORD/2024/013",
-    status: OrderStatus.COMPLETED,
-    payment_status: PaymentStatus.PAID,
-    payment_method: PaymentMethod.BANK_TRANSFER,
-    customer: {
-      name: "Sara Tekle",
-      phone: "+251933333333",
-      email: "sara.tekle@example.com",
-    },
-    items: [
-      {
-        item_id: 13,
-        category_id: 3,
-        item_name: "Item 13",
-        category_name: "Category 3",
-        quantity: 4,
-        unit_price: 1500,
-        subtotal: 6000,
-      },
-    ],
-    total_amount: 6000,
-    employee_name: "Daniel Girma",
-    user_name: "daniel.girma",
-    order_date: "2024-12-15T11:20:00.000Z",
-    created_at: "2024-12-15T11:20:00.000Z",
-    updated_at: "2024-12-15T11:20:00.000Z",
-  },
-
-  // This quarter (November 5, 2024)
-  {
-    order_id: "ORD-014",
-    store_id: 14,
-    location_id: 14,
-    user_id: 14,
-    employee_id: 14,
-    order_number: "ORD/2024/014",
-    status: OrderStatus.COMPLETED,
-    payment_status: PaymentStatus.PAID,
-    payment_method: PaymentMethod.CREDIT,
-    customer: {
-      name: "Henok Mulugeta",
-      phone: "+251955555555",
-      email: "henok.mulugeta@example.com",
-    },
-    items: [
-      {
-        item_id: 14,
-        category_id: 4,
-        item_name: "Item 14",
-        category_name: "Category 4",
-        quantity: 1,
-        unit_price: 3000,
-        subtotal: 3000,
-      },
-    ],
-    total_amount: 3000,
-    employee_name: "Bereket Solomon",
-    user_name: "bereket.solomon",
-    order_date: "2024-11-05T16:45:00.000Z",
-    created_at: "2024-11-05T16:45:00.000Z",
-    updated_at: "2024-11-05T16:45:00.000Z",
-  },
-
-  // This quarter (October 20, 2024)
-  {
-    order_id: "ORD-015",
-    store_id: 15,
-    location_id: 15,
-    user_id: 15,
-    employee_id: 15,
-    order_number: "ORD/2024/015",
-    status: OrderStatus.PENDING,
-    payment_status: PaymentStatus.PENDING,
-    payment_method: PaymentMethod.CASH,
-    customer: {
-      name: "Henok Mulugeta",
-      phone: "+251955555555",
-      email: "henok.mulugeta@example.com",
-    },
-    items: [
-      {
-        item_id: 15,
-        category_id: 5,
-        item_name: "Item 15",
-        category_name: "Category 5",
-        quantity: 5,
-        unit_price: 1000,
-        subtotal: 5000,
-      },
-    ],
-    total_amount: 5000,
-    employee_name: "Martha Teshome",
-    user_name: "martha.teshome",
-    order_date: "2024-10-20T13:30:00.000Z",
-    created_at: "2024-10-20T13:30:00.000Z",
-    updated_at: "2024-10-20T13:30:00.000Z",
-  },
-];
-
-const DEFAULT_PAGE_SIZE = 10;
-
-export function useOrders(defaultOrders: Order[] = []): UseOrdersReturn {
-  // Core state
-  const [orders, setOrders] = useState<Order[]>(defaultOrders);
-  const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
+export const useOrders = (locationId: number) => {
+  const [orders, setOrders] = useState<Order[]>([]);
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<Error | null>(null);
-
-  // Filters and pagination state
-  const [filters, setFilters] = useState<OrderFilters>({});
+  const [error, setError] = useState<string | null>(null);
+  const [filters, setFilters] = useState<OrderFilters>({
+    status: 'all',
+    paymentStatus: 'all',
+    timeframe: 'all',
+  });
+  const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
-  const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
-  const [sortColumn, setSortColumn] = useState<keyof Order | null>(null);
-  const [sortDirection, setSortDirection] = useState<"asc" | "desc" | null>(
-    null
-  );
+  const [pageSize, setPageSize] = useState(10);
+  const [sortColumn, setSortColumn] = useState<string>('created_at');
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
 
-  // Filtered orders computation
-  const filteredOrders = useMemo(() => {
-    let result = [...orders];
-
-    // Apply search filter
-    if (filters.searchTerm) {
-      const searchTerm = filters.searchTerm.toLowerCase();
-      result = result.filter((order) => {
-        const searchableFields = [
-          order.order_id,
-          order.order_number,
-          order.customer.name,
-          order.customer.phone,
-          order.customer.email,
-          order.employee_name,
-          order.user_name,
-          ...order.items.map((item) => item.item_name),
-          ...order.items.map((item) => item.category_name),
-        ];
-        return searchableFields.some((field) =>
-          field?.toLowerCase().includes(searchTerm)
-        );
-      });
-    }
-
-    // Apply status filters
-    if (filters.status?.length) {
-      result = result.filter((order) => filters.status?.includes(order.status));
-    }
-
-    // Apply payment status filters
-    if (filters.paymentStatus?.length) {
-      result = result.filter((order) =>
-        filters.paymentStatus?.includes(order.payment_status)
-      );
-    }
-
-    // Apply payment method filters
-    if (filters.paymentMethod?.length) {
-      result = result.filter((order) =>
-        filters.paymentMethod?.includes(order.payment_method)
-      );
-    }
-
-    // Apply category filters
-    if (filters.categoryIds?.length) {
-      result = result.filter((order) =>
-        order.items.some((item) =>
-          filters.categoryIds?.includes(item.category_id)
-        )
-      );
-    }
-
-    // Apply date range filters
-    if (filters.startDate && filters.endDate) {
-      const start = new Date(filters.startDate);
-      start.setHours(0, 0, 0, 0);
-      const end = new Date(filters.endDate);
-      end.setHours(23, 59, 59, 999);
-
-      result = result.filter((order) => {
-        const orderDate = new Date(order.order_date);
-        return orderDate >= start && orderDate <= end;
-      });
-    }
-
-    // Apply sorting
-    if (sortColumn) {
-      result.sort((a, b) => {
-        const aValue = a[sortColumn];
-        const bValue = b[sortColumn];
-
-        if (typeof aValue === "number" && typeof bValue === "number") {
-          return sortDirection === "asc" ? aValue - bValue : bValue - aValue;
-        }
-
-        const aString = String(aValue || "");
-        const bString = String(bValue || "");
-
-        return sortDirection === "asc"
-          ? aString.localeCompare(bString)
-          : bString.localeCompare(aString);
-      });
-    }
-
-    return result;
-  }, [orders, filters, sortColumn, sortDirection]);
-
-  // Paginated orders computation
-  const paginatedOrders = useMemo(() => {
-    const startIndex = (currentPage - 1) * pageSize;
-    return filteredOrders.slice(startIndex, startIndex + pageSize);
-  }, [filteredOrders, currentPage, pageSize]);
-
-  // Analytics functions
-  const getAnalyticsByCategory = useCallback((): CategoryAnalytics[] => {
-    const analytics = new Map<number, CategoryAnalytics>();
-
-    filteredOrders.forEach((order) => {
-      order.items.forEach((item) => {
-        const existing = analytics.get(item.category_id) || {
-          category_id: item.category_id,
-          category_name: item.category_name,
-          total_sales: 0,
-          total_items: 0,
-          total_revenue: 0,
-          average_order_value: 0,
-        };
-
-        existing.total_sales += 1;
-        existing.total_items += item.quantity;
-        existing.total_revenue += item.subtotal;
-        existing.average_order_value =
-          existing.total_revenue / existing.total_sales;
-
-        analytics.set(item.category_id, existing);
-      });
-    });
-
-    return Array.from(analytics.values());
-  }, [filteredOrders]);
-
-  const getTopSellingItems = useCallback(
-    (limit: number = 10): ItemSalesAnalytics[] => {
-      const itemAnalytics = new Map<number, ItemSalesAnalytics>();
-
-      filteredOrders.forEach((order) => {
-        order.items.forEach((item) => {
-          const existing = itemAnalytics.get(item.item_id) || {
-            item_id: item.item_id,
-            item_name: item.item_name,
-            category_name: item.category_name,
-            total_quantity: 0,
-            total_revenue: 0,
-            average_price: 0,
-            stock_level: 0, // Would need to be updated from inventory system
-          };
-
-          existing.total_quantity += item.quantity;
-          existing.total_revenue += item.subtotal;
-          existing.average_price =
-            existing.total_revenue / existing.total_quantity;
-
-          itemAnalytics.set(item.item_id, existing);
-        });
-      });
-
-      return Array.from(itemAnalytics.values())
-        .sort((a, b) => b.total_revenue - a.total_revenue)
-        .slice(0, limit);
-    },
-    [filteredOrders]
-  );
-
-  const getCustomerAnalytics = useCallback((): CustomerAnalytics[] => {
-    const analytics = new Map<string, CustomerAnalytics>();
-
-    filteredOrders.forEach((order) => {
-      const customerKey =
-        order.customer.phone || order.customer.email || "unknown";
-      const existing = analytics.get(customerKey) || {
-        customer_phone: order.customer.phone || "",
-        customer_name: order.customer.name || "Unknown",
-        total_orders: 0,
-        total_amount: 0,
-        average_order_value: 0,
-        last_order_date: order.order_date,
-      };
-
-      existing.total_orders += 1;
-      existing.total_amount += order.total_amount;
-      existing.average_order_value =
-        existing.total_amount / existing.total_orders;
-
-      if (new Date(order.order_date) > new Date(existing.last_order_date)) {
-        existing.last_order_date = order.order_date;
-      }
-
-      analytics.set(customerKey, existing);
-    });
-
-    return Array.from(analytics.values());
-  }, [filteredOrders]);
-
-  // Order operations
-  const createOrder = useCallback(async (order: Omit<Order, "order_id">) => {
+  const fetchOrders = useCallback(async () => {
+    setIsLoading(true);
+    setError(null);
     try {
-      setIsLoading(true);
-      // API call would go here
-      setOrders((prev) => [
-        ...prev,
-        { ...order, order_id: `ORD-${Date.now()}` },
-      ]);
-    } catch (err) {
-      setError(
-        err instanceof Error ? err : new Error("Failed to create order")
-      );
-      throw err;
+      const response = await orderApi.getOrders(locationId);
+      console.log('[useOrders.fetchOrders] Orders:', response);
+      setOrders(response);
+    } catch (error: any) {
+      console.error("[useOrders.fetchOrders] Error:", error);
+      const errorMessage = error.response?.data?.message || 'Failed to fetch orders';
+      setError(errorMessage);
+      toast.error(errorMessage);
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [locationId]);
 
-  const updateOrder = useCallback(
-    async (orderId: string, updates: Partial<Order>) => {
-      try {
-        setIsLoading(true);
-        // API call would go here
-        setOrders((prev) =>
-          prev.map((order) =>
-            order.order_id === orderId ? { ...order, ...updates } : order
-          )
-        );
-      } catch (err) {
-        setError(
-          err instanceof Error ? err : new Error("Failed to update order")
-        );
-        throw err;
-      } finally {
-        setIsLoading(false);
-      }
-    },
-    []
-  );
+  useEffect(() => {
+    fetchOrders();
+  }, [fetchOrders]);
 
-  const deleteOrder = useCallback(async (orderId: string) => {
+  const updateOrder = async (orderId: string, data: any) => {
     try {
-      setIsLoading(true);
-      // API call would go here
-      setOrders((prev) => prev.filter((order) => order.order_id !== orderId));
-    } catch (err) {
-      setError(
-        err instanceof Error ? err : new Error("Failed to delete order")
-      );
-      throw err;
-    } finally {
-      setIsLoading(false);
+      await orderApi.updateOrder(locationId, orderId, data);
+      toast.success('Order updated successfully');
+      fetchOrders(); // Refresh orders after update
+    } catch (error: any) {
+      console.error("[useOrders.updateOrder] Error:", error);
+      const errorMessage = error.response?.data?.message || 'Failed to update order';
+      toast.error(errorMessage);
     }
-  }, []);
+  };
+
+  const handleSort = (column: string) => {
+    if (sortColumn === column) {
+      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortColumn(column);
+      setSortDirection('asc');
+    }
+  };
+
+  // Apply filters and sorting
+  const filteredOrders = orders.filter(order => {
+    if (filters.status !== 'all' && order.status !== filters.status) return false;
+    if (filters.paymentStatus !== 'all' && order.payment_status !== filters.paymentStatus) return false;
+    
+    if (filters.timeframe !== 'all') {
+      const orderDate = new Date(order.created_at);
+      const now = new Date();
+      const today = new Date(now.setHours(0, 0, 0, 0));
+      
+      switch (filters.timeframe) {
+        case 'today':
+          return orderDate >= today;
+        case 'this_week':
+          const lastWeek = new Date(now.setDate(now.getDate() - 7));
+          return orderDate >= lastWeek;
+        case 'this_month':
+          const lastMonth = new Date(now.setMonth(now.getMonth() - 1));
+          return orderDate >= lastMonth;
+        default:
+          return true;
+      }
+    }
+    
+    return true;
+  }).sort((a, b) => {
+    const aValue = a[sortColumn as keyof Order];
+    const bValue = b[sortColumn as keyof Order];
+    
+    if (typeof aValue === 'string' && typeof bValue === 'string') {
+      return sortDirection === 'asc' 
+        ? aValue.localeCompare(bValue)
+        : bValue.localeCompare(aValue);
+    }
+    
+    return sortDirection === 'asc'
+      ? (aValue as any) - (bValue as any)
+      : (bValue as any) - (aValue as any);
+  });
+
+  // Calculate pagination
+  const totalPages = Math.ceil(filteredOrders.length / pageSize);
+  const startIndex = (currentPage - 1) * pageSize;
+  const paginatedOrders = filteredOrders.slice(startIndex, startIndex + pageSize);
+
+  const setPage = (page: number) => {
+    setCurrentPage(Math.min(Math.max(1, page), totalPages));
+  };
 
   return {
-    // Data state
-    orders,
-    selectedOrder,
+    orders: filteredOrders,
+    paginatedOrders,
     isLoading,
     error,
-
-    // Filters and pagination
     filters,
+    setFilters,
+    selectedOrder,
+    setSelectedOrder,
     currentPage,
     pageSize,
-    paginatedOrders,
-    totalPages: Math.ceil(filteredOrders.length / pageSize),
-
-    // Actions
-    setFilters: (newFilters: Partial<OrderFilters>) => {
-      setFilters((prev) => ({ ...prev, ...newFilters }));
-      setCurrentPage(1); // Reset to first page on filter change
-    },
-    setPage: setCurrentPage,
-    setPageSize: (size: number) => {
-      setPageSize(size);
-      setCurrentPage(1); // Reset to first page on size change
-    },
-    selectOrder: setSelectedOrder,
-
-    // Order operations
-    createOrder,
+    totalPages,
+    setPage,
+    setPageSize,
     updateOrder,
-    deleteOrder,
-
-    // Analytics
-    getAnalyticsByCategory,
-    getTopSellingItems,
-    getCustomerAnalytics,
-
-    // Sorting
+    handleSort,
     sortColumn,
     sortDirection,
-    handleSort: (column: keyof Order) => {
-      if (sortColumn === column) {
-        setSortDirection((prev) => {
-          if (prev === "asc") return "desc";
-          if (prev === "desc") return null;
-          return "asc";
-        });
-        if (sortDirection === null) {
-          setSortColumn(null);
-        }
-      } else {
-        setSortColumn(column);
-        setSortDirection("asc");
-      }
-    },
+    refresh: fetchOrders,
   };
-}
+};

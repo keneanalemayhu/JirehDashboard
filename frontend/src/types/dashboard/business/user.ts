@@ -4,6 +4,7 @@ export interface User {
   name: string;
   email: string;
   phone: string;
+  location: string;  // This will hold the location name
   location_id: string;
   role: Role;
   isActive: boolean;
@@ -153,6 +154,7 @@ export const INITIAL_FORM_DATA: UserFormData = {
   email: "",
   phone: "+251",
   location_id: "",
+  location: "",
   role: Role.ADMIN,
   isActive: true,
 };

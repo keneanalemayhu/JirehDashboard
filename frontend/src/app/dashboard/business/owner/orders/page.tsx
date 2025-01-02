@@ -6,7 +6,7 @@ import { SidebarLayout } from "@/components/common/dashboard/business/owner/Side
 import { OrderTable } from "@/components/dashboard/business/owner/orders/OrderTable";
 import { OrderTableSettings } from "@/components/dashboard/business/owner/orders/OrderTableSettings";
 import { OrderTablePagination } from "@/components/dashboard/business/owner/orders/OrderTablePagination";
-import { useOrders, initialOrders } from "@/hooks/dashboard/business/order";
+import { useOrders } from "@/hooks/dashboard/business/order";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Download, FileDown, FileSpreadsheet, FileText } from "lucide-react";
@@ -18,24 +18,27 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { PaymentStatus, OrderFilters } from "@/types/dashboard/business/order";
+import { Order, PaymentStatus, PaymentStatuses, OrderFilters } from "@/types/dashboard/business/order";
+import { useLocations } from "@/hooks/dashboard/business/location";
 
 export default function OrdersPage() {
-  const [timeframe, setTimeframe] = React.useState("today");
+  const { locations } = useLocations();
+  const selectedLocation = locations[0]; // Assuming the first location is selected
+  const locationId = selectedLocation?.id || 0;
+
   const [showAmounts, setShowAmounts] = React.useState(true);
   const [showEmployeeInfo, setShowEmployeeInfo] = React.useState(true);
   const [showCustomerInfo, setShowCustomerInfo] = React.useState(true);
-  const [sortDirection, setSortDirection] = React.useState<"asc" | "desc">(
-    "desc"
-  );
+  const [sortDirection, setSortDirection] = React.useState<"asc" | "desc">("desc");
   const [itemsPerPage, setItemsPerPage] = React.useState(10);
 
   const {
     orders,
+    isLoading,
+    error,
     filters,
     setFilters,
     selectedOrder,
-    paginatedOrders,
     currentPage,
     pageSize,
     setPage,
@@ -43,96 +46,55 @@ export default function OrdersPage() {
     updateOrder,
     handleSort,
     sortColumn,
-  } = useOrders(initialOrders);
+    refresh
+  } = useOrders(locationId);
 
-  // Function to get filtered orders based on timeframe
-  const getTimeframeOrders = React.useCallback(() => {
-    const now = new Date();
-    const startOfDay = new Date(now.setHours(0, 0, 0, 0));
-    const startOfWeek = new Date(now);
-    startOfWeek.setDate(now.getDate() - now.getDay());
-    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-    const startOfYear = new Date(now.getFullYear(), 0, 1);
+  // Calculate statistics
+  const stats = React.useMemo(() => {
+    const total = orders.reduce((sum, order) => sum + Number(order.total_amount), 0);
+    const completed = orders.filter(order => order.status === 'completed').length;
+    const pending = orders.filter(order => order.status === 'pending').length;
+    const cancelled = orders.filter(order => order.status === 'cancelled').length;
+    
+    return {
+      totalAmount: total,
+      totalOrders: orders.length,
+      paidOrders: completed,
+      pendingOrders: pending,
+      cancelledOrders: cancelled
+    };
+  }, [orders]);
 
-    let startDate;
-    switch (timeframe) {
-      case "today":
-        startDate = startOfDay;
-        break;
-      case "week":
-        startDate = startOfWeek;
-        break;
-      case "month":
-        startDate = startOfMonth;
-        break;
-      case "year":
-        startDate = startOfYear;
-        break;
-      default:
-        return orders;
-    }
-
-    return orders.filter((order) => new Date(order.order_date) >= startDate);
-  }, [timeframe, orders]);
-
-  const timeframeOrders = React.useMemo(
-    () => getTimeframeOrders(),
-    [getTimeframeOrders]
-  );
-
-  // Calculate statistics based on timeframe orders
-  const stats = React.useMemo(
-    () => ({
-      totalOrders: timeframeOrders.length,
-      totalAmount: timeframeOrders.reduce(
-        (sum, order) => sum + order.total_amount,
-        0
-      ),
-      paidOrders: timeframeOrders.filter(
-        (order) => order.payment_status === PaymentStatus.PAID
-      ).length,
-      pendingOrders: timeframeOrders.filter(
-        (order) => order.payment_status === PaymentStatus.PENDING
-      ).length,
-      cancelledOrders: timeframeOrders.filter(
-        (order) => order.payment_status === PaymentStatus.CANCELLED
-      ).length,
-    }),
-    [timeframeOrders]
-  );
-
-  // Handle timeframe change
-  const handleTimeframeChange = (newTimeframe: string) => {
-    setTimeframe(newTimeframe);
-    setPage(1);
+  const handleTimeframeChange = (timeframe: string) => {
+    setFilters(prev => ({ 
+      ...prev, 
+      timeframe: timeframe as OrderFilters['timeframe']
+    }));
   };
 
-  // Handle search
   const handleSearch = (searchTerm: string) => {
-    setFilters({ ...filters, searchTerm });
+    setFilters(prev => ({
+      ...prev,
+      searchTerm: searchTerm.toLowerCase()
+    }));
   };
 
-  // Handle status filter change
-  const handleStatusFilterChange = (statuses: PaymentStatus[]) => {
-    setFilters({ ...filters, paymentStatus: statuses });
+  const handleStatusFilterChange = (status: PaymentStatus) => {
+    setFilters(prev => ({ 
+      ...prev, 
+      paymentStatus: status 
+    }));
   };
 
-  // Handle payment status update
-  const handleUpdatePaymentStatus = async (
-    orderId: string,
-    newStatus: PaymentStatus
-  ) => {
-    await updateOrder(orderId, { payment_status: newStatus });
+  const handleUpdatePaymentStatus = async (orderId: string, status: PaymentStatus) => {
+    await updateOrder(orderId, { payment_status: status });
+    refresh();
   };
 
-  // Export functions
   const handleExport = (format: "csv" | "excel" | "sheets") => {
     const headers = [
       "Order ID",
-      "Order Number",
-      ...(showCustomerInfo
-        ? ["Customer Name", "Customer Phone", "Customer Email"]
-        : []),
+      ...(showCustomerInfo ? ["Customer Name", "Customer Phone", "Customer Email"] : []),
       ...(showEmployeeInfo ? ["Employee Name"] : []),
       "Status",
       "Payment Status",
@@ -140,20 +102,20 @@ export default function OrdersPage() {
       "Order Date",
     ];
 
-    const rows = timeframeOrders.map((order) => {
-      const row = [order.order_id, order.order_number];
+    const rows = orders.map((order) => {
+      const row = [order.id];
 
       if (showCustomerInfo) {
         row.push(
-          order.customer.name,
-          order.customer.phone,
-          order.customer.email
+          order.customer_name || 'N/A',
+          order.customer_phone || 'N/A',
+          order.customer_email || 'N/A'
         );
       }
 
-      if (showEmployeeInfo) {
-        row.push(order.employee_name);
-      }
+      // if (showEmployeeInfo) {
+      //   row.push(order.employee_name || 'N/A');
+      // }
 
       row.push(order.status, order.payment_status);
 
@@ -161,30 +123,66 @@ export default function OrdersPage() {
         row.push(order.total_amount.toString());
       }
 
-      row.push(new Date(order.order_date).toLocaleString());
+      row.push(new Date(order.created_at).toLocaleString());
 
       return row;
     });
 
     const content = [headers, ...rows].map((row) => row.join(",")).join("\n");
-
     const blob = new Blob([content], {
-      type:
-        format === "csv"
-          ? "text/csv;charset=utf-8;"
-          : "application/vnd.ms-excel;charset=utf-8;",
+      type: format === "csv" ? "text/csv;charset=utf-8;" : "application/vnd.ms-excel;charset=utf-8;",
     });
 
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.href = url;
-    link.download = `orders-export-${timeframe}-${
-      new Date().toISOString().split("T")[0]
-    }.${format === "csv" ? "csv" : format === "excel" ? "xls" : "tsv"}`;
+    link.download = `orders-export-${filters.timeframe}-${new Date().toISOString().split("T")[0]}.${
+      format === "csv" ? "csv" : format === "excel" ? "xls" : "tsv"
+    }`;
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
   };
+
+  const filteredOrders = React.useMemo(() => {
+    return orders.filter(order => {
+      if (filters.searchTerm) {
+        const searchTerm = filters.searchTerm.toLowerCase();
+        return (
+          order.id.toString().includes(searchTerm) ||
+          order.customer_name?.toLowerCase().includes(searchTerm) ||
+          order.customer_phone?.toLowerCase().includes(searchTerm) ||
+          order.customer_email?.toLowerCase().includes(searchTerm)
+        );
+      }
+      return true;
+    });
+  }, [orders, filters.searchTerm]);
+
+  const settings = {
+    showAmounts,
+    showEmployeeInfo,
+    showCustomerInfo,
+    statusFilter: filters.paymentStatus === 'all' ? [] : [filters.paymentStatus],
+    sortDirection,
+    itemsPerPage,
+  };
+
+  if (!locationId) {
+    return (
+      <SidebarLayout>
+        <Header />
+        <div className="flex-1 space-y-6 p-8 pt-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-2xl font-bold tracking-tight">Orders Management</h1>
+              <p className="text-sm text-muted-foreground">Please select a location to view orders</p>
+            </div>
+          </div>
+        </div>
+      </SidebarLayout>
+    );
+  }
 
   return (
     <SidebarLayout>
@@ -198,15 +196,13 @@ export default function OrdersPage() {
                 Orders Management
               </h1>
               <p className="text-sm text-muted-foreground">
-                {timeframe === "today"
+                {filters.timeframe === "today"
                   ? "Today's"
-                  : timeframe === "week"
+                  : filters.timeframe === "this_week"
                   ? "This Week's"
-                  : timeframe === "month"
+                  : filters.timeframe === "this_month"
                   ? "This Month's"
-                  : timeframe === "year"
-                  ? "This Year's"
-                  : "Total"}{" "}
+                  : "All"}{" "}
                 Orders Overview ({stats.totalOrders}{" "}
                 {stats.totalOrders === 1 ? "order" : "orders"})
               </p>
@@ -238,16 +234,15 @@ export default function OrdersPage() {
           <Card className="border-none shadow-none">
             <CardContent className="p-0">
               <Tabs
-                defaultValue="today"
-                value={timeframe}
+                defaultValue="all"
+                value={filters.timeframe}
                 onValueChange={handleTimeframeChange}
               >
                 <TabsList>
+                  <TabsTrigger value="all">All Time</TabsTrigger>
                   <TabsTrigger value="today">Today</TabsTrigger>
-                  <TabsTrigger value="week">This Week</TabsTrigger>
-                  <TabsTrigger value="month">This Month</TabsTrigger>
-                  <TabsTrigger value="year">This Year</TabsTrigger>
-                  <TabsTrigger value="total">Total</TabsTrigger>
+                  <TabsTrigger value="this_week">This Week</TabsTrigger>
+                  <TabsTrigger value="this_month">This Month</TabsTrigger>
                 </TabsList>
               </Tabs>
             </CardContent>
@@ -315,14 +310,7 @@ export default function OrdersPage() {
                 onChange={(e) => handleSearch(e.target.value)}
               />
               <OrderTableSettings
-                settings={{
-                  showAmounts,
-                  showEmployeeInfo,
-                  showCustomerInfo,
-                  statusFilter: filters.paymentStatus || [],
-                  sortDirection,
-                  itemsPerPage,
-                }}
+                settings={settings}
                 onSettingsChange={{
                   onShowAmountsChange: setShowAmounts,
                   onShowEmployeeInfoChange: setShowEmployeeInfo,
@@ -337,15 +325,8 @@ export default function OrdersPage() {
 
           {/* Table */}
           <OrderTable
-            orders={paginatedOrders}
-            settings={{
-              showAmounts,
-              showEmployeeInfo,
-              showCustomerInfo,
-              sortDirection,
-              itemsPerPage,
-              statusFilter: filters.paymentStatus || [],
-            }}
+            orders={filteredOrders}
+            settings={settings}
             onSort={handleSort}
             onStatusUpdate={handleUpdatePaymentStatus}
             selectedOrder={selectedOrder}
@@ -353,10 +334,10 @@ export default function OrdersPage() {
 
           {/* Pagination */}
           <OrderTablePagination
-            totalItems={timeframeOrders.length}
-            pageSize={pageSize}
             currentPage={currentPage}
+            totalItems={Math.ceil(filteredOrders.length / pageSize)}
             onPageChange={setPage}
+            pageSize={pageSize}
             onPageSizeChange={setPageSize}
           />
         </div>

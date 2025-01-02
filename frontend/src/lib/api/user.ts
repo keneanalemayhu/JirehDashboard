@@ -54,6 +54,7 @@ export const userApi = {
         phone: user.phone_number,
         role: user.role,
         location_id: user.location_id,
+        location: user.location?.name, // Add this
         isActive: user.is_active,
       };
     } catch (error: any) {
@@ -94,7 +95,8 @@ export const userApi = {
         email: user.email,
         phone: user.phone_number,
         role: user.role,
-        location_id: user.location, // TODO: Add location name
+        location_id: user.location, 
+        location: user.location?.name, // Add this
         isActive: user.is_active,
       };
     } catch (error: any) {

@@ -466,7 +466,18 @@ class UserRegistrationViewSet(viewsets.ModelViewSet):
         serializer = self.get_serializer(queryset, many=True)
         return Response({
             'success': True,
-            'data': serializer.data
+            'data': [{
+                'id': user['id'],
+                'user_name': user['user_name'],
+                'email': user['email'],
+                'full_name': user['full_name'],
+                'phone_number': user['phone_number'],
+                'role': user['role'],
+                'is_active': user['is_active'],
+                'location': user['location'],  # This includes the full location data
+                'location_id': user.get('location_id') if user.get('location') else None,
+                'location_name': user.get('location_name') if user.get('location') else None
+            } for user in serializer.data]
         }, status=status.HTTP_200_OK)
 
     def update(self, request, *args, **kwargs):
@@ -527,6 +538,7 @@ class AccountView(APIView):
 
 class ProfileView(APIView):
     parser_classes = (MultiPartParser, FormParser)
+    permission_classes = [IsAuthenticated]  
     
     def get(self, request):
         serializer = ProfileSerializer(request.user, context={'request': request})

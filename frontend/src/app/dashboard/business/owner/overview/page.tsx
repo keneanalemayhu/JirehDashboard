@@ -43,7 +43,7 @@ import {
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import {
-  useOrders,
+  useOrder,
   initialOrders,
   getDateRangeForTimeframe,
 } from "@/hooks/dashboard/business/order";
